@@ -1,4 +1,4 @@
-# OWNER: ayan — seed version; replace/extend freely but keep the public signatures.
+# OWNER: karthik — seed version; replace/extend freely but keep the public signatures.
 
 """STT. Contract: provider="none" means the client must use browser speech recognition."""
 from __future__ import annotations

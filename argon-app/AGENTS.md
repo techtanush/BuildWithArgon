@@ -54,9 +54,9 @@ cd kernel && uv run python -m foundry_kernel.llm.smoke all   # live API smoke te
 - Managed agent: `agent="antigravity-preview-09-2026"`, `agent_config={"type":"antigravity","model":"gemini-4-argon"}`, `environment="remote"`.
 - Server-side state: `previous_interaction_id`. HTTP timeouts 15–20 min for `high`.
 
-## Team rules (three parallel branches: `tanush`, `ayan`, `mahin`)
+## Team rules (four parallel branches: `tanush`, `ayan`, `mahin`, `karthik`)
 
-The work is split so the three branches never depend on each other and merge as a union. Before
+The work is split so the four branches never depend on each other and merge as a union. Before
 writing code, read `../architecture-files/06-execution/07-team-split.md` and your
 `WORKORDER_<NAME>.md` at the repo root of your branch.
 
