@@ -3,8 +3,14 @@
 **Lane A: kernel core, the company, and the dashboard.** You build the company's brain and its
 source-of-truth UI: database, API, event stream, scheduler, approvals, ledger, 11 of the 13
 departments' handlers, agent coordination and group chat, grounded conversation (talk, concierge,
-citation checker), the world manifest route, and every dashboard page. (The grounding eval moved to
-Karthik — keep `conversation.talk.talk` / `conversation.concierge.ask` signatures so it can call them.)
+citation checker), the world manifest route, the grounding eval, and every dashboard page —
+including the **World Lab**, where judges see our Problem Statement 2 loop (recorded score curve +
+a live round on stage).
+
+**Our entry (ADR-019):** Problem Statement 2 — More Dimensions, plus Best use of Managed Agents.
+Your lane carries the Managed Agents story: an Argon Chief of Staff orchestrating department agents
+built on Google's agent APIs, coordinating through tickets, asks, requests and standups — and the
+dashboard is where judges *see* that orchestration (runs, Antigravity sandboxes, chat, approvals).
 
 ---
 
@@ -13,7 +19,7 @@ Karthik — keep `conversation.talk.talk` / `conversation.concierge.ask` signatu
 Read these in order (they are on every branch, under `architecture-files/`):
 
 1. `architecture-files/README.md` — the whole thing, including "Why we're building this".
-2. `00-overview/*` (vision, hackathon context, glossary, ADRs, feature catalog).
+2. `00-overview/*` (vision, hackathon context, glossary, **ADRs incl. 018–020**, feature catalog).
 3. `01-architecture/*` (system overview, repo layout, **data model**, **API contract**, event bus &
    orchestration, security).
 4. `06-execution/07-team-split.md` — who owns what, the frozen contracts, the cross-branch
@@ -21,11 +27,12 @@ Read these in order (they are on every branch, under `architecture-files/`):
 5. `06-execution/06-agent-operating-rules.md`, `02-acceptance-criteria.md`, `03-testing-strategy.md`,
    `05-risk-register-and-fallbacks.md`.
 6. Your sections: `03-company-kernel/01`, `04`–`09` and `departments/*` (skim 02/03 — Ayan's),
+   `02-models-and-integrations/03-antigravity-managed-agents.md` (what the dashboard must show),
    `04-dashboard/01-dashboard-spec.md`, `04-dashboard/02-onboarding.md`,
+   `05-world/13-world-lab-and-live-round.md` §1, §3, §4 (the World Lab page),
    `05-world/03-city-layout.md` §Manifest, `05-world/07-npc-conversation.md`, `05-world/08-concierge.md`,
-   `06-execution/04-evals.md` §2 (grounding — Karthik runs it against your talk/concierge),
-   `02-models-and-integrations/01-model-routing.md`.
-7. `argon-app/AGENTS.md` and every seed file you own (they start with `# OWNER: tanush`).
+   `06-execution/04-evals.md` §2 (grounding eval), `02-models-and-integrations/01-model-routing.md`.
+7. `argon-app/AGENTS.md` and every seed file you own (they start with `# OWNER: tanush` / `// OWNER: tanush`).
 
 The spec is the contract. If this work order and the spec ever disagree, follow the spec and log it
 in `argon-app/docs/decisions/tanush.md`.
@@ -36,7 +43,7 @@ in `argon-app/docs/decisions/tanush.md`.
 git fetch origin && git checkout tanush
 cd argon-app && cp .env.example .env          # add GEMINI_API_KEY if you have it; LLM_MODE=fake works without
 cd kernel && uv sync --extra dev && uv run pytest -q     # 11 passed
-cd ../web && pnpm install && pnpm typecheck && pnpm test  # 5 passed
+cd ../web && pnpm install && pnpm typecheck && pnpm test  # 7 passed
 cd .. && make dev                                         # kernel :8787, web :5173
 ```
 
@@ -49,33 +56,37 @@ cd .. && make dev                                         # kernel :8787, web :5
 (create the ones that don't exist); `departments/prompts/*.md` for every agent **except** `eng.*`
 and `su.*`; `conversation/*`; `api/system.py`, `ventures.py`, `departments.py`, `agents.py`,
 `tickets.py`, `runs.py`, `artifacts.py`, `approvals.py`, `channels.py`, `activity.py`, `stream.py`,
-`conversation.py`, `world.py`, `metrics.py`, `org.py`; migrations `0001`–`0099` named `NNNN_tanush_<what>.sql`; any **new top-level**
-kernel module you need.
+`conversation.py`, `world.py` (manifest only), `metrics.py`, `org.py`; **`evals/grounding_eval.py`,
+`evals/fixtures/*`**; migrations `0001`–`0099` named `NNNN_tanush_<what>.sql`; any **new
+top-level** kernel module you need.
 
 **Kernel tests:** everything under `kernel/tests/` except the frozen files, Ayan's
 (`tests/ayan/`, `test_fileblocks.py`, `test_computer_guard.py`, `test_worldgen_*`,
 `test_engineering*`, `test_executor*`, `test_llm*`, `test_composio*`, `test_support*`) and
-Karthik's (`tests/karthik/`, `test_voice*`, `test_grounding*`). FakeLLM fixtures
-`kernel/tests/fixtures/fake_llm/<job>.json` for every job not owned by Ayan or Karthik (e.g. `orchestrate_plan`, `dept_artifact`, `talk`, `concierge`, `check_citation`,
-`standup_update`, `agent_request`, `spec_write`, `decision_review`, `capability_design`,
-`cos_report`, `summarize`, `route_rank`, `panel_simulation`).
+Karthik's (`tests/karthik/`, `test_voice*`). That includes `test_grounding*.py`. FakeLLM fixtures
+`kernel/tests/fixtures/fake_llm/<job>.json` for every job not owned by Ayan or Karthik (e.g.
+`orchestrate_plan`, `dept_artifact`, `talk`, `concierge`, `check_citation`, `standup_update`,
+`agent_request`, `spec_write`, `decision_review`, `capability_design`, `cos_report`, `summarize`,
+`route_rank`, `panel_simulation`).
 
-**Web** (`argon-app/web/`): `src/dashboard/**`, `src/api/**` (client, sse, hooks; `schema.d.ts` is
-generated at merge), `src/styles/app.css`, `tests/unit/dashboard/**`, `tests/e2e/dashboard.spec.ts`.
+**Web** (`argon-app/web/`): `src/dashboard/**` (incl. `pages/WorldLab.tsx`), `src/api/**` (client,
+sse, hooks; `schema.d.ts` is generated at merge), `src/styles/app.css`, `tests/unit/dashboard/**`,
+`tests/e2e/dashboard.spec.ts`.
 
-**Docs:** `docs/{build-logs,decisions,verified,contract-requests}/tanush.md`.
+**Results/docs:** `evals/results/grounding-*.json`, `docs/{build-logs,decisions,verified,contract-requests}/tanush.md`.
 
 ## 3. Never touch
 
 Frozen: `schema.sql`, `contracts.py`, `config.py`, `ids.py`, `errors.py`, `security.py`,
 `world_layout.py`, `api/__init__.py`, `evals/cli.py`, `tests/conftest.py`, `tests/fakes.py`,
 `tests/test_seed_contracts.py`, `kernel/data/roster.json`, `web/src/App.tsx`, `main.tsx`,
-`src/shared/contracts.ts`, `styles/tokens.css`, everything under `src/world/` (Mahin's, Karthik's or frozen),
-`Makefile`, `AGENTS.md`, `docs/*.md`, `architecture-files/**`.
+`src/shared/contracts.ts`, `styles/tokens.css`, everything under `src/world/` (Mahin's, Karthik's,
+Ayan's generated, or frozen), `Makefile`, `AGENTS.md`, `docs/*.md`, `architecture-files/**`.
 Ayan's: `models.py`, `llm/*`, `departments/engineering.py`/`qa.py`/`support.py`, `executors/*`,
-`integrations/*`, `computers/*`, `worldgen/*`, `api/integrations.py`/`computers.py`/`preview.py`.
-Karthik's: `voice/*`, `api/voice.py`, `evals/grounding_eval.py`, `evals/fixtures/*` (read the fixture
-freely in your tests), `kernel/data/voices.json`. Need a change there? → `docs/contract-requests/tanush.md`.
+`integrations/*`, `computers/*`, `worldgen/*`, `api/integrations.py`/`computers.py`/`preview.py`/
+**`worldgen.py`**. Karthik's: `voice/*`, `api/voice.py`, `kernel/data/voices.json`,
+`web/assets-pipeline/**`, `web/public/assets/**`. Need a change there? →
+`docs/contract-requests/tanush.md`.
 
 Check before every push: `make ownership WHO=tanush`.
 
@@ -83,9 +94,10 @@ Check before every push: `make ownership WHO=tanush`.
 
 | You need | Use | Seed behaviour |
 |---|---|---|
-| LLM calls | `app.state.llm` / `ctx.llm` from `llm.client.build_llm_client(settings, db)`; `generate`, `generate_json(job, prompt, Schema)`; job names in `models.JOBS` | Minimal **working** live client (S1-level); `FakeLLM` in `LLM_MODE=fake` (scriptable: `FakeLLM().script(job, [outputs])`, fixtures by job name) |
+| LLM calls | `app.state.llm` / `ctx.llm` from `llm.client.build_llm_client(settings, db)`; `generate`, `generate_json(job, prompt, Schema)`, `run_agent(...)` (Antigravity); job names in `models.JOBS` | Minimal **working** live client (S1-level); `FakeLLM` in `LLM_MODE=fake` (scriptable: `FakeLLM().script(job, [outputs])`, fixtures by job name) |
 | Engineering + QA + support handlers | `departments.REGISTRY` → `engineering:EngineeringHandler`, `support:SupportHandler` (don't rename those entries) | Fake mode: `eng.design` → creates `eng.build`(ref `build:T1`) → `eng.review` → `qa.verify` → **merge gate** → done. Live mode raises `NotImplementedError` until Ayan's branch lands |
 | Cloud computers | `computers.loop.run_task(settings=, db=, llm=, venture_id=, agent_id=, ticket_id=, goal=, allowed_domains=, start_url=, max_steps=)` | Always returns `status="skipped"` → your caller must fall back (CU-05) |
+| World Lab data (Ayan) | `GET /v1/world/worldgen/latest`, `/runs`, `/runs/{id}`, `/files/{path}`, `POST/GET /v1/world/worldgen/live-rounds…`, `…/promote`; shapes `WorldgenRunSummary`, `WorldgenRun`, `LiveRound` in `src/shared/contracts.ts`; SSE `worldgen.progress` (global event) | Empty router → 404s: the page renders an empty state ("No world generation run yet"). Build against hand-written fixture objects of those types in `tests/unit/dashboard/` |
 | TTS for standup audio (Karthik) | `voice.tts.synthesize(settings=, db=, agent_id=, text=)` → `TtsResponse` | `provider="browser"`, no audio URL |
 | Voice availability per agent (Karthik) | `kernel/data/voices.json` (`agent_id → voice_id`) → manifest `voice_ready` | Missing → all `false` |
 | Startup hooks | `integrations.github_watch.start/stop(app)`, `computers.manager.start/stop(app)` | No-ops — keep calling them from `app.py` lifespan |
@@ -97,22 +109,23 @@ Check before every push: `make ownership WHO=tanush`.
 - `db.Database` (`connect`, `close`, `tx()`, `fetch_one`, `fetch_all`, `ping`) and `Tx` (`execute`,
   `fetch_one`, `fetch_all`); events published **after commit**.
 - `bus.emit(tx, *, venture_id, type, entity_kind=None, entity_id=None, data=None, level="info")`,
-  `bus.BROKER`.
+  `bus.BROKER`. Events with `venture_id=None` are **global**: every venture's SSE stream must
+  forward them (Ayan's `worldgen.progress` for the World Lab).
 - `gates.request_approval(tx, *, venture_id, gate_type, title, summary, payload=None, ticket_id=None, run_id=None, requested_by_agent_id=None) -> approval_id`
   and `gates.require_approved(db_or_tx, approval_id, gate_type)` — Ayan calls these for `merge`,
   `integration`, `computer_action`.
-- `ledger.record(tx, *, venture_id, kind, cost_usd, model=None, run_id=None, department_id=None, agent_id=None, units_in=0, units_out=0, estimated=True)` and `ledger.over_budget(db, venture_id)` —
-  Ayan's LLM client records every call through `ledger.record`.
+- `ledger.record(tx, *, venture_id, kind, cost_usd, model=None, run_id=None, department_id=None, agent_id=None, units_in=0, units_out=0, estimated=True)`
+  and `ledger.over_budget(db, venture_id)` — Ayan's LLM client records every call through `ledger.record`.
 - `departments.REGISTRY` keys (the seed test checks it equals the spec's ticket types) and the
   `HandlerContext` protocol from `contracts.py`, implemented by your scheduler/coordination.
 - `seed.seed_roster(db, settings)`, `app.create_app(settings)`, module-level `app`.
 - `conversation.talk.talk(*, db, llm, settings, venture_id, agent_id, req) -> TalkResponse` and
-  `conversation.concierge.ask(*, db, llm, settings, venture_id, req) -> ConciergeResponse` — Karthik's
-  grounding eval calls them directly (seed stubs already have these signatures).
-- Every route in `01-architecture/04-api-contract.md` (except integrations/computers/preview, which
-  are Ayan's, and voice, which is Karthik's), with the exact response shapes in `web/src/shared/contracts.ts` — Mahin's world
-  calls `/v1/world/manifest`, `/agents/{id}/talk`, `/concierge/ask`, `/answers/{id}`,
-  `/standups/latest`, `/telemetry/latency`, and the SSE stream (`answer.checked`).
+  `conversation.concierge.ask(*, db, llm, settings, venture_id, req) -> ConciergeResponse`.
+- Every route in `01-architecture/04-api-contract.md` except Ayan's (integrations, computers,
+  preview, worldgen) and Karthik's (voice), with the exact response shapes in
+  `web/src/shared/contracts.ts` — Mahin's world calls `/v1/world/manifest`, `/agents/{id}/talk`,
+  `/concierge/ask`, `/answers/{id}`, `/standups/latest`, `/telemetry/latency`, and the SSE stream
+  (`answer.checked`).
 
 ## 6. Build steps (phases from `06-execution/01-12-hour-build-plan.md`)
 
@@ -129,13 +142,14 @@ Commit after each step with its tests green; append `T+hh:mm step — result` to
    runs/artifacts/approvals/children, create, retry, cancel), runs (+logs), artifacts, approvals
    (list, decision incl. clarification answers), channels (list, messages with threads, post,
    summarize), activity.
-3. `stream.py`: SSE per venture with `Last-Event-ID` resume and `: ping` every 15 s (K-04).
+3. `stream.py`: SSE per venture with `Last-Event-ID` resume and `: ping` every 15 s (K-04);
+   forward global events (`venture_id` NULL) to every venture stream.
 4. `gates.py` decisions + re-entry hook; `ledger.py` spend gate when over budget (K-09);
    `redact()` on every stored text (K-11).
-5. Tests: `test_db.py`, `test_api_contract.py` (one test per route), `test_gates.py`, `test_ledger.py`.
+5. Tests: `test_db.py`, `test_api_contract.py` (one test per route you own), `test_gates.py`, `test_ledger.py`.
 **Checkpoint:** the Phase 2 curl sequence in the build plan works; tests green.
 
-### Step B — Company orchestration (Phase 3)
+### Step B — Company orchestration (Phase 3) — the Managed Agents core
 1. `departments/base.py`: `ArtifactHandler` (generic `dept_artifact` job; output → artifact +
    status message + optional follow-up tickets), shared prompt loading.
 2. Prompts for all agents except `eng.*`/`su.*` (`03-company-kernel/07-agent-prompts.md`).
@@ -144,9 +158,10 @@ Commit after each step with its tests green; append `T+hh:mm step — result` to
    `cos.report`; `cos.standup`; `capability.gap`), `pivot.py` (decision.review + pivot gate),
    `finance_people.py` (finance.budget, people.hire → `new_capability` gate → register agent),
    `requests.py` (agent.request: answer/delegate/decline), `chat.py` (chat.reply with citations and
-   allowed actions), generic registrations for the remaining types. `research.competitors` and
-   `leads.icp` call `ctx.use_computer(...)` and fall back to web/Deep Research when it returns
-   `skipped` (CU-05).
+   allowed actions), generic registrations for the remaining types. `research.market` uses the
+   Deep Research agent; `research.competitors` and `leads.icp` call `ctx.use_computer(...)` (and
+   Antigravity web research per `03-antigravity-managed-agents.md` via `ctx.llm.run_agent`) and fall
+   back when unavailable (CU-05).
 4. `scheduler.py`: dispatch with `SCHEDULER_CONCURRENCY`, per-ticket timeouts, retries, dependency
    resolution (`ref:<key>`), gate re-entry (K-08), startup recovery, standup timer
    (`STANDUP_MINUTES`), escalation (`ESCALATE_MINUTES`), `agent_state`, `runs` rows, automatic chat
@@ -164,18 +179,27 @@ venture up to `plan.request` (real Argon plan) if you have a key.
 ### Step C — Dashboard (Phase 4) — `04-dashboard/01-dashboard-spec.md`, `02-onboarding.md`
 1. `api/client.ts` (seed works), `sse.ts` (one EventSource per venture, backoff 1→10 s, Live dot),
    `hooks.ts` (`useQuery`, SSE patching). Types from `src/shared/contracts.ts`.
-2. Layout (Sidebar, TopBar with **Enter the view ▸** → `/view?venture=<vid>`, SystemStrip), pages:
-   Overview, Departments (+detail), Agents (+detail, Talk box using `/talk`, **Find in the world** →
-   `/view?venture=<vid>&goto=<agent_id>`), Tickets (+graph), Runs (+live logs), Approvals (all gate
-   types incl. `computer_action` with screenshot), Chat (threads, kinds, ref chips, @-autocomplete,
-   Summarize), Org, Artifacts (+detail), **Computers** (live screenshot every 1.5 s, action log,
-   Stop, Take over link — data from Ayan's `/v1/ventures/{vid}/computers` endpoints; render an
-   empty state when the list is empty), Integrations, **Metrics** (engineering baseline vs loop,
-   grounding, world scores per iteration, cost, latency p50/p90), Settings, Onboarding.
-3. Portraits: `/generated/portraits/<id>.png` with an initials fallback ring in the department color.
-4. `tests/e2e/dashboard.spec.ts` (D-01…D-05) against `LLM_MODE=fake make kernel`.
+2. Layout (Sidebar incl. **World Lab**, TopBar with **Enter the view ▸** → `/view?venture=<vid>`,
+   SystemStrip), pages: Overview, Departments (+detail), Agents (+detail, Talk box using `/talk`,
+   **Find in the world** → `/view?venture=<vid>&goto=<agent_id>`), Tickets (+graph), Runs (+live
+   logs; **Antigravity runs show the interaction id, sandbox progress and result** — the managed
+   agents must be visible), Approvals (all gate types incl. `computer_action` with screenshot), Chat
+   (threads, kinds, ref chips, @-autocomplete, Summarize), Org (who directs whom), Artifacts
+   (+detail), **Computers** (live screenshot every 1.5 s, action log, Stop, Take over link — Ayan's
+   endpoints; empty state when none), Integrations, **Metrics** (world scores headline, grounding,
+   cost, latency p50/p90, engineering baseline vs loop only if results exist), Settings, Onboarding.
+3. **World Lab** (`/world-lab`, `05-world/13` §4): latest run header; score curve (world, visual,
+   realism per iteration; iteration 0 = single-pass baseline); per-building table; filmstrip per
+   building (iterations × cameras, walkthrough videos, critic issues/keep); **live round panel**
+   (building picker pre-selecting the weakest, **Improve live** → `POST …/live-rounds`, step list
+   from SSE `worldgen.progress`, elapsed time, before/after slider for screenshots, side-by-side
+   videos, scores before → after, **Promote**, **Open in the world**). Handle 404/409/503 with clear
+   messages; never show a fabricated result.
+4. Portraits: `/generated/portraits/<id>.png` with an initials fallback ring in the department color.
+5. `tests/e2e/dashboard.spec.ts` (D-01…D-05) against `LLM_MODE=fake make kernel`; unit tests for
+   the World Lab view models with fixture `WorldgenRun`/`LiveRound` objects.
 **Checkpoint:** `pnpm typecheck && pnpm test && pnpm e2e --grep dashboard` green; live updates
-without refresh; approving a gate unblocks its ticket.
+without refresh; approving a gate unblocks its ticket; World Lab renders the fixtures.
 
 ### Step D — Conversation & world data (kernel side of Phase 7)
 1. `conversation/context_pack.py`, `directory.py`, `talk.py`, `concierge.py` (route cards),
@@ -186,22 +210,27 @@ without refresh; approving a gate unblocks its ticket.
 3. `api/world.py`: `GET /v1/world/manifest?venture=` = `world_layout.build_manifest(roster,
    registry=<web/src/world/buildings/generated/registry.json>, faces=<kernel/data/faces.json>,
    voices=<kernel/data/voices.json>, extra_agents=<venture's registered agents>)` — read files if
-   present, tolerate absence; `GET /v1/world/worldgen/latest`; static route for worldgen captures.
+   present, tolerate absence. (Worldgen history and the live round are Ayan's `api/worldgen.py`.)
 4. `api/org.py`: org chart, `POST /standup`, `GET /standups/latest` with lazily generated audio via
    `voice.tts.synthesize` (cache the result; `provider="browser"` → `audio_url: null`).
 5. Tests: `test_checker.py`, `test_directory.py`, `test_context_pack.py`, manifest test (shape equals
    `Manifest` in `contracts.py`; 13 buildings, 52 nodes, 65 edges).
 
-### Step E — Evals, loops, metrics (Phase 9)
-1. Make sure talk/concierge answer correctly over the Pantry Pal fixture
-   (`evals/fixtures/grounding_state.json`) — Karthik's grounding eval scores them (C-06, V-02).
+### Step E — Grounding eval, loops, metrics (Phase 9)
+1. `evals/grounding_eval.py` `main(argv)` (`--only`, `--out`, `--answerer live|fake`): temp DB,
+   load `evals/fixtures/grounding_state.json`, ask every item of
+   `argon-app/evals/grounding/questions.yaml` through `concierge.ask` / `talk.talk`, score fact,
+   citation, route, fabrication and checker agreement per `06-execution/04-evals.md` §2, write
+   `argon-app/evals/results/grounding-<UTC ts>.json` + `eval_results` rows. Make the answerer
+   injectable; `tests/test_grounding_eval.py` scores a fake answerer with known right/wrong answers
+   (C-06, V-02).
 2. `api/metrics.py`: `/v1/ventures/{vid}/metrics`, `/v1/evals/latest`, `POST /v1/telemetry/latency`
    (rolling 500 in `kv`, p50/p90).
 3. Improvement loop end to end; hardening; `make test` green.
 
 ## 7. Definition of done
 
-- Acceptance: **K-01…K-11, CO-01…CO-06, D-01…D-05, C-05…C-07 (kernel side), E-09, V-03**
+- Acceptance: **K-01…K-11, CO-01…CO-06, D-01…D-05, G-08, C-05…C-07 (kernel side), E-09, V-02, V-03**
   (`06-execution/02-acceptance-criteria.md`).
 - `cd kernel && uv run pytest -q` green (seed tests included); `cd web && pnpm typecheck && pnpm test` green.
 - `make ownership WHO=tanush` clean. Branch pushed.
@@ -210,7 +239,8 @@ without refresh; approving a gate unblocks its ticket.
 
 ## 8. One-shot prompt for your coding agent
 
-> You are building lane A (Tanush) of Foundry × Argon on branch `tanush` of this repo. First read
+> You are building lane A (Tanush) of Foundry × Argon on branch `tanush` of this repo. We enter
+> Problem Statement 2 (More Dimensions) + Best use of Managed Agents. First read
 > `architecture-files/README.md`, `architecture-files/00-overview/*`, `architecture-files/01-architecture/*`,
 > `architecture-files/06-execution/07-team-split.md`, and `WORKORDER_TANUSH.md`, then `argon-app/AGENTS.md`.
 > Follow `WORKORDER_TANUSH.md` step by step (A → E). Edit only files owned by tanush (check with
