@@ -83,7 +83,7 @@ async def create(body: CreateVenture, request: Request):
         slug = stem
         if await tx.fetch_one("SELECT id FROM ventures WHERE slug=?", (slug,)):
             slug = f"{stem}-{vid[4:].lower()}"
-        await tx.execute("INSERT INTO ventures(id,name,slug,idea,founder_name,budget_usd,composio_user_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)", (vid, values["name"], slug, values["idea"], values["founder_name"], budget, f"foundry:{vid}", now, now))
+        await tx.execute("INSERT INTO ventures(id,name,slug,idea,founder_name,budget_usd,composio_user_id,created_at,updated_at,owner_user_id) VALUES(?,?,?,?,?,?,?,?,?,?)", (vid, values["name"], slug, values["idea"], values["founder_name"], budget, f"foundry:{vid}", now, now, getattr(getattr(request, "state", None), "user_id", None)))
         await tx.execute("INSERT INTO agent_state(venture_id,agent_id) SELECT ?,id FROM agents WHERE venture_id IS NULL", (vid,))
         channels = [("all-hands", "All hands", "all_hands", None), ("exec", "Executive", "exec", None), ("incidents", "Incidents", "incident", None)]
         for dept in await tx.fetch_all("SELECT id,name FROM departments ORDER BY sort_order"):
@@ -99,7 +99,13 @@ async def create(body: CreateVenture, request: Request):
 @router.get("/v1/ventures", response_model=Envelope[Page[Venture]])
 async def list_ventures(request: Request, limit: int = Query(50, ge=1, le=200), cursor: str | None = None):
     clause, params = cursor_clause(cursor)
-    rows = await request.app.state.db.fetch_all("SELECT * FROM ventures WHERE 1=1" + clause + " ORDER BY created_at DESC,id DESC LIMIT ?", (*params, limit + 1))
+    cfg = request.app.state.settings
+    owner_clause, owner_params = "", ()
+    if cfg.auth_mode == "gateway":
+        subject = request.state.user_id
+        owner_clause = " AND (owner_user_id=? OR (owner_user_id IS NULL AND ?))"
+        owner_params = (subject, cfg.bootstrap_owner_subject == subject)
+    rows = await request.app.state.db.fetch_all("SELECT * FROM ventures WHERE 1=1" + owner_clause + clause + " ORDER BY created_at DESC,id DESC LIMIT ?", (*owner_params, *params, limit + 1))
     rows, cursor = page_rows(rows, limit)
     return {"data": {"items": [serialize_venture(r) for r in rows], "next_cursor": cursor}}
 

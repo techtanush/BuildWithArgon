@@ -1,7 +1,7 @@
 import { IntegrationConnect } from "../components/IntegrationConnect";
 // OWNER: tanush
 import { IntegrationCatalog } from "../components/IntegrationCatalog";
-import { readLocalProfile } from "../../entry/profile";
+import { useAppAuth } from "../../auth/AuthProvider";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { get, post } from "../../api/client";
@@ -11,8 +11,9 @@ import { useCompany } from "../context";
 import { ErrorNotice, Icon, useAction } from "../components/Shared";
 
 export default function Onboarding() {
+  const auth = useAppAuth();
   const [step, setStep] = useState(1),
-    [founder, setFounder] = useState(() => readLocalProfile().name),
+    [founder, setFounder] = useState(() => auth.name),
     [name, setName] = useState(""),
     [idea, setIdea] = useState(""),
     [intent, setIntent] = useState<"bring" | "discover">("bring"),

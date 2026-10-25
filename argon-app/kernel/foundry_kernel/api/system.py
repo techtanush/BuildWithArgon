@@ -38,8 +38,13 @@ class SystemStatus(BaseModel):
 @router.get("/v1/system/status", response_model=Envelope[SystemStatus])
 async def status(request: Request):
     cfg = request.app.state.settings
-    latest = await request.app.state.db.fetch_one("SELECT id,final_score FROM worldgen_runs ORDER BY started_at DESC,id DESC LIMIT 1")
-    override = await request.app.state.db.fetch_one("SELECT value_json FROM kv WHERE key='executor.override'")
+    # Hosted bootstrap exposes configuration flags only, never global run IDs,
+    # scores, timestamps, secrets or operator override records.
+    latest = None
+    override = None
+    if cfg.auth_mode != "gateway":
+        latest = await request.app.state.db.fetch_one("SELECT id,final_score FROM worldgen_runs ORDER BY started_at DESC,id DESC LIMIT 1")
+        override = await request.app.state.db.fetch_one("SELECT value_json FROM kv WHERE key='executor.override'")
     executor = json_loads_or(override["value_json"], None) if override else None
     if executor not in {"local", "antigravity"}:
         executor = cfg.engineering_executor

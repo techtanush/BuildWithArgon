@@ -76,6 +76,12 @@ async def recover_interrupted(db: Database) -> None:
 
 def create_app(settings: Settings | None = None) -> FastAPI:
     cfg = settings or get_settings()
+    if cfg.auth_mode == "gateway":
+        from .tenant_auth import SUBJECT_RE
+        if not cfg.kernel_token or not cfg.kernel_token.get_secret_value().strip():
+            raise RuntimeError("KERNEL_TOKEN is required in gateway mode")
+        if cfg.bootstrap_owner_subject is not None and not SUBJECT_RE.fullmatch(cfg.bootstrap_owner_subject):
+            raise RuntimeError("BOOTSTRAP_OWNER_SUBJECT must be a valid verified subject")
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -111,12 +117,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def bearer_auth(request: Request, call_next: Any) -> Any:
-        if cfg.kernel_token and (request.url.path == "/v1" or request.url.path.startswith("/v1/")):
+        if cfg.kernel_token and ((cfg.auth_mode == "gateway" and request.url.path != "/health") or request.url.path == "/v1" or request.url.path.startswith("/v1/")):
             authorization = request.headers.get("authorization", "")
             scheme, _, token = authorization.partition(" ")
             expected = cfg.kernel_token.get_secret_value()
             if scheme.lower() != "bearer" or not secrets.compare_digest(token.encode(), expected.encode()):
                 return error(401, "unauthorized", "A valid bearer token is required", headers={"WWW-Authenticate": "Bearer"})
+        if cfg.auth_mode == "gateway" and request.url.path != "/health":
+            from .tenant_auth import authorize_tenant
+            try:
+                await authorize_tenant(request)
+            except KernelError as exc:
+                return error(exc.status_code, exc.code, exc.message)
         return await call_next(request)
 
     @app.exception_handler(KernelError)

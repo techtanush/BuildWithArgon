@@ -1,0 +1,6 @@
+packages:
+  - argon-app/web
+onlyBuiltDependencies:
+  - esbuild
+  - fbx2gltf
+  - sharp

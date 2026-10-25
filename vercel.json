@@ -1,0 +1,33 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "pnpm build",
+  "outputDirectory": "argon-app/web/dist",
+  "functions": {
+    "api/gateway.js": {
+      "maxDuration": 60
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/v1/:path*",
+      "destination": "/api/gateway?__route=/v1/:path*"
+    },
+    {
+      "source": "/preview/:path*",
+      "destination": "/api/gateway?__route=/preview/:path*"
+    },
+    {
+      "source": "/media/:path*",
+      "destination": "/api/gateway?__route=/media/:path*"
+    },
+    {
+      "source": "/((?!api(?:/|$)).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "env": {
+    "NODEJS_HELPERS": "0"
+  }
+}

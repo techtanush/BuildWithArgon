@@ -1,0 +1,13 @@
+.git
+.local-preview
+**/node_modules
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/.env
+**/.env.*
+!**/.env.example
+**/dist
+argon-app/data
+**/test-results
+**/playwright-report

@@ -167,6 +167,8 @@ function Dashboard() {
             </Link>
           </div>
           <div className="topbar-right">
+            <Link to="/account" aria-label="Manage your account">Account</Link>
+            <Link to="/signout">Sign out</Link>
             <DashboardNotificationCenter />
             <span className={`live-indicator ${live}`}>
               <span />

@@ -19,9 +19,9 @@ let root: Root, host: HTMLDivElement;
 beforeEach(() => { vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT', true); vi.stubGlobal('localStorage', storage()); vi.stubGlobal('sessionStorage', storage()); localStorage.clear(); sessionStorage.clear(); host = document.createElement('div'); document.body.append(host); root = createRoot(host); });
 afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi.unstubAllGlobals(); });
 async function render(node: React.ReactNode, url = '/') { await act(async () => root.render(<MemoryRouter initialEntries={[url]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{node}<Location /></MemoryRouter>)); }
-it('landing primary calls to action enter local demo sign-in rather than world or an invented OAuth flow', async () => {
+it('landing account calls to action enter managed sign-up and sign-in rather than world', async () => {
   await render(<Landing />);
-  for (const text of ['Build your company', 'Sign in', "Let's build something"]) expect([...host.querySelectorAll('a')].find(a => a.textContent?.includes(text))?.getAttribute('href')).toBe('/signin');
+  for (const text of ['Build your company', 'Sign in', "Let's build something"]) expect([...host.querySelectorAll('a')].find(a => a.textContent?.includes(text))?.getAttribute('href')).toBe(text === 'Sign in' ? '/signin' : '/signup');
   expect(host.querySelector('a[href="/view"]')).toBeNull();
   expect(host.querySelector('[aria-label*="not live activity"]')).not.toBeNull();
   expect(host.querySelector('a[href="/dashboard"]')).not.toBeNull();

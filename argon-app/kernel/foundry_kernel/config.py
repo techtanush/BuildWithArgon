@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     kernel_host: str = "127.0.0.1"
     kernel_port: int = 8787
     kernel_token: SecretStr | None = None
+    auth_mode: Literal["local", "gateway"] = "local"
+    bootstrap_owner_subject: str | None = None
     data_dir: Path = APP_DIR / "data"
     web_public_dir: Path = APP_DIR / "web" / "public"
     web_url: str = "http://localhost:5173"  # running web dev server (World Lab live round captures)

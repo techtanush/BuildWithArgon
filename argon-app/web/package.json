@@ -22,7 +22,8 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "6.30.6",
     "three": "0.186.1",
-    "@radix-ui/colors": "3.0.0"
+    "@radix-ui/colors": "3.0.0",
+    "@clerk/react": "6.18.1"
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.5.1",
@@ -44,12 +45,5 @@
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
     "vitest": "^3.2.4"
-  },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "esbuild",
-      "fbx2gltf",
-      "sharp"
-    ]
   }
 }

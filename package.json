@@ -1,0 +1,19 @@
+{
+  "name": "build-with-argon",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.28.2",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "build": "pnpm --filter foundry-argon-web build",
+    "dev": "pnpm --filter foundry-argon-web dev",
+    "typecheck": "pnpm --filter foundry-argon-web typecheck",
+    "test:gateway": "node --test tests/deployment/*.test.mjs",
+    "test": "pnpm test:gateway && pnpm --filter foundry-argon-web test"
+  },
+  "dependencies": {
+    "@clerk/backend": "3.26.2"
+  }
+}
