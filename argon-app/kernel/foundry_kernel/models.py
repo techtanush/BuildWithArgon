@@ -1,6 +1,6 @@
 # OWNER: ayan — seed version; replace/extend freely but keep the public signatures.
 
-"""THE ONLY file with model ID strings. Everyone else names a job.
+"""THE ONLY file with model ID strings (plus agent ids like Deep Research). Everyone else names a job.
 Spec: architecture-files/02-models-and-integrations/01-model-routing.md. Job names are a frozen contract."""
 from __future__ import annotations
 
@@ -14,6 +14,8 @@ class Job:
     max_output_tokens: int | None = None
     background: bool = False  # long decode (Argon only)
     timeout_s: int = 120
+    modality: str | None = None  # response modality for media jobs: "image" | "audio" (text otherwise)
+    aspect_ratio: str | None = None  # image jobs: generation_config.image_config.aspect_ratio (e.g. "4:1")
 
 
 ARGON = "gemini-4-argon"
@@ -47,20 +49,27 @@ JOBS: dict[str, Job] = {
     "summarize": Job(LITE, None, 1_024, timeout_s=30),
     # voice
     "transcribe": Job("gemini-3.5-transcribe", None, None, timeout_s=20),
-    "tts_fallback": Job("gemini-3.8-flash-tts", None, None, timeout_s=20),
+    "tts_fallback": Job("gemini-3.8-flash-tts", None, None, timeout_s=20, modality="audio"),
     # world generation (offline)
     "worldgen_buildings": Job(ARGON, "high", 524_288, background=True),
     "worldgen_building": Job(ARGON, "high", 65_536, timeout_s=1200),
     "worldgen_critic": Job(ARGON, "high", 16_384, timeout_s=1200),
     "worldgen_patch": Job(ARGON, "high", 65_536, timeout_s=1200),
+    # World Lab live round (05-world/13 §2: "fast" -> thinking medium)
+    "worldgen_critic_fast": Job(ARGON, "medium", 16_384, timeout_s=600),
+    "worldgen_patch_fast": Job(ARGON, "medium", 65_536, timeout_s=600),
     "face_spec": Job(ARGON, "medium", 32_768, timeout_s=600),
-    "portrait": Job("gemini-nano-banana-2.1"),
-    "texture": Job("gemini-nano-banana-2.1"),
-    "music_loop": Job("lyria-3-clip-preview"),
+    "portrait": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image", aspect_ratio="1:1"),
+    "texture": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image"),
+    "sign": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image", aspect_ratio="4:1"),
+    "sign_check": Job(FLASH, None, 256, timeout_s=60),
+    "music_loop": Job("lyria-3-clip-preview", timeout_s=300, modality="audio"),
     # cloud computers (cua)
     "computer_step": Job(FLASH, None, 1_024, timeout_s=30),
     "computer_plan": Job(ARGON, "high", 8_192, timeout_s=600),
     "computer_guard": Job(LITE, None, 256, timeout_s=10),
+    # managed agents (llm.client.run_agent accounting; the agent id comes from settings)
+    "antigravity": Job(ARGON, None, None, background=True, timeout_s=3600),
     # coordination
     "standup_update": Job(FLASH, None, 512, timeout_s=60),
     "agent_request": Job(FLASH, None, 4_096, timeout_s=120),
