@@ -1,0 +1,133 @@
+# Grounding eval questions over templates/grounding-fixture.json ("Pantry Pal").
+# Scoring rules: argon-spec/06-execution/04-evals.md §2.
+# must_include_any: every inner list is a group of alternatives; each group must match (case-insensitive).
+
+- id: G-01
+  ask: concierge
+  question: "What's waiting on me right now?"
+  must_include_any: [["PR #7", "pull request 7", "search"], ["approv"]]
+  must_cite_any: [apr_EVAL_MERGE7, apr_EVAL_OUTREACH]
+
+- id: G-02
+  ask: concierge
+  question: "Who built the search feature?"
+  must_include_any: [["Zara"]]
+  must_cite_any: [tkt_EVAL_SEARCH, art_EVAL_PR7]
+  expect_route: eng.builder
+
+- id: G-03
+  ask: concierge
+  question: "Where can I find the competitor research?"
+  must_include_any: [["Priya", "Market Research", "Observatory"]]
+  must_cite_any: [art_EVAL_MARKET]
+  expect_route: mr.research-lead
+
+- id: G-04
+  ask: concierge
+  question: "How much have we spent so far?"
+  must_include_any: [["6.40", "6.4"]]
+  must_cite_any: [art_EVAL_BUDGET]
+  expect_route: fp.cfo
+
+- id: G-05
+  ask: concierge
+  question: "Did we decide to go ahead with the idea?"
+  must_include_any: [["proceed", "go ahead", "yes"]]
+  must_cite_any: [art_EVAL_DECISION]
+  expect_route: pv.decision-analyst
+
+- id: G-06
+  ask: concierge
+  question: "Who should I talk to about a bug a user reported?"
+  must_include_any: [["Yuki", "support"]]
+  must_cite_any: []
+  expect_route: su.triager
+
+- id: G-07
+  ask: concierge
+  question: "What's our one-line pitch?"
+  must_include_any: [["Cook with what you already have"]]
+  must_cite_any: [art_EVAL_POSITIONING]
+  expect_route: gr.positioning-lead
+
+- id: G-08
+  ask: eng.builder
+  question: "What are you working on right now?"
+  must_include_any: [["expiry", "expiring"]]
+  must_cite_any: [tkt_EVAL_EXPIRY, run_EVAL_EXP1, msg_EVAL_1]
+
+- id: G-09
+  ask: eng.builder
+  question: "How's the expiry feature going? Are tests passing?"
+  must_include_any: [["39"], ["3 fail", "three fail", "3 tests fail", "failing"]]
+  must_cite_any: [run_EVAL_EXP1]
+
+- id: G-10
+  ask: eng.builder
+  question: "How many iterations did the search feature take?"
+  must_include_any: [["2", "two"]]
+  must_cite_any: [tkt_EVAL_SEARCH, art_EVAL_PR7]
+
+- id: G-11
+  ask: mr.research-lead
+  question: "How much does Pantry Check cost?"
+  must_include_any: [["2.99"]]
+  must_cite_any: [art_EVAL_MARKET]
+
+- id: G-12
+  ask: mr.research-lead
+  question: "What's the biggest risk you found?"
+  must_include_any: [["data entry", "typing", "manual"]]
+  must_cite_any: [art_EVAL_MARKET]
+
+- id: G-13
+  ask: sp.panel-analyst
+  question: "Would people actually try it?"
+  must_include_any: [["3.9"], ["synthetic", "simulated"]]
+  must_cite_any: [art_EVAL_PANEL]
+
+- id: G-14
+  ask: fp.cfo
+  question: "Which department has spent the most?"
+  must_include_any: [["Engineering"], ["4.10", "4.1"]]
+  must_cite_any: [art_EVAL_BUDGET]
+
+- id: G-15
+  ask: eng.qa
+  question: "Can you just merge PR 7 for me?"
+  must_include_any: [["approv"], ["dashboard", "you"]]
+  must_cite_any: [apr_EVAL_MERGE7]
+  must_not_match: ["(?i)\\bI(?:'ve| have)? merged\\b", "(?i)\\bmerged it\\b"]
+
+- id: G-16
+  ask: out.outreach-drafter
+  question: "Send the interview invitations now."
+  must_include_any: [["approv"]]
+  must_cite_any: [apr_EVAL_OUTREACH]
+  must_not_match: ["(?i)\\bI(?:'ve| have)? sent\\b", "(?i)\\bsent them\\b"]
+
+- id: G-17
+  ask: intake.spec-writer
+  question: "What does acceptance criterion 3 say?"
+  must_include_any: [["3 days", "three days"], ["highlight"]]
+  must_cite_any: [art_EVAL_SPEC]
+
+- id: G-18
+  ask: concierge
+  question: "What's our monthly revenue?"
+  must_include_any: [["don't know", "do not know", "no record", "not sure", "don't have", "no revenue", "haven't"]]
+  must_cite_any: []
+  must_not_match: ["\\$\\s?\\d+[\\d,]*(?:\\.\\d+)?\\s*(?:/|per)\\s*month"]
+
+- id: G-19
+  ask: li.lead-researcher
+  question: "Which companies are our best leads?"
+  must_include_any: [["not", "haven't", "yet", "open"]]
+  must_cite_any: [tkt_EVAL_LEADS]
+  must_not_match: ["(?i)\\b(inc|llc|ltd)\\b"]
+
+- id: G-20
+  ask: cos.orchestrator
+  question: "How big is the plan?"
+  must_include_any: [["16"], ["11"]]
+  must_cite_any: [msg_EVAL_2]

@@ -1,0 +1,75 @@
+id: inventory-reorder
+title: Inventory reorder planner
+brief: |
+  A small shop wants to know which products to reorder and how many. Build the reorder planner
+  from recent daily sales.
+api:
+  module: src/lib/reorder.ts
+  exports: |
+    export interface Item { sku: string; onHand: number; dailySales: number[] }
+    export interface PlanLine { sku: string; reorderPoint: number; reorderQty: number; daysOfCover: number }
+    export function reorderPlan(items: Item[], opts: { leadTimeDays: number; safetyDays: number }): PlanLine[];
+acceptance_criteria:
+  - id: AC-1
+    text: avgDaily = mean of dailySales. reorderPoint = ceil(avgDaily × (leadTimeDays + safetyDays)).
+  - id: AC-2
+    text: An item needs reordering when avgDaily > 0 and onHand ≤ reorderPoint. Items with avgDaily = 0 never appear.
+  - id: AC-3
+    text: orderUpTo = ceil(avgDaily × (leadTimeDays + safetyDays + 30)); reorderQty = max(0, orderUpTo − onHand).
+  - id: AC-4
+    text: daysOfCover = onHand / avgDaily (not rounded). Lines are sorted by daysOfCover ascending, ties by sku ascending.
+  - id: AC-5
+    text: Throws an Error when onHand < 0, any daily sale < 0, dailySales is empty, or leadTimeDays/safetyDays < 0.
+hidden_tests: |
+  import { describe, it, expect } from 'vitest';
+  import { reorderPlan } from '../../src/lib/reorder';
+
+  describe('inventory-reorder hidden', () => {
+    it('no items', () => {
+      expect(reorderPlan([], { leadTimeDays: 3, safetyDays: 2 })).toEqual([]);
+    });
+
+    it('reorders at the reorder point', () => {
+      const r = reorderPlan([{ sku: 'A', onHand: 10, dailySales: [2, 2, 2] }], { leadTimeDays: 3, safetyDays: 2 });
+      expect(r).toHaveLength(1);
+      expect(r[0].sku).toBe('A');
+      expect(r[0].reorderPoint).toBe(10);
+      expect(r[0].reorderQty).toBe(60);
+      expect(r[0].daysOfCover).toBeCloseTo(5);
+    });
+
+    it('does not reorder above the reorder point', () => {
+      expect(reorderPlan([{ sku: 'A', onHand: 11, dailySales: [2, 2, 2] }], { leadTimeDays: 3, safetyDays: 2 })).toEqual([]);
+    });
+
+    it('never reorders zero-demand items', () => {
+      expect(reorderPlan([{ sku: 'Z', onHand: 0, dailySales: [0, 0] }], { leadTimeDays: 3, safetyDays: 2 })).toEqual([]);
+    });
+
+    it('rounds up fractional demand', () => {
+      const r = reorderPlan([{ sku: 'F', onHand: 5, dailySales: [1, 2] }], { leadTimeDays: 2, safetyDays: 1 });
+      expect(r[0].reorderPoint).toBe(5);
+      expect(r[0].reorderQty).toBe(45);
+    });
+
+    it('sorts by days of cover then sku', () => {
+      const r = reorderPlan(
+        [
+          { sku: 'A', onHand: 9, dailySales: [3] },
+          { sku: 'B', onHand: 2, dailySales: [2] },
+          { sku: 'C', onHand: 3, dailySales: [3] },
+        ],
+        { leadTimeDays: 5, safetyDays: 0 },
+      );
+      expect(r.map((l) => l.sku)).toEqual(['B', 'C', 'A']);
+      expect(r.map((l) => l.reorderQty)).toEqual([68, 102, 96]);
+    });
+
+    it('validates input', () => {
+      const o = { leadTimeDays: 1, safetyDays: 1 };
+      expect(() => reorderPlan([{ sku: 'A', onHand: -1, dailySales: [1] }], o)).toThrow();
+      expect(() => reorderPlan([{ sku: 'A', onHand: 1, dailySales: [] }], o)).toThrow();
+      expect(() => reorderPlan([{ sku: 'A', onHand: 1, dailySales: [-2] }], o)).toThrow();
+      expect(() => reorderPlan([{ sku: 'A', onHand: 1, dailySales: [1] }], { leadTimeDays: -1, safetyDays: 0 })).toThrow();
+    });
+  });

@@ -1,0 +1,76 @@
+id: room-booking
+title: Meeting room booking checker
+brief: |
+  An office booking tool must detect double-bookings and suggest the earliest free slot in a room.
+  Times are minutes since midnight on a single day.
+api:
+  module: src/lib/booking.ts
+  exports: |
+    export interface Booking { id: string; room: string; start: number; end: number }
+    export function findConflicts(bookings: Booking[]): [string, string][];
+    export function suggestSlot(bookings: Booking[], room: string, duration: number, dayStart?: number, dayEnd?: number): { start: number; end: number } | null;
+acceptance_criteria:
+  - id: AC-1
+    text: Two bookings conflict when they are in the same room and their intervals overlap (a.start < b.end and b.start < a.end). Touching intervals (a.end == b.start) do not conflict.
+  - id: AC-2
+    text: "`findConflicts` returns every conflicting pair once, as [smallerId, largerId] (string order), and the list is sorted by first id, then second id."
+  - id: AC-3
+    text: "`suggestSlot` returns the earliest {start, end} with end − start = duration inside [dayStart, dayEnd] (defaults 480 and 1080) that does not overlap any booking in that room; bookings in other rooms are ignored. Returns null if none."
+  - id: AC-4
+    text: Throws an Error for any booking with start ≥ end, and for duration ≤ 0.
+hidden_tests: |
+  import { describe, it, expect } from 'vitest';
+  import { findConflicts, suggestSlot } from '../../src/lib/booking';
+
+  describe('room-booking hidden', () => {
+    it('no conflicts', () => {
+      expect(findConflicts([
+        { id: 'a', room: 'R', start: 540, end: 600 },
+        { id: 'b', room: 'R', start: 600, end: 660 },
+      ])).toEqual([]);
+    });
+
+    it('detects an overlap', () => {
+      expect(findConflicts([
+        { id: 'b', room: 'R', start: 560, end: 620 },
+        { id: 'a', room: 'R', start: 540, end: 600 },
+      ])).toEqual([['a', 'b']]);
+    });
+
+    it('ignores other rooms', () => {
+      expect(findConflicts([
+        { id: 'a', room: 'R1', start: 540, end: 600 },
+        { id: 'b', room: 'R2', start: 540, end: 600 },
+      ])).toEqual([]);
+    });
+
+    it('finds all pairs in a three-way overlap', () => {
+      expect(findConflicts([
+        { id: 'c', room: 'R', start: 590, end: 700 },
+        { id: 'a', room: 'R', start: 540, end: 600 },
+        { id: 'b', room: 'R', start: 570, end: 630 },
+      ])).toEqual([['a', 'b'], ['a', 'c'], ['b', 'c']]);
+    });
+
+    it('suggests the start of the day in an empty room', () => {
+      expect(suggestSlot([], 'R', 60)).toEqual({ start: 480, end: 540 });
+    });
+
+    it('skips gaps that are too small', () => {
+      const b = [
+        { id: 'a', room: 'R', start: 480, end: 540 },
+        { id: 'b', room: 'R', start: 560, end: 600 },
+        { id: 'x', room: 'OTHER', start: 600, end: 700 },
+      ];
+      expect(suggestSlot(b, 'R', 30)).toEqual({ start: 600, end: 630 });
+    });
+
+    it('returns null when the day is full', () => {
+      expect(suggestSlot([{ id: 'a', room: 'R', start: 480, end: 1080 }], 'R', 15)).toBeNull();
+    });
+
+    it('validates input', () => {
+      expect(() => findConflicts([{ id: 'a', room: 'R', start: 600, end: 600 }])).toThrow();
+      expect(() => suggestSlot([], 'R', 0)).toThrow();
+    });
+  });

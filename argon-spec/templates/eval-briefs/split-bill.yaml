@@ -1,0 +1,88 @@
+id: split-bill
+title: Split a shared bill and settle up
+brief: |
+  Friends share expenses on trips. Build the settle-up logic for a bill-splitting app: given who
+  paid for what and who shared each expense, compute everyone's balance and the list of transfers
+  that settles all debts. Amounts are integer cents.
+api:
+  module: src/lib/settle.ts
+  exports: |
+    export interface Expense { paidBy: string; amountCents: number; splitAmong: string[] }
+    export interface Transfer { from: string; to: string; amountCents: number }
+    export function balances(expenses: Expense[], people: string[]): Record<string, number>;
+    export function settleUp(expenses: Expense[], people: string[]): Transfer[];
+acceptance_criteria:
+  - id: AC-1
+    text: Each expense is split equally among `splitAmong`. Each share is floor(amount / n); the remainder cents (amount − share·n) are paid one extra cent each by the first participants in alphabetical order.
+  - id: AC-2
+    text: "`balances` returns, for every person in `people`, total paid minus total owed (cents). People with no expenses have balance 0. Balances sum to 0."
+  - id: AC-3
+    text: "`settleUp` repeatedly matches the person with the most negative balance (ties: alphabetical) with the person with the most positive balance (ties: alphabetical) and transfers the smaller of the two absolute amounts, until all balances are 0. Transfers are returned in the order they are generated."
+  - id: AC-4
+    text: Both functions throw an Error if any amountCents is not a positive integer, if splitAmong is empty, or if paidBy or any splitAmong name is not in `people`.
+  - id: AC-5
+    text: No expenses → `balances` is all zeros and `settleUp` returns [].
+hidden_tests: |
+  import { describe, it, expect } from 'vitest';
+  import { balances, settleUp } from '../../src/lib/settle';
+
+  const P3 = ['A', 'B', 'C'];
+
+  describe('split-bill hidden', () => {
+    it('splits a single expense equally', () => {
+      const ex = [{ paidBy: 'A', amountCents: 3000, splitAmong: ['A', 'B', 'C'] }];
+      expect(balances(ex, P3)).toEqual({ A: 2000, B: -1000, C: -1000 });
+      expect(settleUp(ex, P3)).toEqual([
+        { from: 'B', to: 'A', amountCents: 1000 },
+        { from: 'C', to: 'A', amountCents: 1000 },
+      ]);
+    });
+
+    it('assigns remainder cents alphabetically', () => {
+      const ex = [{ paidBy: 'A', amountCents: 1000, splitAmong: ['C', 'B', 'A'] }];
+      expect(balances(ex, P3)).toEqual({ A: 666, B: -333, C: -333 });
+    });
+
+    it('handles no expenses', () => {
+      expect(balances([], P3)).toEqual({ A: 0, B: 0, C: 0 });
+      expect(settleUp([], P3)).toEqual([]);
+    });
+
+    it('keeps uninvolved people at zero', () => {
+      const ex = [{ paidBy: 'A', amountCents: 500, splitAmong: ['A', 'B'] }];
+      const b = balances(ex, ['A', 'B', 'Z']);
+      expect(b.Z).toBe(0);
+      expect(settleUp(ex, ['A', 'B', 'Z'])).toEqual([{ from: 'B', to: 'A', amountCents: 250 }]);
+    });
+
+    it('nets multiple expenses', () => {
+      const ex = [
+        { paidBy: 'A', amountCents: 1200, splitAmong: ['A', 'B'] },
+        { paidBy: 'B', amountCents: 600, splitAmong: ['A', 'B'] },
+      ];
+      expect(balances(ex, ['A', 'B'])).toEqual({ A: 300, B: -300 });
+      expect(settleUp(ex, ['A', 'B'])).toEqual([{ from: 'B', to: 'A', amountCents: 300 }]);
+    });
+
+    it('follows the greedy matching order exactly', () => {
+      const people = ['A', 'B', 'C', 'D'];
+      const ex = [
+        { paidBy: 'A', amountCents: 999, splitAmong: ['A', 'B', 'C', 'D'] },
+        { paidBy: 'B', amountCents: 501, splitAmong: ['C', 'D'] },
+      ];
+      expect(balances(ex, people)).toEqual({ A: 749, B: 251, C: -501, D: -499 });
+      expect(settleUp(ex, people)).toEqual([
+        { from: 'C', to: 'A', amountCents: 501 },
+        { from: 'D', to: 'B', amountCents: 251 },
+        { from: 'D', to: 'A', amountCents: 248 },
+      ]);
+    });
+
+    it('validates input', () => {
+      expect(() => balances([{ paidBy: 'A', amountCents: 0, splitAmong: ['A'] }], P3)).toThrow();
+      expect(() => balances([{ paidBy: 'A', amountCents: 10.5, splitAmong: ['A'] }], P3)).toThrow();
+      expect(() => balances([{ paidBy: 'A', amountCents: 100, splitAmong: [] }], P3)).toThrow();
+      expect(() => settleUp([{ paidBy: 'X', amountCents: 100, splitAmong: ['A'] }], P3)).toThrow();
+      expect(() => settleUp([{ paidBy: 'A', amountCents: 100, splitAmong: ['Q'] }], P3)).toThrow();
+    });
+  });
