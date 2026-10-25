@@ -5,6 +5,8 @@ This is the authoritative handoff for `techtanush/BuildWithArgon`, branch **`tan
 
 Read this document first, then [contract requests](../contract-requests/tanush.md), [decisions](../decisions/tanush.md), [provider evidence](../verified/tanush.md) and the historical [build log](../build-logs/tanush.md). The source contract remains [WORKORDER_TANUSH.md](../../../WORKORDER_TANUSH.md) and the architecture/team split.
 
+**For the session merging all branches:** follow the [combined-branch integration runbook](../merge/tanush.md). It specifies each lane's required wiring, GitHub/Composio versus sandbox authentication, actual engineering → browser QA → repair → approved publishing evidence, missing implementation checks, wallet preservation and the final combined acceptance/handoff. Tanush has asked that session to complete missing integration work as well as merge. This Lane A session remains on `tanush`.
+
 ## What landed
 
 | Area | Implemented behavior | Evidence |
@@ -24,7 +26,7 @@ The pasted responsibility checklist is covered: agent “Runs on” badges, repo
 
 ## Final validation
 
-Final combined `make test`: **423 kernel tests**, frontend typecheck, **98 web tests** passed. **All six browser scenarios** passed against the updated running backend. Scoped fatal-error lint and `git diff --check` passed. Configured-secret scanning and `make ownership WHO=tanush` are required before push, with **zero violations**. Both frozen seed suites remain unchanged. The final build-log entry records the command/environment details; the containing commit is the handoff revision.
+Final Lane A `make test`: **423 kernel tests**, frontend typecheck, **98 web tests** passed. **All six browser scenarios** passed against the updated running backend. Scoped fatal-error lint and `git diff --check` passed. Configured-secret scanning and `make ownership WHO=tanush` are required before push, with **zero violations**. Both frozen seed suites remain unchanged. The final build-log entry records the command/environment details; the containing commit is the handoff revision.
 
 A local low-disk condition intermittently affected SQLite test setup. Use unique `--basetemp` paths for simultaneous pytest invocations; pytest's shared retention cleanup can also interfere with concurrent runs. The final full suite is run serially. Do not solve disk issues by deleting another person's cache, assets, database or worktree.
 
@@ -35,7 +37,7 @@ A local low-disk condition intermittently affected SQLite test setup. Use unique
 - Reports: [first live](../../evals/results/grounding-20261025T190142661980Z.json), [follow-up live](../../evals/results/grounding-20261025T192423222525Z.json), [fake plumbing](../../evals/results/grounding-20261025T190126204609Z.json). Gold expectations never reach the answerer. Prompts were not tuned to gold facts; the follow-up fixes supply the required schema and preserve the public JSON protocol.
 - Real Composio metadata reads succeeded and found active project connections for GitHub, Gmail, LinkedIn, Calendar and Meet. Those connections were not silently bound to ventures, and no external message or post was sent.
 - Real ElevenLabs speech generation succeeded. The current key lacks user/voice-list/agent-management read permissions; live-call setup needs the appropriate permissions and an `ELEVENLABS_AGENT_ID`.
-- Real Privy provisioning succeeded after the credentials were supplied: the actual HTTP API created one approved CFO wallet and returned the same wallet on retry. Intended network policy is Base Sepolia; mainnet/spending flags stayed false. No wallet funding, signing or transaction occurred. The durable verification venture is `ven_01M5T98JPWFNHTHGV0Q44DV937` in the isolated preview database, with provider wallet `hpkdpniglqzvm3q9jxpm8axp`.
+- Real Privy provisioning succeeded after the credentials were supplied: the actual HTTP API created one approved CFO wallet and returned the same wallet on retry. That initial probe did not fund or sign; the later payment extension obtained free test USDC as recorded below. Mainnet stayed disabled and no live payment was broadcast. The durable verification venture is `ven_01M5T98JPWFNHTHGV0Q44DV937` in the isolated preview database, with provider wallet `hpkdpniglqzvm3q9jxpm8axp`.
 - Real engineering/Antigravity/Deep Research/Cua, world generation/live-round execution, assets and live voice depend on their owning branches. Their seed unavailable/fake paths are retained and labelled. No world score, engineering baseline, cash balance, wallet address or successful payment was invented.
 
 ## Merge procedure — designated merge session only
@@ -89,6 +91,8 @@ From `argon-app` / the appropriate project folders after all lanes merge:
 rtk make test
 rtk proxy python3 scripts/check_ownership.py --audit
 # Kernel folder; live calls incur provider usage, so verify credits first.
+# First verify/fix the smoke dispatcher: the seed ignores "all" and runs only basic.
+# Require named S1–S7 results; this command alone does not prove all cases passed.
 rtk uv run python -m foundry_kernel.llm.smoke all
 rtk uv run foundry-eval grounding --answerer live --concurrency 4
 # Web folder, with the kernel running on the generator's configured port:
@@ -161,8 +165,8 @@ All responses use the normal `{data: ...}` / error envelope. Amounts are **USDC 
 | `WALLET_MODE` | `testnet` by default; `mainnet` explicitly selects Base; `off` disables provisioning/payments |
 | `WALLET_PAYMENTS_ENABLED` | Defaults true; false stops new payments while allowing receipt verification |
 | `WALLET_MAX_COUNT` | 50 by default; runtime caps provisioning at 50 globally |
-| `GITHUB_SANDBOX_TOKEN` | Optional private-repo sandbox access |
-| `KERNEL_TOKEN` | Optional local bearer auth; use the owned proxy config |
+| `GITHUB_SANDBOX_TOKEN` | Optional sandbox Git authentication; need depends on the implemented clone/publish path, not simply whether Composio is connected |
+| `KERNEL_TOKEN` | Optional for local testnet; required for mainnet; use the owned server proxy |
 
 The ignored `argon-app/.env` is 0600 locally. Do not commit it, paste values into this handoff, put them in `VITE_*`, or send them through an agent prompt. Additional Privy literals, the derived Basic credential and the credential-bundle unlock password are redacted from stored text. No Stripe secret is required for the wallet prototype; Stripe execution is not enabled by this branch.
 
@@ -180,4 +184,4 @@ For Tanush's cross-computer sharing request, [the encrypted credential bundle](.
 | T-CR-06 | Runtime standup audio is implemented via an owned response subtype; align the frozen Python type at merge |
 | T-CR-07 | Ayan: native structured response format, complete/incomplete status checks, output capacity review and per-attempt accounting. Lane A's helper-bypass/schema bugs are fixed; remaining live failures stay visible |
 
-The latest fetched remote heads of the other three lanes still contained their starter work-order changes at the time of this handoff. Do not assume those implementations have landed merely because their public seed interfaces import successfully. Fetch and read their final handoffs before merge.
+At the 2026-10-25 20:16 UTC review, fetched Ayan/Mahin refs still differed from main only by their work orders. Karthik had advanced to `a425502` with 49 changed files covering assets and voice; their build-log Handoff explicitly leaves production avatars/car and live-call acceptance unfinished. This describes published refs only. Fetch again and read all final handoffs before merge; see the [dated branch snapshot and owner checklist](../merge/tanush.md). Successful seed imports or tests do not establish the live combined workflow.
