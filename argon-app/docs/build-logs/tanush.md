@@ -1,3 +1,9 @@
 # Build log — tanush
 
 Format: `T+hh:mm <step> — what works, what doesn't`.
+
+T+00:00 setup — cloned the requested repository into the empty local workspace, fetched origin, checked out and fast-forward pulled `tanush`. Architecture and app instructions match `origin/main`; no other branch was checked out or changed. Read README, all overview/architecture files, team split, work order and app instructions. Local `.env` is ignored and uses `LLM_MODE=fake`.
+
+T+00:09 setup — baseline kernel: 11 passed; web: typecheck passed and 7 passed. pnpm 11 rejected the seed's pnpm 10 build-script settings; installed using pnpm 10.11.0 without changing tracked scaffolding or dependencies. Live providers have not been exercised.
+
+T+00:18 step A — kernel core complete: typed API routes, safe uploads, venture/channel/agent initialization, ticket/run/artifact/chat queries, pagination, optional bearer auth, error envelopes, durable SSE with global events and replay, gate decisions/re-entry, idempotent spend approval, startup recovery and stored-text redaction. Kernel 110 passed (including all 11 seed tests); web typecheck and 7 tests passed. Live HTTP smoke passed health → create → start → pause and SSE replay on port 18787, because this machine already has another service on 8787. No external model call was made. Scheduling and company handlers remain the next step. Frozen files unchanged; two TypeScript union corrections requested for merge.

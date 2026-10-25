@@ -5,9 +5,9 @@ Spec: architecture-files/01-architecture/05-event-bus-and-orchestration.md."""
 from __future__ import annotations
 
 import asyncio
-import json
 from typing import Any
 
+from .db import json_dumps
 from .ids import utc_now
 
 
@@ -22,13 +22,16 @@ class Broker:
 
     def unsubscribe(self, venture_id: str | None, q: asyncio.Queue[dict[str, Any]]) -> None:
         self._subs.get(venture_id, set()).discard(q)
+        if not self._subs.get(venture_id):
+            self._subs.pop(venture_id, None)
 
     def publish(self, event: dict[str, Any]) -> None:
-        for key in {event.get("venture_id"), None}:
-            for q in list(self._subs.get(key, ())):
-                if q.full():
-                    q.get_nowait()  # drop oldest
-                q.put_nowait(event)
+        keys = self._subs if event.get("venture_id") is None else {event["venture_id"], None}
+        queues = {q for key in keys for q in self._subs.get(key, ())}
+        for q in queues:
+            if q.full():
+                q.get_nowait()  # drop oldest
+            q.put_nowait(event)
 
 
 BROKER = Broker()
@@ -37,10 +40,14 @@ BROKER = Broker()
 async def emit(tx: Any, *, venture_id: str | None, type: str, entity_kind: str | None = None,
                entity_id: str | None = None, data: dict[str, Any] | None = None, level: str = "info") -> int:
     created = utc_now()
-    payload = data or {}
     event_id = await tx.execute(
         "INSERT INTO events (venture_id, type, entity_kind, entity_id, level, data_json, created_at) VALUES (?,?,?,?,?,?,?)",
-        (venture_id, type, entity_kind, entity_id, level, json.dumps(payload, default=str), created))
-    tx.events.append({"id": event_id, "venture_id": venture_id, "type": type, "entity_kind": entity_kind,
-                      "entity_id": entity_id, "level": level, "data": payload, "created_at": created})
+        (venture_id, type, entity_kind, entity_id, level, json_dumps(data or {}, getattr(tx, "settings", None)), created))
+    # Publish the persisted representation so redaction is identical for replay and live SSE.
+    row = await tx.fetch_one("SELECT * FROM events WHERE id=?", (event_id,))
+    if row is not None:
+        from .db import json_loads_or
+
+        row["data"] = json_loads_or(row.pop("data_json"), {})
+        tx.events.append(row)
     return int(event_id or 0)

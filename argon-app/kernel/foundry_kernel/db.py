@@ -5,6 +5,7 @@ Writes go through `async with db.tx() as tx:`; events emitted on the tx are publ
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,17 +13,66 @@ from typing import Any
 
 import aiosqlite
 
+from .config import Settings, get_settings
+from .security import SECRET_FIELDS, redact
+
 SCHEMA = Path(__file__).with_name("schema.sql")
 MIGRATIONS = Path(__file__).with_name("migrations")
 
 
+def json_loads_or(value: str | bytes | None, default: Any) -> Any:
+    """Decode a SQLite JSON column, falling back only for absent or invalid JSON."""
+    if value is None:
+        return default
+    try:
+        return json.loads(value)
+    except (ValueError, TypeError, UnicodeDecodeError):
+        return default
+
+
+def redact_value(value: Any, settings: Settings | None = None) -> Any:
+    """Redact nested payloads without corrupting JSON escaping or changing scalar types."""
+    cfg = settings or get_settings()
+    if isinstance(value, str):
+        value = redact(value, cfg)
+        # security.redact deliberately ignores short secrets; storage must cover all literals.
+        for name in SECRET_FIELDS:
+            secret = getattr(cfg, name, None)
+            literal = secret.get_secret_value() if secret else ""
+            if literal:
+                value = value.replace(literal, "[REDACTED]")
+        return value
+    if isinstance(value, dict):
+        return {redact_value(k, cfg): redact_value(v, cfg) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [redact_value(item, cfg) for item in value]
+    return value
+
+
+def json_dumps(value: Any, settings: Settings | None = None) -> str:
+    return json.dumps(redact_value(value, settings), default=str)
+
+
+def _stored_param(value: Any, settings: Settings) -> Any:
+    if isinstance(value, str):
+        # Handle escaped configured secrets inside JSON as well as ordinary text columns.
+        if value.lstrip().startswith(("{", "[")):
+            try:
+                return json_dumps(json.loads(value), settings)
+            except (ValueError, TypeError):
+                pass
+        return redact_value(value, settings)
+    return value
+
+
 class Tx:
-    def __init__(self, conn: aiosqlite.Connection) -> None:
+    def __init__(self, conn: aiosqlite.Connection, settings: Settings | None = None) -> None:
         self.conn = conn
+        self.settings = settings or get_settings()
         self.events: list[dict[str, Any]] = []
 
     async def execute(self, sql: str, params: Sequence[Any] = ()) -> int | None:
-        cur = await self.conn.execute(sql, params)
+        cur = await self.conn.execute(sql, tuple(_stored_param(p, self.settings) for p in params))
         last = cur.lastrowid
         await cur.close()
         return last
@@ -41,8 +91,9 @@ class Tx:
 
 
 class Database:
-    def __init__(self, path: Path | str) -> None:
+    def __init__(self, path: Path | str, settings: Settings | None = None) -> None:
         self.path = Path(path)
+        self.settings = settings or get_settings()
         self._conn: aiosqlite.Connection | None = None
         self._lock = asyncio.Lock()
 
@@ -63,9 +114,10 @@ class Database:
         await self._migrate()
 
     async def close(self) -> None:
-        if self._conn is not None:
-            await self._conn.close()
-            self._conn = None
+        async with self._lock:
+            if self._conn is not None:
+                await self._conn.close()
+                self._conn = None
 
     async def _migrate(self) -> None:
         async with self._lock:
@@ -91,25 +143,38 @@ class Database:
         from .bus import BROKER
 
         async with self._lock:
-            await self.conn.execute("BEGIN IMMEDIATE")
-            tx = Tx(self.conn)
+            tx = Tx(self.conn, self.settings)
             try:
+                await self.conn.execute("BEGIN IMMEDIATE")
                 yield tx
+                # Keep the lock until publication, preserving commit/event ordering.
+                # aiosqlite operations continue in its worker when their awaiter is cancelled.
+                commit = asyncio.create_task(self.conn.commit())
+                cancelled: asyncio.CancelledError | None = None
+                try:
+                    await asyncio.shield(commit)
+                except asyncio.CancelledError as exc:
+                    cancelled = exc
+                    await commit
+                for event in tx.events:
+                    BROKER.publish(event)
+                if cancelled is not None:
+                    raise cancelled
             except BaseException:
-                await self.conn.rollback()
+                rollback = asyncio.create_task(self.conn.rollback())
+                try:
+                    await asyncio.shield(rollback)
+                except asyncio.CancelledError:
+                    await rollback
                 raise
-            else:
-                await self.conn.commit()
-        for event in tx.events:  # publish only after a successful commit
-            BROKER.publish(event)
 
     async def fetch_one(self, sql: str, params: Sequence[Any] = ()) -> dict[str, Any] | None:
         async with self._lock:
-            return await Tx(self.conn).fetch_one(sql, params)
+            return await Tx(self.conn, self.settings).fetch_one(sql, params)
 
     async def fetch_all(self, sql: str, params: Sequence[Any] = ()) -> list[dict[str, Any]]:
         async with self._lock:
-            return await Tx(self.conn).fetch_all(sql, params)
+            return await Tx(self.conn, self.settings).fetch_all(sql, params)
 
     async def ping(self) -> bool:
         row = await self.fetch_one("SELECT 1 AS ok")
