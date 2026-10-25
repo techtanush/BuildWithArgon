@@ -104,7 +104,7 @@ uses relative paths (`/v1/...`).
 | GET | `/v1/ventures/{vid}/departments` | `{"items":[Department]}` |
 | GET | `/v1/ventures/{vid}/departments/{dept}` | Department + `{"recent_tickets":[Ticket],"recent_artifacts":[Artifact],"channel_id":"chn_.."}` |
 | GET | `/v1/ventures/{vid}/agents` | `{"items":[Agent]}` (global roster + venture's generated agents) |
-| GET | `/v1/ventures/{vid}/agents/{agent_id}` | Agent + `{"recent_runs":[Run],"current_ticket":Ticket\|null}` |
+| GET | `/v1/ventures/{vid}/agents/{agent_id}` | Agent + `{"recent_runs":[Run],"current_ticket":Ticket\|null}` (every Agent also carries `runtime` — `AgentRuntime`, from `kernel/data/agent_capabilities.json` + `models.JOBS`; [`../03-company-kernel/10-agent-model-matrix.md`](../03-company-kernel/10-agent-model-matrix.md)) |
 
 ### Tickets, runs, artifacts
 
@@ -188,6 +188,8 @@ model check, the final result arrives as SSE `answer.checked` and via `GET /v1/a
 | POST | `/v1/voice/transcribe` | multipart `audio` (webm/opus or wav, ≤ 30 s) | `{"text":"..","provider":"gemini"\|"none","latency_ms"}` |
 | POST | `/v1/voice/tts` | `{"agent_id":"..","text":".."}` (≤ 600 chars) | `{"audio_url":"/media/audio/<sha>.mp3","mime":"audio/mpeg","alignment":{"chars":[..],"starts":[..],"ends":[..]}\|null,"provider":"elevenlabs"\|"gemini"\|"browser","latency_ms"}` — `provider:"browser"` means the client must use `speechSynthesis` |
 | GET | `/media/audio/{sha}.mp3` | — | audio bytes (served from `data/audio-cache/`) |
+| POST | `/v1/voice/sessions` | `{"agent_id","venture_id","surface":"world"\|"dashboard"}` | `VoiceSessionInfo` — live call token + per-agent overrides, or `provider:"unavailable"` with a reason ([`../02-models-and-integrations/12-elevenlabs-voice-agents.md`](../02-models-and-integrations/12-elevenlabs-voice-agents.md)) |
+| POST | `/v1/voice/sessions/{session_id}/end` | `{"conversation_id"?,"duration_s","answer_ids","turns"}` | `{"stored":true}` |
 
 ### World
 

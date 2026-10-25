@@ -7,7 +7,8 @@ import { REST, type MouthShape } from './visemes';
 export type LipSyncSource =
   | { kind: 'alignment'; audio: HTMLAudioElement; alignment: Alignment } // ElevenLabs
   | { kind: 'analyser'; analyser: AnalyserNode } // Gemini TTS (no alignment)
-  | { kind: 'boundary' }; // browser speechSynthesis — call onBoundary() on each word
+  | { kind: 'boundary' } // browser speechSynthesis — call onBoundary() on each word
+  | { kind: 'level'; level: () => number }; // live voice call: output level 0..1 (ElevenLabs getOutputVolume)
 
 export class LipSync {
   /** Current smoothed mouth shape. */

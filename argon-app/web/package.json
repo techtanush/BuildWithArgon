@@ -16,11 +16,12 @@
     "assets": "pnpm assets:fetch && pnpm assets:build"
   },
   "dependencies": {
+    "@dgreenheck/ez-tree": "1.1.0",
+    "@elevenlabs/client": "1.26.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "6.30.6",
-    "three": "0.186.1",
-    "@dgreenheck/ez-tree": "1.1.0"
+    "three": "0.186.1"
   },
   "devDependencies": {
     "@gltf-transform/cli": "^4.5.1",

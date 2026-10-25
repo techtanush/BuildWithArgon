@@ -29,6 +29,7 @@ in phase 10.
 | R22 | Rocketbox avatars missing blendshapes / animations | M | M | `build.ts` inspection report | Jaw-bone lip-sync + procedural bone animation; procedural character fallback |
 | R23 | Live World Lab round overruns or fails on stage | M | H | G-07 drills | `fast` mode (medium thinking), pre-pick a building with a known issue, show the last stored live round and say so |
 | R24 | Video input to the critic unsupported | L | M | VERIFY in smoke tests | 8 evenly spaced frames per video as images |
+| R25 | ElevenLabs Agents API differs / tokens fail / agent answers facts without the tool | M | M | C-10 drill; answers without `ask_company` calls in the transcript | Prompt rule + tool-only grounding; VERIFY shapes; fall back to push-to-talk (C-11) |
 
 ## Offline / degraded behaviour summary
 

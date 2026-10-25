@@ -45,6 +45,9 @@ Copy [`../templates/env.example`](../templates/env.example) to `argon-app/.env.e
 | `ELEVENLABS_MODEL_ID` | `eleven_flash_v2_5` | |
 | `ELEVENLABS_OUTPUT_FORMAT` | `mp3_44100_128` | |
 | `TTS_MAX_CHARS` | `600` | |
+| `ELEVENLABS_AGENT_ID` | — | Base ElevenLabs agent for live voice calls (printed by `python -m foundry_kernel.voice.agents_setup`) |
+| `VOICE_AGENT_MODE` | `client_tools` | `client_tools` (grounding through the `ask_company` browser tool) or `custom_llm` (MAY; needs `PUBLIC_KERNEL_URL`) |
+| `PUBLIC_KERNEL_URL` | — | Public tunnel URL to the kernel, only for `custom_llm` mode |
 | `STT_PRIMARY` | `browser` | Set to `gemini` if smoke test S5 passes |
 | `CHECKER_MODEL_CHECK` | `true` | Async model-based citation check |
 | `STANDUP_MINUTES` | `30` | Standup cadence while a venture is active |
