@@ -123,8 +123,8 @@ as early as possible** — Ayan's worldgen loop can test against your branch in 
    quality), `kit/LookKit.ts`, `kit/primitives.ts` (implements `KitApi`: records every call, builds
    meshes, converts `collide: true` into world-space OBB/circle colliders, merges static geometry by
    material, records calls/bounds/triangles/lights/slots/entrance/sign for the probes),
-   `kit/props.ts` (every `PropKind`, sized for a 1.75 m person; exports the footprint table Ayan's
-   prompt needs), `kit/validateModule.ts`. Three.js add-ons from `three/examples/jsm/...`.
+   `kit/props.ts` (every `PropKind`, built to the frozen sizes in `kit/props.contract.ts` — Ayan's
+   worldgen prompt tells Argon those same sizes), `kit/validateModule.ts`. Three.js add-ons from `three/examples/jsm/...`.
 2. Render `buildings/example/house.example.ts` (exterior + interior) with zero errors.
 3. Unit tests: kit validator, collider conversion, prop footprints.
 
