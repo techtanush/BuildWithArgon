@@ -2,11 +2,12 @@
 
 **Lane C: the 3D world — "Enter the view".** You build the first-person town the founder walks
 into: the look kit, the city and its 13 department buildings (with interiors), the player and the
-car, navigation (walk, race, fast travel, map), the 29 characters with generated faces and
-lip-sync, the conversation experience (push-to-talk, cited answers, source and route cards), the
-Concierge in the plaza, Town Hall standup playback, the capture page + probes that Argon's
+car, navigation (walk, race, fast travel, map), the 29 characters with generated faces (mouths
+driven by Karthik's lip-sync), the conversation experience (push-to-talk, cited answers, source
+and route cards), the Concierge in the plaza, Town Hall standup playback, the capture page + probes that Argon's
 render → critique → fix loop uses, and performance. The world never shows company state; only the
-conversations are live.
+conversations are live. The low-level voice pieces — `npc/visemes.ts`, `npc/LipSync.ts`,
+`conversation/Mic.ts`, `Stt.ts`, `Speech.ts` — are Karthik's; you call them.
 
 ---
 
@@ -22,8 +23,9 @@ Read these in order (they are on every branch, under `architecture-files/`):
 5. `06-execution/06-agent-operating-rules.md`, `02-acceptance-criteria.md` (W-, C-, CO-07, G-04),
    `03-testing-strategy.md` (unit + `world.spec.ts`), `05-risk-register-and-fallbacks.md`.
 6. Your sections: **all of `05-world/`** (00-game-experience → 11-performance), `templates/DESIGN.md`,
-   `assets/reference-bedroom.webp` (the visual target), `02-models-and-integrations/05-elevenlabs-voice.md`
-   and `06-speech-to-text.md` (client side), `03-company-kernel/06-group-chats.md` §In the world.
+   `assets/reference-bedroom.webp` (the visual target), skim `02-models-and-integrations/05-elevenlabs-voice.md`
+   and `06-speech-to-text.md` (Karthik implements them; you orchestrate),
+   `03-company-kernel/06-group-chats.md` §In the world.
 7. `argon-app/AGENTS.md` and every seed file you own (they start with `// OWNER: mahin`), plus the
    frozen world contracts: `web/src/world/kit/types.ts`, `npc/FaceSpec.ts`, `probes/types.ts`,
    `buildings/example/house.example.ts`, `src/shared/contracts.ts`, `data/manifest.fallback.json`.
@@ -52,7 +54,8 @@ live path with the kernel down: `/view` must load from the fallback manifest and
 `data/manifest.fallback.json`) and Ayan's generated paths (`buildings/generated/*`,
 `buildings/staging/*`). That includes `WorldHost.tsx`, `engine/`, `kit/` (all but `types.ts`),
 `city/`, `interiors/`, `buildings/index.ts`, `buildings/fallback/`, `player/`, `vehicle/`, `nav/`,
-`npc/` (all but `FaceSpec.ts`), `conversation/`, `probes/probes.ts`, `capture/CapturePage.tsx`,
+`npc/` (all but `FaceSpec.ts`, `visemes.ts`, `LipSync.ts`), `conversation/` (all but `Mic.ts`,
+`Stt.ts`, `Speech.ts`), `probes/probes.ts`, `capture/CapturePage.tsx`,
 `hud/` (incl. `hud.css`), `data/mock/*`.
 Also `src/shared/worldApi.ts` (the world's only kernel client — extend it, e.g. add
 `answer(id)` and an SSE subscription for `answer.checked`), `tests/unit/world/**`,
@@ -65,7 +68,9 @@ files above, `vite.config.ts`, `tsconfig*.json`, `playwright.config.ts`, `index.
 `tests/unit/seed.contracts.test.ts`, `Makefile`, `AGENTS.md`, `docs/*.md`, `architecture-files/**`.
 Tanush's: `src/dashboard/**`, `src/api/**`, `styles/app.css`, the whole kernel except Ayan's parts.
 Ayan's: `scripts/capture.ts`, `public/generated/**`, `buildings/generated|staging`, kernel
-models/engineering/voice/worldgen.
+models/engineering/worldgen.
+Karthik's: `npc/visemes.ts`, `npc/LipSync.ts`, `conversation/Mic.ts`, `Stt.ts`, `Speech.ts`,
+`tests/unit/voice/**`, kernel `voice/*` + `api/voice.py`.
 Need a change there (e.g. a new manifest field or API shape)? → `docs/contract-requests/mahin.md`
 and an adapter in your own files. Check before every push: `make ownership WHO=mahin` (from `argon-app/`).
 
@@ -82,6 +87,9 @@ and an adapter in your own files. Check before every push: `make ownership WHO=m
 | Generated buildings | `buildings/generated/index.ts` → `generatedModules` | Empty → every building uses your fallback archetype |
 | Voice audio | `TtsResponse` (`audio_url` + `alignment`, or `provider: 'browser'`) | Mock/seed → `browser` → `speechSynthesis` + boundary-driven lip-sync |
 | STT | `SttResponse` (`provider: 'none'` = use browser `SpeechRecognition`) | `none` |
+| Lip-sync (Karthik) | `const ls = new LipSync()`; each frame `ls.update(dt)` then read `ls.mouth` (`{open, width}` in meters) to set the mouth cavity/lips; `REST` mouth when idle | Seed: mouth stays at Rest |
+| Speech playback (Karthik) | `speak(text, ttsResponse \| null, { lipSync, onCaption })` → `{ started, done, stop }` | Seed: browser `speechSynthesis`, no lip-sync |
+| Push-to-talk (Karthik) | `Mic.supported()`; `startListening({ transcribe: worldApi.transcribe })` on V down → `session.stop()` on V up → `{ text, provider, latency_ms }`; empty text → offer typing | Seed: always empty → typing fallback |
 
 ## 5. What others rely on from you (keep these)
 
@@ -145,13 +153,12 @@ as early as possible** — Ayan's worldgen loop can test against your branch in 
    static parts), animations (breathing, sway, blink, look-at, listening, thinking, talking,
    greeting), `NpcManager.ts` (place NPCs at module `npcSlot`s from manifest `slot`; concierge at
    the plaza pose), `LookAt.ts`, `portraitFallback.ts`.
-2. `npc/visemes.ts` + `LipSync.ts` with the three drivers (alignment / analyser RMS / browser
-   boundary) and smoothing; unit tests from `05-world/05` (mapping, binary search, smoothing,
-   diacritics).
-3. `conversation/Mic.ts` (hold V; MediaRecorder webm/opus ≤ 30 s), `Stt.ts` (server transcribe or
-   browser SpeechRecognition), `Speech.ts` (play `audio_url` or `speechSynthesis`),
-   `ConversationController.ts` (engage on E within range, typed input fallback C-04, history,
-   latency samples → `postLatency`, C-09).
+2. Mouths: give each `Character` a `LipSync` (Karthik's) and apply `lipSync.mouth` to the mouth
+   group every frame (talking animation runs while `lipSync.speaking`).
+3. `ConversationController.ts` — orchestrates Karthik's modules: V down → `startListening(...)`,
+   V up → transcript → `worldApi.talk/concierge` → `worldApi.tts` → `speak(text, tts, { lipSync })`;
+   engage on E within range, typed input fallback (C-04), history, latency samples (STT, answer,
+   TTS, total) → `postLatency`.
 4. HUD: `ConversationPanel` (captions, check status updating from `answer.checked` or polling
    `GET /v1/answers/{id}`), `SourceCard`, `RouteCard` (Race there / Take me there).
 5. Concierge: Nova auto-greets on arrival (C-02), route cards for routing questions; `?goto=<agent_id>`
@@ -179,7 +186,8 @@ with lip-synced (browser) voice; typing works with the mic denied.
 
 ## 7. Definition of done
 
-- Acceptance: **W-01…W-11, C-01…C-04, C-08/C-09 (client side), CO-07, G-04**
+- Acceptance: **W-01…W-11, C-01, C-02, C-04, CO-07, G-04** (C-03/C-08/C-09 are shared with Karthik:
+  you wire them, Karthik implements the voice pieces).
   (`06-execution/02-acceptance-criteria.md`).
 - `cd web && pnpm typecheck && pnpm test` green (seed tests included); `pnpm build` succeeds.
 - `make ownership WHO=mahin` clean. Branch pushed.
