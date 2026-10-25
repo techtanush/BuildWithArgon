@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check that a branch only changes files its owner owns.
 
-Usage: python3 scripts/check_ownership.py <tanush|ayan|mahin> [base-ref]   (default base: origin/main)
+Usage: python3 scripts/check_ownership.py <tanush|ayan|mahin|karthik> [base-ref]   (default base: origin/main)
 Paths are relative to the repo root. Rules are checked top to bottom; the first match wins.
 Source of truth for ownership: architecture-files/06-execution/07-team-split.md.
 """
@@ -16,13 +16,15 @@ K = A + "kernel/"
 FK = K + "foundry_kernel/"
 W = A + "web/"
 
-AYAN_JOBS = ["engineering_*", "qa_analyze", "eval_baseline", "triage", "transcribe", "tts_fallback", "worldgen_*",
+PEOPLE = ("tanush", "ayan", "mahin", "karthik")
+KARTHIK_JOBS = ["transcribe", "tts_fallback"]
+AYAN_JOBS = ["engineering_*", "qa_analyze", "eval_baseline", "triage", "worldgen_*",
              "face_spec", "portrait", "texture", "music_loop", "computer_*"]
 
 RULES: list[tuple[str, str]] = [
     # --- per-person docs and work orders
-    *[(f"{A}docs/*/{p}.md", p) for p in ("tanush", "ayan", "mahin")],
-    *[(f"WORKORDER_{p.upper()}.md", p) for p in ("tanush", "ayan", "mahin")],
+    *[(f"{A}docs/*/{p}.md", p) for p in PEOPLE],
+    *[(f"WORKORDER_{p.upper()}.md", p) for p in PEOPLE],
     # --- shared dependency files: anyone may add a line; union + regenerate at merge
     (K + "pyproject.toml", "union"), (K + "uv.lock", "union"),
     (W + "package.json", "union"), (W + "pnpm-lock.yaml", "union"),
@@ -41,17 +43,27 @@ RULES: list[tuple[str, str]] = [
                                   "evals/briefs/*", "evals/grounding/*", "scripts/*", "data/.gitkeep",
                                   "evals/results/.gitkeep", "web/tests/e2e/.gitkeep")],
     ("architecture-files/*", "frozen"), ("README.md", "frozen"),
-    # --- ayan: models, engineering, integrations, computers, voice, worldgen
+    # --- karthik: voice end to end (kernel TTS/STT + browser mic/STT/speech/lip-sync) + grounding eval
+    *[(FK + n, "karthik") for n in ("voice/*", "api/voice.py", "evals/grounding_eval.py", "evals/fixtures/*",
+                                    "migrations/03??_karthik_*")],
+    *[(K + "tests/fixtures/fake_llm/" + j + ".json", "karthik") for j in KARTHIK_JOBS],
+    *[(K + "tests/" + n, "karthik") for n in ("karthik/*", "test_voice*.py", "test_grounding*.py")],
+    (K + "data/voices.json", "karthik"),
+    *[(W + "src/world/" + n, "karthik") for n in ("npc/visemes.ts", "npc/LipSync.ts", "conversation/Mic.ts",
+                                                  "conversation/Stt.ts", "conversation/Speech.ts")],
+    (W + "tests/unit/voice/*", "karthik"),
+    (A + "evals/results/grounding-*", "karthik"),
+    # --- ayan: models, engineering, integrations, computers, worldgen
     *[(FK + n, "ayan") for n in ("models.py", "llm/*", "departments/engineering.py", "departments/qa.py",
                                  "departments/support.py", "departments/prompts/eng.*", "departments/prompts/su.*",
-                                 "executors/*", "integrations/*", "computers/*", "voice/*", "worldgen/*",
-                                 "api/voice.py", "api/integrations.py", "api/computers.py", "api/preview.py",
+                                 "executors/*", "integrations/*", "computers/*", "worldgen/*",
+                                 "api/integrations.py", "api/computers.py", "api/preview.py",
                                  "evals/engineering_eval.py", "migrations/01??_ayan_*")],
     *[(K + "tests/fixtures/fake_llm/" + j + ".json", "ayan") for j in AYAN_JOBS],
     *[(K + "tests/" + n, "ayan") for n in ("ayan/*", "test_fileblocks.py", "test_computer_guard.py",
                                            "test_worldgen_*.py", "test_engineering*.py", "test_executor*.py",
-                                           "test_voice*.py", "test_llm*.py", "test_composio*.py", "test_support*.py")],
-    *[(K + "data/" + n, "ayan") for n in ("faces.json", "voices.json", "worldgen/*")],
+                                           "test_llm*.py", "test_composio*.py", "test_support*.py")],
+    *[(K + "data/" + n, "ayan") for n in ("faces.json", "worldgen/*")],
     *[(W + n, "ayan") for n in ("scripts/*", "src/world/buildings/generated/*", "src/world/buildings/staging/*",
                                 "public/generated/*")],
     (A + "evals/results/engineering-*", "ayan"),
@@ -65,7 +77,6 @@ RULES: list[tuple[str, str]] = [
     (K + "data/*", "tanush"),
     (W + "src/dashboard/*", "tanush"), (W + "src/api/*", "tanush"), (W + "src/styles/app.css", "tanush"),
     (W + "tests/unit/dashboard/*", "tanush"), (W + "tests/e2e/dashboard*", "tanush"),
-    (A + "evals/results/grounding-*", "tanush"),
 ]
 
 
@@ -77,7 +88,7 @@ def owner_of(path: str) -> str:
 
 
 def main() -> int:
-    if len(sys.argv) < 2 or sys.argv[1] not in ("tanush", "ayan", "mahin"):
+    if len(sys.argv) < 2 or sys.argv[1] not in PEOPLE:
         print(__doc__)
         return 2
     who, base = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else "origin/main")

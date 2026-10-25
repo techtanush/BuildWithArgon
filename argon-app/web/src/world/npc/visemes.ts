@@ -1,0 +1,28 @@
+// OWNER: karthik — seed version; replace/extend freely but keep the exported names and signatures (mahin calls them).
+// Viseme table + alignment lookup (architecture-files/05-world/05-characters-and-faces.md §Lip-sync).
+import type { Alignment } from '../../shared/contracts';
+
+export type Viseme = 'A' | 'E' | 'O' | 'U' | 'M' | 'F' | 'C' | 'Rest';
+export interface MouthShape { open: number; width: number } // meters: open 0–0.07, width 0.05–0.10
+
+export const VISEMES: Record<Viseme, MouthShape> = {
+  A: { open: 0.065, width: 0.085 },
+  E: { open: 0.035, width: 0.1 },
+  O: { open: 0.055, width: 0.06 },
+  U: { open: 0.03, width: 0.05 },
+  M: { open: 0.0, width: 0.07 },
+  F: { open: 0.012, width: 0.08 },
+  C: { open: 0.025, width: 0.075 },
+  Rest: { open: 0.004, width: 0.072 },
+};
+export const REST: MouthShape = VISEMES.Rest;
+
+/** Viseme for one character (lowercased, NFD diacritics stripped). Seed: always Rest. */
+export function visemeForChar(_ch: string): Viseme {
+  return 'Rest';
+}
+
+/** Index k with starts[k] <= t < ends[k] (binary search), or -1. Seed: always -1. */
+export function charIndexAt(_alignment: Alignment, _t: number): number {
+  return -1;
+}
