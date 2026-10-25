@@ -3,6 +3,8 @@
 // The capture-page <-> capture-script handshake (05-world/10-render-critique-loop.md §1–3).
 // mahin implements it (CapturePage.tsx + probes.ts); ayan consumes it (scripts/capture.ts, kernel worldgen).
 //
+// Portrait mode (`?mode=portrait&agent=<agent_id>`): studio headshot of that agent's avatar, 768 × 768,
+// camera 'portrait', no probes (05-world/12-photoreal-look.md §8).
 // One page load = one building in one mode. The page computes the probes that apply to that mode:
 //   exterior: P1 P2 P3 P6 P7 P8 P10      interior: P1 P2 P4 P5 P6 P7 P8
 // P9 (nonblank) is computed by scripts/capture.ts from the PNGs. The script merges both modes + P9 into
@@ -14,15 +16,21 @@ export const PROBE_NAMES: Record<ProbeId, string> = {
   P6: 'overlap', P7: 'budget', P8: 'lights', P9: 'nonblank', P10: 'sign_visible',
 };
 
-export type CaptureMode = 'exterior' | 'interior';
+export type CaptureMode = 'exterior' | 'interior' | 'portrait';
 export type CaptureSource = 'staging' | 'generated' | 'fallback';
 export type ExteriorCamera = 'ext-1' | 'ext-2' | 'ext-3';
 export type InteriorCamera = 'int-1' | 'int-2' | 'int-3';
-export type CameraName = ExteriorCamera | InteriorCamera;
+export type PortraitCamera = 'portrait';
+export type CameraName = ExteriorCamera | InteriorCamera | PortraitCamera;
 export const CAMERAS: Record<CaptureMode, CameraName[]> = {
   exterior: ['ext-1', 'ext-2', 'ext-3'],
   interior: ['int-1', 'int-2', 'int-3'],
+  portrait: ['portrait'],
 };
+
+/** Scripted camera paths recorded as walkthrough videos for the critic (05-world/13 §5). */
+export type WalkPath = 'ext-orbit' | 'int-walk';
+export const WALK_PATH_SECONDS: Record<WalkPath, number> = { 'ext-orbit': 8, 'int-walk': 6 };
 
 export interface ProbeCheck {
   id: ProbeId;
@@ -43,8 +51,10 @@ export interface ProbeResult {
 export interface FoundryProbeHandle {
   ready: boolean;
   error?: string;
-  result?: ProbeResult;
+  result?: ProbeResult; // portrait mode: probes = []
   setCamera(name: CameraName): Promise<void>;
+  /** Plays the scripted path in real time (the script records it with Playwright video); resolves when done. */
+  playPath(name: WalkPath): Promise<void>;
 }
 
 export interface BuildingProbeReport {
@@ -54,6 +64,7 @@ export interface BuildingProbeReport {
   probe_score: number; // passed / 10
   critical_pass: boolean;
   screenshots: Partial<Record<CameraName, string>>; // relative paths
+  videos: Partial<Record<'ext' | 'int', string>>; // relative paths (webm)
   stats: { exterior?: ProbeResult['stats']; interior?: ProbeResult['stats'] };
   consoleErrors: string[];
 }

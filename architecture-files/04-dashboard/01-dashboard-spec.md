@@ -45,6 +45,7 @@ Load Inter and JetBrains Mono from Google Fonts in `index.html`. Department colo
 │ Org          │                                                             │
 │ Computers    │                                                             │
 │ Artifacts    │                                                             │
+│ World Lab    │                                                             │
 │ Metrics      │                                                             │
 │ Integrations │                                                             │
 │ Settings     │                                                             │
@@ -56,6 +57,11 @@ Responsive: below 900 px the sidebar collapses to icons.
 **Enter the view button:** primary orange button with a small isometric-town icon. Navigates to
 `/view?venture=<vid>` in the same tab (the world is a route in the same app). The world has a
 "Back to dashboard" control (Esc menu) that returns to the page the founder came from.
+
+### World Lab (`/world-lab`)
+
+The Problem Statement 2 evidence page and the live loop round — full spec in
+[`../05-world/13-world-lab-and-live-round.md`](../05-world/13-world-lab-and-live-round.md) §4.
 
 ## Data loading
 

@@ -14,7 +14,7 @@ needs, and what happens without it.
 | Deep Research | `deep-research-preview-04-2026` | Cited market research | `mr.research-lead` | Flash report labelled "no live web research" |
 | Gemini 3.5 Transcribe | `gemini-3.5-transcribe` | Push-to-talk transcription | world conversation | Browser Web Speech API |
 | Gemini 3.8 Flash TTS | `gemini-3.8-flash-tts` | Fallback agent voice | world conversation | Browser `speechSynthesis` |
-| Nano Banana 2.1 | `gemini-nano-banana-2.1` | Agent portraits, textures, building signs | worldgen | Procedural textures, canvas signs, rendered-head portraits |
+| Nano Banana 2.1 | `gemini-nano-banana-2.1` | Building signs (realistic); optional polish of avatar-rendered portraits | worldgen | Canvas signs; raw rendered portraits |
 | Lyria 3 clip | `lyria-3-clip-preview` | Plaza ambient music (MAY) | world | Silence |
 | Gemini 3.8 Live | `gemini-3.8-live` | Optional real-time Concierge voice mode (MAY) | world | Push-to-talk path |
 
@@ -30,7 +30,12 @@ needs, and what happens without it.
 | **Playwright + Chromium** | Worldgen capture/probes; e2e tests; headless QA fallback | worldgen, tests, `eng.qa` | none | Headed capture on the laptop |
 | **SQLite** (aiosqlite, WAL) | The company's memory: everything | kernel | none | — |
 | **SSE** | Live updates to dashboard and world | web | none | Polling every 5 s |
-| **Three.js** | The 3D world | web | none | — |
+| **Three.js** | The 3D world (photoreal: PBR, HDRI IBL, CSM shadows, GTAO, SMAA, AgX) | web | none | — |
+| **Poly Haven** (CC0) | Scanned PBR texture sets, HDRIs, real prop/furniture/street models | asset pipeline → world | none (public API — VERIFY) | ambientCG backup; procedural PBR |
+| **ambientCG** (CC0) | Backup PBR texture sets | asset pipeline | none | procedural PBR |
+| **Microsoft Rocketbox** (MIT) | Realistic rigged human avatars for the 29 agents | asset pipeline → characters | none (GitHub) | procedural characters |
+| **EZ-Tree** (MIT, npm `@dgreenheck/ez-tree`) | Procedural realistic trees | world | none | simple PBR trees |
+| **glTF-Transform, meshoptimizer, sharp, fbx2gltf** | Optimize models/textures, LODs, compression, FBX → glTF | asset pipeline | none | — |
 | **Vite / React** | Dashboard and HUD | web | none | — |
 | **Node + npm** | Product workspaces (build/test generated apps) | engineering | template cache | — |
 | **Docker** (optional) | Network-less sandbox for local product tests | `LocalLoopExecutor` | Docker installed | `subprocess` sandbox |

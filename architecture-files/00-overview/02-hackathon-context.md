@@ -23,7 +23,10 @@ Full text: [`../reference/hackathon-problem-statements.md`](../reference/hackath
    procedural worlds in a single pass. *A single pass is only the first draft. Build a system that
    renders what it made, watches the result, critiques it against the goal, and fixes it in a loop.*
 
-Additional prize we target: **Best use of Managed Agents** (Antigravity).
+**Our entry (ADR-019):** the organizers confirmed one problem statement per team plus the Managed
+Agents prize. We enter **Problem Statement 2 — More Dimensions** and **Best use of Managed Agents**
+(judged on the agents we build on Google's agent APIs and how we orchestrate them — not on the
+tools we use to write the code).
 
 ## Judging tests (from Google's builder guide)
 
@@ -39,9 +42,9 @@ Judges score working demos, not slides. Strong projects pass four tests:
 
 | Requirement | Foundry feature | Spec |
 |---|---|---|
-| PS1: monumental engineering, measured vs baseline | Autonomous engineering loop; eval harness comparing single-call baseline vs Argon loop on 5 briefs (first-run pass rate, interventions, cost) | [`../03-company-kernel/02-autonomous-engineering-loop.md`](../03-company-kernel/02-autonomous-engineering-loop.md), [`../06-execution/04-evals.md`](../06-execution/04-evals.md) |
-| PS2: render → watch → critique → fix | World generation + render/critique loop scoring all 13 buildings per iteration | [`../05-world/09-worldgen-pipeline.md`](../05-world/09-worldgen-pipeline.md), [`../05-world/10-render-critique-loop.md`](../05-world/10-render-critique-loop.md) |
-| Managed Agents prize | Department agents as Antigravity managed agents; Argon orchestrator directing 12 department leads who delegate to sub-agents; Cua cloud computers for GUI work | [`../02-models-and-integrations/03-antigravity-managed-agents.md`](../02-models-and-integrations/03-antigravity-managed-agents.md) |
+| **PS2 (our track):** single pass → render → watch → critique → fix | One-pass generation of 13 buildings; headless renders + walkthrough videos; 10 probes; Argon critic (screenshots + video, realism); patch loop; score curve; photoreal town; World Lab with a live one-building round | [`../05-world/09-worldgen-pipeline.md`](../05-world/09-worldgen-pipeline.md), [`../05-world/10-render-critique-loop.md`](../05-world/10-render-critique-loop.md), [`../05-world/12-photoreal-look.md`](../05-world/12-photoreal-look.md), [`../05-world/13-world-lab-and-live-round.md`](../05-world/13-world-lab-and-live-round.md) |
+| Not entered: PS1 | The engineering loop stays as a company capability (and a managed-agents showcase); its baseline eval is optional (P2) | [`../03-company-kernel/02-autonomous-engineering-loop.md`](../03-company-kernel/02-autonomous-engineering-loop.md) |
+| Managed Agents prize | 29 agents on Google's agent APIs (Interactions API: Argon, Flash, Flash-Lite, Deep Research agent, Antigravity managed sandboxes); Argon orchestrator directing 12 department leads who delegate to sub-agents; typed coordination (tickets, asks, requests, standups); Cua cloud computers for GUI work | [`../02-models-and-integrations/03-antigravity-managed-agents.md`](../02-models-and-integrations/03-antigravity-managed-agents.md) |
 | Test 1: real person | Founder persona; chosen at kickoff (see "Open decisions") | — |
 | Test 2: needed Argon | Long-decode builds and world generation, whole-repo context, high-thinking orchestration | [`01-product-vision.md`](01-product-vision.md) table |
 | Test 3: people in control | Approval gates; agents in the world point to the dashboard, never act | [`../03-company-kernel/05-approval-gates.md`](../03-company-kernel/05-approval-gates.md) |

@@ -5,6 +5,10 @@
 > critiques it against the goal, and fixes it in a loop." This document is that system; iteration 0
 > is the single-pass baseline and the score curve is the evidence.
 
+> **Updates (ADR-018/020):** the critic also **watches a walkthrough video** per building and scores
+> **realism** against the photoreal bar in [`12-photoreal-look.md`](12-photoreal-look.md); one round
+> can run **live** from the World Lab ([`13-world-lab-and-live-round.md`](13-world-lab-and-live-round.md)).
+
 This is the **More Dimensions** problem statement implemented literally: Argon's first draft of
 the town is rendered, measured, looked at, critiqued against the goal, and fixed — in a loop, with
 a score recorded at every iteration.
@@ -13,9 +17,9 @@ a score recorded at every iteration.
 iteration 0: one-pass generation of 13 modules (09-worldgen-pipeline.md)
 for iteration n = 0..MAX (default 4):
    1. stage modules → static validation → tsc
-   2. capture: headless browser renders each building (6 cameras) + runs probes
+   2. capture: headless browser renders each building (6 cameras + 2 walkthrough videos) + runs probes
    3. score: probe score (deterministic) per building
-   4. critique: Argon looks at the 6 screenshots + probe report + source vs DESIGN.md/reference
+   4. critique: Argon watches the videos and looks at the 6 screenshots + probe report + source vs DESIGN.md
    5. keep best version per building so far
    6. if all buildings: probe score = 1.0 and visual score ≥ 0.75 → stop
    7. patch: Argon rewrites each building that still has failures or high-severity issues
@@ -34,7 +38,9 @@ URL: `/view/capture?building=<dept>&mode=exterior|interior&source=staging|genera
   Interior: `int-1` from the door (0, 1.65, 6.0) → (0, 1.4, −7); `int-2` corner (7.5, 3.6, 5.5) →
   (−3, 0.5, −3); `int-3` top-down (0, 12, 0.01) → (0, 0, 0) with the ceiling hidden.
 - Exposes `window.__foundryProbe = { ready: boolean, error?: string, result?: ProbeResult,
-  setCamera(name: string): Promise<void> }`.
+  setCamera(name): Promise<void>, playPath(name): Promise<void> }` (exact types:
+  `web/src/world/probes/types.ts`). `mode=portrait&agent=<agent_id>` renders a studio headshot of
+  that agent's avatar for portraits (`12-photoreal-look.md` §8).
 
 ## 2. Capture script (`web/scripts/capture.ts`, run via `pnpm capture`)
 
@@ -49,7 +55,9 @@ pnpm capture --run <run_id> --iter <n> --source staging [--only engineering,pivo
    GPU is available on the machine, omit these flags). Viewport 1280 × 720, deviceScaleFactor 1.
 3. For each building × mode: open the URL, wait for `__foundryProbe.ready` (timeout 60 s), collect
    console errors, for each camera call `setCamera` then `page.screenshot` into
-   `kernel/data/worldgen/runs/<run>/captures/iter-<n>/<dept>/<cam>.png`, and write the probe JSON.
+   `kernel/data/worldgen/runs/<run>/captures/iter-<n>/<dept>/<cam>.png`, record the walkthrough
+   video (`playPath('ext-orbit')` / `playPath('int-walk')` with Playwright `recordVideo`) to
+   `…/<dept>/{ext,int}.webm`, and write the probe JSON.
 4. Exit non-zero only on infrastructure failure (browser didn't start); building failures are data.
 
 `worldgen/capture.py` invokes this script with `subprocess.run([...], cwd=web_dir, timeout=1800)`.
@@ -64,7 +72,7 @@ pnpm capture --run <run_id> --iter <n> --source staging [--only engineering,pivo
 | P4 | `slots` | Interior: exactly 6 slots s1–s6; pairwise ≥ 1.6 m; ≥ 0.8 m from walls; not inside any collider |
 | P5 | `reachability` | Interior nav grid (0.25 m cells; colliders inflated by 0.35 m): BFS from (0, 5.4) reaches the point 1.2 m in front of every slot (along its facing) |
 | P6 | `overlap` | No two colliders intersect with overlap volume > 0.01 m³ |
-| P7 | `budget` | Triangles: exterior ≤ 60,000, interior ≤ 120,000; draw calls after merge ≤ 60 |
+| P7 | `budget` | Triangles: exterior ≤ 250,000, interior ≤ 400,000 (incl. prop models); draw calls after merge/instancing ≤ 150 |
 | P8 | `lights` | Module lights: interior ≤ 3, exterior ≤ 1 |
 | P9 | `nonblank` | Every screenshot: luminance std-dev > 12 and no single color > 90% of pixels |
 | P10 | `sign_visible` | In `ext-1`, the sign's projected screen area ≥ 1% and a raycast from the camera to the sign center hits the sign first |
@@ -75,24 +83,27 @@ P3, P4, P5 — a module failing any critical probe cannot be used in the product
 
 ## 4. Critique (job `worldgen_critic`, Argon high, per building, run in parallel up to 4)
 
-Input parts: the 6 screenshots (PNG), the reference image, DESIGN.md, the building's brief, the
-probe JSON (with failure details), tsc errors if any, and the module source.
+Input parts: the 2 walkthrough videos (WEBM; fallback 8 frames each), the 6 screenshots (PNG),
+DESIGN.md, the photoreal quality bar (`12-photoreal-look.md` §1), the building's brief, the probe
+JSON (with failure details), tsc errors if any, and the module source.
 
 ```text
-You are the art director and QA lead for the Foundry town. Judge this building against DESIGN.md,
-its brief and the reference image. Look carefully at the screenshots: clipping, floating objects,
-objects inside walls, empty or cluttered rooms, unreadable sign, wrong scale, missing department
-identity, bad composition, inconsistent style with the reference.
+You are the art director and QA lead for the Foundry town, which must look photoreal — like a
+team of environment artists built it. Judge this building against DESIGN.md, the photoreal
+quality bar and its brief. Watch the videos and look carefully at the screenshots: clipping,
+floating objects, objects inside walls, flicker/z-fighting/popping in motion, empty or cluttered
+rooms, unreadable sign, wrong scale, missing architectural detail, flat or stretched materials,
+missing department identity, bad composition, anything that looks fake or toy-like.
 Return ONLY JSON:
-{"scores": {"style_match": 1-10, "department_identity": 1-10, "composition": 1-10,
+{"scores": {"realism": 1-10, "department_identity": 1-10, "composition": 1-10,
             "readability": 1-10, "craft": 1-10},
  "issues": [{"severity": "high"|"medium"|"low", "where": "exterior|interior",
-             "camera": "ext-1|...", "description": "...", "fix": "concrete change in kit calls"}],
+             "camera": "ext-1|...|ext-video|int-video", "description": "...", "fix": "concrete change in kit calls"}],
  "keep": ["what works and must not be lost"]}
 Every failed probe must appear as a high-severity issue with a concrete fix.
 ```
 
-`visual_score = mean(scores) / 10`.
+`visual_score = mean(scores) / 10`; `realism = scores.realism / 10` is also reported on its own.
 
 ## 5. Patch (job `worldgen_patch`, Argon high)
 
@@ -115,7 +126,7 @@ screenshots — carries over). Patched modules go back to step 1 of the next ite
 
 - Per building keep the version with the highest `(critical_pass, probe_score, visual_score)`
   lexicographically.
-- Stop early when every building has `probe_score == 1.0` and `visual_score ≥ 0.75`, or at
+- Stop early when every building has `probe_score == 1.0`, `visual_score ≥ 0.75` and `realism ≥ 0.7`, or at
   `--max-iter` (default 4), or when an iteration improves nothing.
 - A building whose best version fails a critical probe → `fallback` in the registry.
 

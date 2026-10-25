@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     kernel_token: SecretStr | None = None
     data_dir: Path = APP_DIR / "data"
     web_public_dir: Path = APP_DIR / "web" / "public"
+    web_url: str = "http://localhost:5173"  # running web dev server (World Lab live round captures)
     llm_mode: Literal["live", "fake"] = "live"
     # gemini
     gemini_api_key: SecretStr | None = None

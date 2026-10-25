@@ -3,7 +3,11 @@
 Three suites. Each writes `evals/results/<suite>-<UTC timestamp>.json` and rows in
 `eval_results`. The Metrics page reads the latest results. Results files are committed.
 
-## 1. Engineering eval — "first-run right" vs baseline (Problem Statement 1)
+> **Priorities (ADR-019):** the **world eval (§3) is the headline number** for Problem Statement 2;
+> the grounding eval (§2) backs the agents' honesty; the engineering eval (§1) is **optional (P2)** —
+> run it if time allows, never at the expense of the world loop.
+
+## 1. Engineering eval — "first-run right" vs baseline (optional, P2)
 
 **Question it answers:** how often does Foundry's autonomous engineering loop produce code that
 passes *hidden* acceptance tests, compared with a single Argon call?
@@ -57,8 +61,9 @@ and share marked `unsupported` among those that failed). Report all.
 ## 3. World eval — from worldgen
 
 No separate run: `foundry-worldgen report` reads the latest `scores.json` and writes
-`evals/results/world-<ts>.json` with iteration-0 vs final world/visual scores and the per-building
-table. (Iteration 0 = single-pass baseline.)
+`evals/results/world-<ts>.json` with iteration-0 vs final world / visual / **realism** scores and
+the per-building table (iteration 0 = single-pass baseline), plus every live round's before → after.
+This is the evidence for Problem Statement 2: the loop's value = final − iteration 0.
 
 ## Honesty rules
 

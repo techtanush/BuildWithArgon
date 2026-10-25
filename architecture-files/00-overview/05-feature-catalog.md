@@ -24,7 +24,7 @@ Every feature in the product, grouped by area, with priority and where it's spec
 | Reports from the Chief of Staff (what we did / waiting on you / next / costs) | P1 | same |
 | Approval gates: clarification, pivot, spend, outreach, merge, integration, new capability, computer action | P0 | [`../03-company-kernel/05-approval-gates.md`](../03-company-kernel/05-approval-gates.md) |
 
-## Engineering (Problem Statement 1)
+## Engineering (company capability; managed-agents showcase)
 
 | Feature | Priority | Spec |
 |---|---|---|
@@ -38,7 +38,7 @@ Every feature in the product, grouped by area, with priority and where it's spec
 | No-GitHub mode (local builds, previews, local merge) | P0 | same |
 | Live previews of built products | P1 | API contract §preview |
 | Support loop: GitHub issues → triage → bug repro (Cua) → fix → review → QA → merge; gated replies | P1 | [`../03-company-kernel/03-support-and-pr-loop.md`](../03-company-kernel/03-support-and-pr-loop.md) |
-| Engineering eval: baseline vs loop on 5 briefs with hidden tests | P1 | [`../06-execution/04-evals.md`](../06-execution/04-evals.md) |
+| Engineering eval: baseline vs loop on 5 briefs with hidden tests | P2 (optional, ADR-019) | [`../06-execution/04-evals.md`](../06-execution/04-evals.md) |
 
 ## Cloud computers (Cua)
 
@@ -70,7 +70,11 @@ Every feature in the product, grouped by area, with priority and where it's spec
 | Take me there (fade travel to the agent) | P0 | same |
 | Map with search | P1 | same |
 | Concierge with auto-greeting and route cards | P0 | [`../05-world/08-concierge.md`](../05-world/08-concierge.md) |
-| Stylized characters from Argon-generated face specs; idle, look-at, blink, gestures | P0 | [`../05-world/05-characters-and-faces.md`](../05-world/05-characters-and-faces.md) |
+| Realistic rigged human avatars chosen/tinted from Argon-generated face specs; idle, look-at, blink, gestures | P0 | [`../05-world/12-photoreal-look.md`](../05-world/12-photoreal-look.md) §7, [`../05-world/05-characters-and-faces.md`](../05-world/05-characters-and-faces.md) |
+| **Photoreal look:** scanned PBR materials, real prop models, HDRI + sun with cascaded shadows, GTAO, SMAA, AgX, color grading, EZ-Tree vegetation; asset pipeline + manifest | P0 | [`../05-world/12-photoreal-look.md`](../05-world/12-photoreal-look.md) |
+| Critic watches walkthrough videos (Argon long-video understanding) and scores realism | P0 | [`../05-world/13-world-lab-and-live-round.md`](../05-world/13-world-lab-and-live-round.md) §5 |
+| **World Lab:** recorded score curve + filmstrips; live one-building loop round on stage; promote | P0 | [`../05-world/13-world-lab-and-live-round.md`](../05-world/13-world-lab-and-live-round.md) |
+| Portraits rendered from the 3D avatars (optional Nano Banana polish) | P1 | [`../05-world/12-photoreal-look.md`](../05-world/12-photoreal-look.md) §8 |
 | Voice conversations: push-to-talk, ElevenLabs voices, lip-sync from timestamps | P0 | [`../05-world/07-npc-conversation.md`](../05-world/07-npc-conversation.md) |
 | Source cards + verification chips on every answer | P0 | [`../03-company-kernel/08-grounding-and-citations.md`](../03-company-kernel/08-grounding-and-citations.md) |
 | Standup playback in Town Hall | P1 | [`../03-company-kernel/09-agent-coordination.md`](../03-company-kernel/09-agent-coordination.md) |
@@ -83,6 +87,6 @@ Every feature in the product, grouped by area, with priority and where it's spec
 
 | Feature | Priority | Spec |
 |---|---|---|
-| Engineering eval, grounding eval, world scores per iteration | P1 | [`../06-execution/04-evals.md`](../06-execution/04-evals.md) |
+| World scores per iteration (headline, P0), grounding eval (P1), engineering eval (P2) | P0/P1/P2 | [`../06-execution/04-evals.md`](../06-execution/04-evals.md) |
 | Metrics page: first-run pass rate, loop vs baseline, grounding accuracy, world score curve, latency p50/p90, costs | P1 | dashboard spec §Metrics |
 | Evidence records committed (worldgen runs, eval results, build log) | P1 | operating rules |

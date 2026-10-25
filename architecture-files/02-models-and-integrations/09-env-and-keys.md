@@ -22,6 +22,7 @@ Copy [`../templates/env.example`](../templates/env.example) to `argon-app/.env.e
 | `KERNEL_TOKEN` | *(empty)* | If set, required as bearer on `/v1/*` |
 | `DATA_DIR` | `../data` | Relative to `kernel/` |
 | `WEB_PUBLIC_DIR` | `../web/public` | Where generated assets go |
+| `WEB_URL` | `http://localhost:5173` | Running web dev server; the World Lab live round captures from it |
 | `LLM_MODE` | `live` | `live` or `fake` |
 | `GEMINI_API_KEY` | — | Read by `google-genai` automatically |
 | `LONG_DECODE_POLL_SECONDS` | `5` | |
