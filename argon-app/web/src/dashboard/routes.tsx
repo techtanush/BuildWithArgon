@@ -39,7 +39,7 @@ import { AgentComputerViewer } from "../components/AgentComputerViewer";
 import "./dashboard.css";
 
 const navigation = [
-  ["/", "Overview", "overview"],
+  ["/dashboard", "Overview", "overview"],
   ["/departments", "Departments", "departments"],
   ["/agents", "Agents", "agents"],
   ["/tickets", "Tickets", "tickets"],
@@ -102,7 +102,7 @@ function Dashboard() {
   return (
     <div className="dashboard-shell">
       <aside className="sidebar">
-        <Link className="brand" to="/">
+        <Link className="brand" to="/dashboard">
           <span className="brand-mark">f</span>
           <span>
             Foundry<span className="brand-period">.</span>
@@ -111,7 +111,7 @@ function Dashboard() {
         <p className="sidebar-label">YOUR COMPANY</p>
         <nav aria-label="Main navigation">
           {navigation.map(([path, label, icon]) => (
-            <NavLink key={path} to={path} end={path === "/"} title={label}>
+            <NavLink key={path} to={path} end={path === "/dashboard"} title={label}>
               <Icon name={icon} />
               <span>{label}</span>
               {path === "/approvals" &&
@@ -191,7 +191,7 @@ function Dashboard() {
               to={`/view?venture=${ventureId}`}
             >
               <Icon name="world" size={17} />
-              Enter the view <span>↗</span>
+              Enter World <span>↗</span>
             </Link>
           </div>
         </header>
@@ -217,7 +217,7 @@ function Dashboard() {
           <div className="launch-banner">
             <span>
               Your company is starting. Intake is reading your idea. Press{" "}
-              <strong>Enter the view</strong> to meet the team.
+              <strong>Enter World</strong> to meet the team.
             </span>
             <button
               className="icon-button"
@@ -236,6 +236,7 @@ function Dashboard() {
         <main className="page-content" key={ventureId}>
           <Routes>
             <Route index element={<Overview />} />
+            <Route path="dashboard" element={<Overview />} />
             <Route path="departments" element={<Departments />} />
             <Route path="departments/:id" element={<DepartmentPage />} />
             <Route path="agents" element={<Agents />} />
@@ -264,7 +265,7 @@ function Dashboard() {
                 <Empty
                   title="This page could not be found"
                   action={
-                    <Link className="button" to="/">
+                    <Link className="button" to="/dashboard">
                       Back to Overview
                     </Link>
                   }

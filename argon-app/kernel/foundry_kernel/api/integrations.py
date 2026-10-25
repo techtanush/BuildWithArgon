@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from typing import Any, Literal
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Request, Query, HTTPException
 from pydantic import BaseModel
 
 from .. import bus, gates
@@ -24,7 +24,7 @@ IntegrationStatus = Literal["not_connected", "pending", "active", "error"]
 
 
 class IntegrationItem(BaseModel):
-    provider: Literal["github"] = "github"
+    provider: str = "github"
     status: IntegrationStatus
     account_ref: str | None = None
     repo_full_name: str | None = None
@@ -108,7 +108,8 @@ async def connect_github(db: Any, client: ComposioClient, venture: dict[str, Any
 async def list_integrations(vid: str, request: Request) -> dict[str, Any]:
     db = request.app.state.db
     venture = await _venture(db, vid)
-    return {"data": {"items": [await _item(db, venture)]}}
+    rows = await db.fetch_all("SELECT provider, status, account_ref FROM integrations WHERE venture_id = ? AND provider != 'github'", (vid,))
+    return {"data": {"items": [await _item(db, venture), *[IntegrationItem(**row) for row in rows]]}}
 
 
 @router.post("/v1/ventures/{vid}/integrations/github/connect", response_model=ConnectEnvelope)
@@ -154,3 +155,67 @@ async def github_refresh(vid: str, request: Request) -> dict[str, Any]:
         if row is not None:
             await _upsert(db, venture, "pending", None, {"composio_status": status["status"]})
     return {"data": await _item(db, await _venture(db, vid))}
+
+
+@router.get("/v1/ventures/{vid}/integrations/catalog")
+async def integration_catalog(vid: str, request: Request, search: str = Query("", max_length=200),
+                              cursor: str | None = Query(None, max_length=2000), limit: int = Query(30, ge=1, le=100)) -> dict[str, Any]:
+    await _venture(request.app.state.db, vid)
+    try:
+        return {"data": await _client(request.app.state.settings).toolkit_catalog(search, cursor, limit)}
+    except ComposioError as exc:
+        raise DependencyError("composio", exc.user_message) from exc
+
+
+def _provider(provider: str) -> None:
+    import re
+    if not re.fullmatch(r"[a-z0-9_][a-z0-9_-]{0,99}", provider):
+        raise HTTPException(422, "Invalid toolkit slug")
+
+
+async def _save_toolkit(db: Any, vid: str, provider: str, status: str, account_ref: str | None) -> None:
+    now = utc_now()
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO integrations(id,venture_id,provider,status,account_ref,data_json,created_at,updated_at) VALUES(?,?,?,?,?,'{}',?,?) ON CONFLICT(venture_id,provider) DO UPDATE SET status=excluded.status,account_ref=excluded.account_ref,updated_at=excluded.updated_at",
+                         (new_id("int"), vid, provider, status, account_ref, now, now))
+
+
+@router.post("/v1/ventures/{vid}/integrations/{provider}/connect", response_model=ConnectEnvelope)
+async def toolkit_connect(vid: str, provider: str, body: ConnectRequest, request: Request) -> dict[str, Any]:
+    _provider(provider)
+    db = request.app.state.db
+    venture = await _venture(db, vid)
+    client = _client(request.app.state.settings)
+    rows = await db.fetch_all("SELECT * FROM approvals WHERE venture_id=? AND gate_type='integration' ORDER BY created_at DESC, id DESC", (vid,))
+    latest = next((row for row in rows if json.loads(row["payload_json"] or "{}").get("provider") == provider and json.loads(row["payload_json"] or "{}").get("callback_url") == body.callback_url), None)
+    if latest is None or latest["status"] not in ("pending", "approved"):
+        async with db.tx() as tx:
+            aid = await gates.request_approval(tx, venture_id=vid, gate_type="integration", title=f"Connect {provider}",
+                summary="Authorize an optional account connection through Composio. Provider consent is still required. This does not authorize spending or tool execution.",
+                payload={"provider": provider, "callback_url": body.callback_url})
+        return {"data": {"redirect_url": None, "approval_id": aid, "status": "waiting_approval"}}
+    if latest["status"] == "pending":
+        return {"data": {"redirect_url": None, "approval_id": latest["id"], "status": "waiting_approval"}}
+    approval = await gates.require_approved(db, latest["id"], "integration")
+    payload = json.loads(approval["payload_json"] or "{}")
+    if approval["venture_id"] != vid or payload.get("provider") != provider or payload.get("callback_url") != body.callback_url:
+        raise GateNotApproved(latest["id"], "integration")
+    try:
+        link = await client.toolkit_connect_link(provider, venture["composio_user_id"], body.callback_url)
+    except ComposioError as exc:
+        raise DependencyError("composio", exc.user_message) from exc
+    await _save_toolkit(db, vid, provider, "pending", link.get("connected_account_id"))
+    return {"data": {"redirect_url": link["redirect_url"], "approval_id": latest["id"], "status": "pending"}}
+
+
+@router.post("/v1/ventures/{vid}/integrations/{provider}/refresh", response_model=IntegrationEnvelope)
+async def toolkit_refresh(vid: str, provider: str, request: Request) -> dict[str, Any]:
+    _provider(provider)
+    db = request.app.state.db
+    venture = await _venture(db, vid)
+    try:
+        status = await _client(request.app.state.settings).toolkit_connection_status(provider, venture["composio_user_id"])
+    except ComposioError as exc:
+        raise DependencyError("composio", exc.user_message) from exc
+    await _save_toolkit(db, vid, provider, status["status"], status["account_ref"])
+    return {"data": IntegrationItem(provider=provider, **status)}

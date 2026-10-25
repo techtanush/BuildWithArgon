@@ -116,6 +116,16 @@
   backdrop-filter: blur(16px);
   font-size: 11px;
 }
+/* Kept outside the top bar so it remains above maps, settings, and workplace overlays. */
+.nova-launcher {
+  position: absolute;
+  z-index: 70;
+  top: 92px;
+  right: 32px;
+  background: #19271de8;
+  backdrop-filter: blur(16px);
+  font-size: 11px;
+}
 .world-location {
   display: flex;
   align-items: center;
@@ -852,4 +862,4 @@
 .workplace-messages p {white-space:pre-wrap;margin:8px 0;}
 .workplace-panel small,.workplace-note {opacity:.8;}
 .world-topbar nav {flex-wrap:wrap;}
-@media(max-width:700px) {.world-topbar {padding:12px;gap:8px;}.world-topbar nav {gap:4px;}.world-topbar nav button {padding:7px;font-size:12px;}.workplace-panel header{align-items:flex-start;}}
+@media(max-width:700px) {.world-topbar {padding:12px;gap:8px;}.world-topbar nav {gap:4px;}.world-topbar nav button {padding:7px;font-size:12px;}.nova-launcher{top:82px;right:12px;padding:8px 10px;}.workplace-panel header{align-items:flex-start;}}

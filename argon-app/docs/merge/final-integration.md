@@ -6,8 +6,8 @@
 
 ## Final checks
 
-- 790 backend tests passed, one upstream deprecation warning.
-- 473 frontend tests passed; TypeScript and production build passed.
+- 796 backend tests passed, one upstream deprecation warning.
+- 507 frontend tests passed; TypeScript and production build passed.
 - Scoped source/credential scan is a publication gate. Ignored local environment remains private, mode0600.
 - Live browser walkthrough: three licensed avatar previews, third-person player entry, camera toggle, Town Hall, executive navigation, real communications panel and actual recorded activity.
 
@@ -43,3 +43,17 @@ The existing ElevenLabs agent was configured through scoped approval and readbac
 ## Run
 
 Open local /onboarding to create your real venture; the existing verification venture is only test data. API18788, preview15178. Use normal setup plus pnpm assets for ignored PBR/model cache files; the three approved humans are versioned. Keep credentials only in ignored .env/secret storage and rotate anything previously pasted into chat.
+
+## Final product-flow update, 15:51 PDT
+
+Current preview: http://127.0.0.1:15180/ . This supersedes15178. API18790; an isolated local data copy is under ignored .local-preview. The OS refused terminating the old backend, so it was left untouched; no permission bypass or destructive replacement was attempted. Existing integration row/account/timestamps were preserved; live FK check had zero issues.
+
+- Root/welcome marketing landing → signin → nongame onboarding → /dashboard. Signin is explicitly a browser-local display profile, NOT production account authentication, identity verification or authorization. No passwords are collected. All normal dashboard pages remain and Enter World is explicit.
+- Full final verification:796 backend,507 frontend tests; TypeScript and production build passed.
+- Actual browser walkthrough covered landing, local entry, onboarding form, normal dashboard, selected-avatar world entry, one-click assisted car entry, map/race, remote Nova and browser computer-use screenshot. Real company launch/provider authorization were deliberately not performed.
+- Nova launcher is persistent above map/settings/workplace/conversation overlays; N preserves driving/race mode. Physical E entry remains proximity-bound; explicit Drive button provides assisted entry. Race starts in an adjacent lane to the scripted rival instead of overlapping it.
+- New original procedural teal open-top roadster with long rounded hood, round cream lights, chrome trim, brown seats, windshield, steering wheel and spoked exposed tires is the runtime car. Legacy GLBs cannot overwrite it. It is a reference-style interpretation, not the screenshot's original asset, and does not include a seated player-driver.114 meshes/10,186 triangles. No claim of Argon visual certification for this new mesh.
+- Live Composio metadata verified1655 apps with provider HTTPS logos, cursor pagination and provider-defined search. Shared catalog appears in dashboard and onboarding. GitHub connection remains independently available during catalog outages.
+- Generic OAuth connections require approval, the correct venture and an existing enabled exact-toolkit auth configuration. Missing config reports setup required; it is NOT silently connected. No connection/auth-config writes or plan changes were performed in QA. Agent tool execution remains GitHub-only, stated in the UI.
+- Migration0005 preserves integration data/constraints while supporting validated toolkit slugs. Original private database was backed up before the isolated-copy migration.
+- Existing live voice/photorealism/complete engineering-run limitations above still apply. Do not reinterpret UI/schema tests as a successful live deployed company.

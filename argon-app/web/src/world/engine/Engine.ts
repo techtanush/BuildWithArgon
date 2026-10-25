@@ -510,15 +510,13 @@ export class Engine {
       if (code === "KeyV") void this.conversation.stopPushToTalk();
       return;
     }
-    if (this.state.mode === "workplace") {
-      if(code === "Escape") this.closeWorkplace();
+    // Keep Nova reachable above every overlay. Input already ignores text fields.
+    if (code === "KeyN") {
+      this.openNova();
       return;
     }
-    if (
-      code === "KeyN" &&
-      ["foot", "car", "race"].includes(this.state.mode)
-    ) {
-      this.openNova();
+    if (this.state.mode === "workplace") {
+      if(code === "Escape") this.closeWorkplace();
       return;
     }
     if (code === "Escape") {
@@ -590,7 +588,7 @@ export class Engine {
   }
   /** Opens the real concierge endpoint without moving the player to Nova's plaza slot. */
   openNova() {
-    if (!this.state.ready || !["foot", "car", "race"].includes(this.state.mode)) return;
+    if (!this.state.ready || this.state.mode === "transition") return;
     const nova = this.manifest.npcs.find(
       (npc) => npc.agent_id === this.manifest.plaza.concierge.agent_id,
     );
@@ -598,11 +596,19 @@ export class Engine {
       this.toast("Nova is not available in this town.");
       return;
     }
+    // Reopening Nova is intentionally a no-op: preserve the current exchange and audio state.
+    if (this.state.remoteConcierge && this.state.conversation?.npc?.agent_id === nova.agent_id) return;
+    const modalBase = ["map", "paused"].includes(this.state.mode)
+      ? this.resumeMode
+      : this.state.mode;
+    this.conversationResumeMode =
+      modalBase === "car" || modalBase === "race" ? modalBase : "foot";
     this.voice?.stop();
-    this.conversationResumeMode = this.state.mode as "foot" | "car" | "race";
+    // ConversationController.open closes any old call before switching agents.
+    this.npcs?.setActive(null);
     this.conversation.open(nova);
     this.input.unlock();
-    this.patch({ mode: "conversation", prompt: "", remoteConcierge: true });
+    this.patch({ mode: "conversation", prompt: "", workplace: null, remoteConcierge: true });
   }
   sendText(text: string) {
     return this.conversation.send(text);
@@ -745,9 +751,9 @@ export class Engine {
     this.engage(person);
     void this.conversation.greet();
   }
-  enterCar() {
+  enterCar(assisted = false) {
     if(this.interior || this.state.mode !== "foot") return;
-    if(this.player.position.distanceTo(this.car.group.position.clone().setY(this.player.position.y)) > 3.5) {this.toast("Walk up to the parked company car, then press E.");return;}
+    if(!assisted && this.player.position.distanceTo(this.car.group.position.clone().setY(this.player.position.y)) > 3.5) {this.toast("Walk up to the parked company car, then press E.");return;}
     this.conversation.close();
     if(urbanEnabled())this.car.followTerrain(cityHeight);
     this.chase.update(0,this.car.state,true,urbanEnabled()?cityHeight(this.car.state.x,this.car.state.z):0,urbanEnabled()?cityHeight:undefined);
@@ -786,7 +792,12 @@ export class Engine {
       -(route[1][0] - route[0][0]),
       -(route[1][1] - route[0][1]),
     );
-    this.car.teleport(route[0][0], route[0][1], heading);
+    // Keep the ghost on the route centerline and place the player in the adjacent lane.
+    this.car.teleport(
+      route[0][0] + Math.cos(heading) * 2.6,
+      route[0][1] - Math.sin(heading) * 2.6,
+      heading,
+    );
     this.routeAgent = agentId;
     this.gps.setPath(route,urbanEnabled()?{heightAt:cityHeight,orthogonal:true}:undefined);
     this.race.start(route, building.building_id);

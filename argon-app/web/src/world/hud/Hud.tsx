@@ -12,20 +12,7 @@ export function Hud({
   state: WorldState;
   engine: Engine | null;
 }) {
-  const back = () => {
-    const ref = document.referrer;
-    try {
-      if (
-        ref &&
-        new URL(ref).origin === location.origin &&
-        !new URL(ref).pathname.startsWith("/view")
-      ) {
-        location.href = ref;
-        return;
-      }
-    } catch {}
-    location.href = "/";
-  };
+  const back = () => { location.href = "/dashboard"; };
   return (
     <div className="world-hud" onKeyDown={event=>{
       if((event.target as HTMLElement).closest("button,a,select,input,textarea")) {
@@ -33,7 +20,7 @@ export function Hud({
       }
     }}>
       <header className="world-topbar">
-        <a className="world-brand" href="/" aria-label="Back to dashboard">
+        <a className="world-brand" href="/dashboard" aria-label="Back to dashboard">
           <span className="brand-mark">f.</span>
           <div>
             FOUNDRY<small>YOUR COMPANY. YOUR CITY.</small>
@@ -46,14 +33,9 @@ export function Hud({
           <span>{state.scene === "city" ? "OUTDOORS" : "INTERIOR"}</span>
         </div>
         <nav>
-          {state.ready && ["foot", "car", "race"].includes(state.mode) && (
-            <button onClick={() => engine?.openNova()}>
-              Ask Nova · <kbd>N</kbd>
-            </button>
-          )}
           {state.ready&&["foot","conversation"].includes(state.mode)&&state.scene!=="city"&&<button onClick={()=>engine?.openWorkplace()}>See communications</button>}
           {state.ready&&state.mode!=="transition"&&<button onClick={()=>void engine?.meetDepartmentLeads()}>Meet department leads</button>}
-          {state.ready&&state.scene==="city"&&state.mode==="foot"&&<button onClick={()=>engine?.enterCar()}>Drive the city</button>}
+          {state.ready&&state.scene==="city"&&state.mode==="foot"&&<button onClick={()=>engine?.enterCar(true)}>Drive the city</button>}
           <button onClick={() => engine?.showMap()}>
             City map <kbd>M</kbd>
           </button>
@@ -66,6 +48,16 @@ export function Hud({
           </button>
         </nav>
       </header>
+      {state.ready && (
+        <button
+          className="nova-launcher"
+          onClick={() => engine?.openNova()}
+          disabled={state.mode === "transition"}
+          aria-label="Ask Nova"
+        >
+          Ask Nova <kbd>N</kbd>
+        </button>
+      )}
       {!state.ready && !state.error && (
         <div className="world-loading">
           <span className="brand-mark">f.</span>

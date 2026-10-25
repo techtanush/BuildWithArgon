@@ -59,6 +59,8 @@ class ComposioError(Exception):
 def _safe_message(status: int) -> str:
     if status in (401, 403):
         return "Composio rejected the API key"
+    if status == 402:
+        return "Requires configuration: Composio account or plan does not permit this request. No paid plan or credits were purchased."
     if status == 429:
         return "Composio rate limited the request"
     return f"Composio request failed (HTTP {status})"
@@ -129,6 +131,66 @@ class ComposioClient:
             return resp.json()
         except ValueError as exc:
             raise ComposioError("Composio returned an invalid response", resp.status_code) from exc
+
+    async def toolkit_catalog(self, search: str = "", cursor: str | None = None, limit: int = 30) -> dict[str, Any]:
+        """Provider v3.1 catalog: https://docs.composio.dev/reference/api-reference/toolkits/get-toolkits."""
+        params: dict[str, Any] = {"search": search, "limit": limit, "sort_by": "alphabetically", "type": "all"}
+        if cursor:
+            params["cursor"] = cursor
+        data = await self._request("GET", "v3.1/toolkits", params=params)
+        if not isinstance(data, dict) or not isinstance(data.get("items"), list):
+            raise ComposioError("Composio returned an invalid toolkit catalog")
+        items = []
+        for item in data["items"]:
+            meta = item.get("meta") or {}
+            logo = str(meta.get("logo") or "")
+            parsed = urlparse(logo)
+            items.append({"slug": item["slug"], "name": item.get("name") or item["slug"],
+                          "description": meta.get("description") or "",
+                          "logo": logo if parsed.scheme == "https" and parsed.netloc and not parsed.username and not parsed.password else None,
+                          "auth_schemes": item.get("auth_schemes") or []})
+        return {"items": items, "next_cursor": data.get("next_cursor"), "total_items": data.get("total_items")}
+
+    async def toolkit_connect_link(self, toolkit: str, user_id: str, callback_url: str) -> dict[str, Any]:
+        # Never borrow GitHub credentials or silently create provider configuration.
+        cursor = None
+        while True:
+            params = {"toolkit_slug": toolkit, "limit": 50}
+            if cursor:
+                params["cursor"] = cursor
+            data = await self._request("GET", "v3.1/auth_configs", params=params)
+            for item in data.get("items", []):
+                if ((item.get("toolkit") or {}).get("slug") == toolkit
+                        and item.get("status") == "ENABLED" and item.get("id")):
+                    result = await self._request("POST", "v3/connected_accounts/link", body={
+                        "auth_config_id": item["id"], "user_id": user_id, "callback_url": callback_url})
+                    redirect = str(result.get("redirect_url") or "")
+                    parsed = urlparse(redirect)
+                    if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
+                        raise ComposioError("Composio returned an invalid connect link")
+                    return {"redirect_url": redirect, "connected_account_id": result.get("connected_account_id")}
+            next_cursor = data.get("next_cursor")
+            if not next_cursor or next_cursor == cursor:
+                break
+            cursor = next_cursor
+        raise ComposioError("Requires configuration: enable an auth config for this toolkit in your Composio project. No account has been connected.")
+
+    async def toolkit_connection_status(self, toolkit: str, user_id: str) -> dict[str, Any]:
+        cursor = None
+        while True:
+            params = {"toolkit_slugs": toolkit, "user_ids": user_id, "limit": 100}
+            if cursor:
+                params["cursor"] = cursor
+            data = await self._request("GET", "v3.1/connected_accounts", params=params)
+            for item in data.get("items", []):
+                if ((item.get("toolkit") or {}).get("slug") == toolkit and item.get("user_id") == user_id
+                        and item.get("status") == "ACTIVE" and item.get("is_disabled") is not True):
+                    return {"status": "active", "account_ref": item.get("id")}
+            next_cursor = data.get("next_cursor")
+            if not next_cursor or next_cursor == cursor:
+                break
+            cursor = next_cursor
+        return {"status": "not_connected", "account_ref": None}
 
     # ------------------------------------------------------------------ connection flow
 

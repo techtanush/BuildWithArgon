@@ -20,7 +20,7 @@ async function company(request: APIRequestContext): Promise<Venture> {
   return post<Venture>(request, '/v1/ventures', { name: `Dashboard verification ${stamp()}`, founder_name: 'Tanush',
     idea: 'A pantry companion for busy families that tracks ingredients and suggests meals using food they already have.', budget_usd: 25 });
 }
-async function select(page: Page, venture: Venture, path = '/') {
+async function select(page: Page, venture: Venture, path = '/dashboard') {
   await page.addInitScript((id) => localStorage.setItem('foundry.venture', id), venture.id);
   await page.goto(path);
 }
@@ -44,13 +44,13 @@ test.describe('dashboard', () => {
     expect(uploadResponse.ok()).toBeTruthy();
     expect((await uploadResponse.json()).data.items[0]).toMatchObject({ name: 'requirements.txt', excerpt_chars: context.length });
     await page.getByRole('button', { name: 'Launch company', exact: true }).click();
-    await expect(page).toHaveURL(/\/$/);
+    await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole('heading', { name: 'Overview', exact: true })).toBeVisible();
     const id = await page.evaluate(() => localStorage.getItem('foundry.venture'));
     expect(id).toBeTruthy();
     const venture = await data<Venture>(request, `/v1/ventures/${id}`);
     expect(venture.name).toBe(name); expect(venture.status).toBe('running');
-    await expect(page.getByRole('link', { name: /Enter the view/ })).toHaveAttribute('href', `/view?venture=${id}`);
+    await expect(page.getByRole('link', { name: /Enter World/ })).toHaveAttribute('href', `/view?venture=${id}`);
     await expect(page.getByText(/Your company is starting/)).toBeVisible();
   });
 
@@ -62,7 +62,7 @@ test.describe('dashboard', () => {
     await expect.poll(async () => (await data<ListPage<Artifact>>(request, `/v1/ventures/${venture.id}/artifacts`)).items.length).toBeGreaterThan(0);
     await post(request, `/v1/ventures/${venture.id}/pause`);
     await select(page, venture);
-    for (const [path, heading] of [['/', 'Overview'], ['/departments', 'Departments'], ['/agents', 'Agents'], ['/tickets', 'Tickets'], ['/runs', 'Runs'], ['/approvals', 'Approvals'], ['/chat', 'Chat'], ['/org', 'Org'], ['/artifacts', 'Artifacts'], ['/computers', 'Computers'], ['/world-lab', 'World Lab'], ['/metrics', 'Metrics'], ['/integrations', 'Integrations'], ['/settings', 'Settings']]) {
+    for (const [path, heading] of [['/dashboard', 'Overview'], ['/departments', 'Departments'], ['/agents', 'Agents'], ['/tickets', 'Tickets'], ['/runs', 'Runs'], ['/approvals', 'Approvals'], ['/chat', 'Chat'], ['/org', 'Org'], ['/artifacts', 'Artifacts'], ['/computers', 'Computers'], ['/world-lab', 'World Lab'], ['/metrics', 'Metrics'], ['/integrations', 'Integrations'], ['/settings', 'Settings']]) {
       await page.goto(path);
       await expect(page.getByRole('heading', { level: 1, name: heading, exact: true })).toBeVisible();
     }
@@ -145,8 +145,8 @@ test.describe('dashboard', () => {
     await expect(find).toHaveAttribute('href', `/view?venture=${venture.id}&goto=eng.builder`);
     await find.click();
     await expect(page).toHaveURL(new RegExp(`/view\\?venture=${venture.id}&goto=eng.builder$`));
-    await page.goto('/');
-    await page.getByRole('link', { name: /Enter the view/ }).click();
+    await page.goto('/dashboard');
+    await page.getByRole('link', { name: /Enter World/ }).click();
     await expect(page).toHaveURL(new RegExp(`/view\\?venture=${venture.id}$`));
   });
 

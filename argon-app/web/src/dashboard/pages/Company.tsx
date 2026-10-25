@@ -16,6 +16,7 @@ import type {
 import { useCompany } from "../context";
 import type { Budget, SettingsData } from "../types";
 import { colors, currency, percent, safeUrl, titleCase } from "../types";
+import { IntegrationCatalog } from "../components/IntegrationCatalog";
 import CallPanel from "../components/CallPanel";
 import { ApprovalCard } from "../components/ApprovalCard";
 import { AgentCard } from "./People";
@@ -1159,47 +1160,25 @@ export function Settings() {
   );
 }
 export function Integrations() {
-  const { ventureId, system } = useCompany(),
-    action = useAction(),
-    [notice, setNotice] = useState("");
-  const query = useQuery<
-    ListPage<{
-      provider: string;
-      status: string;
-      repo_full_name?: string | null;
-    }>
-  >(ventureId ? `/v1/ventures/${ventureId}/integrations` : null, () =>
-    get(`/v1/ventures/${ventureId}/integrations`),
-  );
-  const approvals = useQuery<ListPage<Approval>>(
-    ventureId ? `/v1/ventures/${ventureId}/approvals?status=pending` : null,
-    () => get(`/v1/ventures/${ventureId}/approvals?status=pending`),
-  );
-  const gate = approvals.data?.items.find((a) => a.gate_type === "integration");
-  async function connect() {
+  const { ventureId, system } = useCompany();
+  const action = useAction(), [notice, setNotice] = useState("");
+  const query = useQuery<ListPage<{provider:string; status:string}>>(ventureId ? `/v1/ventures/${ventureId}/integrations` : null, () => get(`/v1/ventures/${ventureId}/integrations`));
+  async function connectGitHub() {
     setNotice("");
     await action.run(async () => {
       try {
-        const response = await post<{ redirect_url: string }>(
-          `/v1/ventures/${ventureId}/integrations/github/connect`,
-          { callback_url: `${location.origin}/integrations?connected=github` },
-        );
+        const response = await post<{redirect_url:string|null;status:string;approval_id:string}>(`/v1/ventures/${ventureId}/integrations/github/connect`, {callback_url: `${location.origin}/integrations?connected=github`});
+        if (response.status === "waiting_approval") {
+          invalidateQueries();
+          setNotice("Check Approvals for the GitHub connection request.");
+          return;
+        }
         const url = safeUrl(response.redirect_url);
-        if (!url)
-          throw new Error(
-            "The connection provider did not return a safe sign-in link.",
-          );
+        if (!url || !url.startsWith("https://")) throw new Error("The connection provider did not return a safe sign-in link.");
         location.assign(url);
       } catch (error) {
-        invalidateQueries();
-        const pending = await get<ListPage<Approval>>(
-          `/v1/ventures/${ventureId}/approvals?status=pending`,
-        ).catch(() => null);
-        if (
-          pending?.items.some(
-            (approval) => approval.gate_type === "integration",
-          )
-        ) {
+        const pending = await get<ListPage<Approval>>(`/v1/ventures/${ventureId}/approvals?status=pending`).catch(() => null);
+        if (pending?.items.some(item => item.gate_type === "integration")) {
           setNotice("Check Approvals for the GitHub connection request.");
           return;
         }
@@ -1207,98 +1186,26 @@ export function Integrations() {
       }
     });
   }
-  return (
-    <>
-      <PageHeader
-        title="Integrations"
-        description="Connections that give the team a place to work. Credentials stay on the server."
-      />
+  return <>
+    <PageHeader title="Integrations" description="Your company's connected apps. Credentials stay on the server." />
+    <Card title="GitHub for engineering">
+      <p>Repositories, pull requests and verified changes. This connection works independently of the optional app catalog.</p>
+      <Status value={query.data?.items.find(item => item.provider === "github")?.status ?? (query.error ? "unavailable" : "not_connected")} />
       <ErrorNotice error={action.error} />
-      <ErrorNotice error={query.error} retry={query.refetch} />
-      <div className="integration-grid">
-        <Card title="Stripe treasury toolkit">
-          <Status value="not_connected" />
-          <p>
-            Record agent payment proposals and review founder approvals. No
-            funded wallet or payment provider is connected.
-          </p>
-          <p className="muted">Approval does not move money.</p>
-          <Link to="/treasury" className="button">
-            Open Treasury →
-          </Link>
-        </Card>
-        <Card title="GitHub">
-          <p>
-            Repositories, pull requests, and verified changes through Composio.
-          </p>
-          <Status
-            value={
-              query.data?.items.find((item) => item.provider === "github")
-                ?.status ??
-              (query.error
-                ? "unavailable"
-                : query.loading
-                  ? "loading"
-                  : "not_connected")
-            }
-          />
-          {query.data?.items.find((item) => item.provider === "github")
-            ?.repo_full_name && (
-            <p>
-              {
-                query.data.items.find((item) => item.provider === "github")
-                  ?.repo_full_name
-              }
-            </p>
-          )}
-          <div className="actions">
-            <button
-              className="button primary"
-              disabled={action.working}
-              onClick={() => void connect()}
-            >
-              Connect GitHub
-            </button>
-            <button
-              className="button"
-              disabled={action.working}
-              onClick={() =>
-                void action.run(async () => {
-                  await post(
-                    `/v1/ventures/${ventureId}/integrations/github/refresh`,
-                  );
-                  await query.refetch();
-                })
-              }
-            >
-              Refresh connection
-            </button>
-          </div>
-          {notice && <p className="notice">{notice}</p>}
-          {gate && (
-            <Link to={`/approvals?id=${gate.id}`} className="text-link">
-              Review connection approval →
-            </Link>
-          )}
-        </Card>
-        {Object.entries(system?.providers ?? {})
-          .filter(([key]) => key !== "composio")
-          .map(([name, value]) => (
-            <Card
-              title={name === "gemini" ? "Gemini" : titleCase(name)}
-              key={name}
-            >
-              <Status
-                value={value.configured ? "configured" : "not_configured"}
-              />
-              <p className="muted">
-                {value.configured
-                  ? "This provider is configured on the server."
-                  : "This provider has not been configured yet."}
-              </p>
-            </Card>
-          ))}
+      <div className="actions">
+        <button type="button" className="button primary" disabled={action.working || !ventureId} onClick={() => void connectGitHub()}>Connect GitHub</button>
+        <button type="button" className="button" disabled={action.working || !ventureId} onClick={() => void action.run(async () => { await post(`/v1/ventures/${ventureId}/integrations/github/refresh`); await query.refetch(); })}>Refresh connection</button>
+        <Link className="button" to="/approvals">Review approvals</Link>
       </div>
-    </>
-  );
+      {notice && <p role="status" className="notice">{notice}</p>}
+    </Card>
+    {ventureId ? <IntegrationCatalog ventureId={ventureId} /> : <p>Select or create a venture to connect apps.</p>}
+    <h2>Server providers</h2>
+    <div className="integration-grid">
+      {Object.entries(system?.providers ?? {}).map(([name,value]) => <Card title={titleCase(name)} key={name}>
+        <Status value={value.configured ? "configured" : "not_configured"} />
+        <p className="muted">Server configuration is not an account connection.</p>
+      </Card>)}
+    </div>
+  </>;
 }

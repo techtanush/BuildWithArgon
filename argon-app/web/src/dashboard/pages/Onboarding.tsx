@@ -1,4 +1,6 @@
 // OWNER: tanush
+import { IntegrationCatalog } from "../components/IntegrationCatalog";
+import { readLocalProfile } from "../../entry/profile";
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { get, post } from "../../api/client";
@@ -9,7 +11,7 @@ import { ErrorNotice, Icon, useAction } from "../components/Shared";
 
 export default function Onboarding() {
   const [step, setStep] = useState(1),
-    [founder, setFounder] = useState(""),
+    [founder, setFounder] = useState(() => readLocalProfile().name),
     [name, setName] = useState(""),
     [idea, setIdea] = useState(""),
     [intent, setIntent] = useState<"bring" | "discover">("bring"),
@@ -159,12 +161,12 @@ ${idea.trim()}`,
       try {
         sessionStorage.setItem("foundry.just-launched", created!.id);
       } catch {}
-      navigate("/");
+      navigate("/dashboard");
     });
   }
   return (
     <div className="onboarding">
-      <Link className="onboarding-brand" to="/">
+      <Link className="onboarding-brand" to="/welcome">
         <span className="brand-mark">f</span>Foundry
       </Link>
       <div className="onboarding-card">
@@ -349,7 +351,7 @@ ${idea.trim()}`,
                 <button
                   type="button"
                   className="button"
-                  disabled={action.working || github?.status === "connected" || system?.providers?.composio?.configured === false}
+                  disabled={action.working || github?.status === "active" || system?.providers?.composio?.configured === false}
                   onClick={() => void connect()}
                 >
                   Connect
@@ -360,6 +362,7 @@ ${idea.trim()}`,
                 <Link className="button" to="/approvals">Review connection approvals</Link>
                 <Link className="button" to="/integrations">Review integrations</Link>
               </div>
+              {created && <IntegrationCatalog ventureId={created.id} />}
               <div className="notice">
                 <h3>Review funding</h3>
                 <p>No funds have been deposited or transferred by onboarding. Review wallet readiness, funding instructions and approvals in Treasury. Starting may create agent work and provider usage; it does not connect GitHub or fund a wallet.</p>

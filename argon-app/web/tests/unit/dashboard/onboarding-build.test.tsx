@@ -2,7 +2,7 @@
 // @vitest-environment jsdom
 import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import Onboarding from "../../../src/dashboard/pages/Onboarding";
 import Chat from "../../../src/dashboard/pages/Chat";
@@ -102,4 +102,32 @@ it("does not show the current company conversation for an unknown deep-linked co
   await render(<Chat />, "/chat?venture=ven_unknown&channel=ch_eng");
   expect(element.textContent).toContain("Requested company is unavailable");
   expect(state.selectVenture).not.toHaveBeenCalled();
+});
+
+function CurrentRoute() { return <output data-current-route>{useLocation().pathname}</output>; }
+it("finishes onboarding in the normal dashboard, not the world", async () => {
+  state.post.mockResolvedValue({ id: "ven_created", name: "My idea" });
+  await render(<><Onboarding /><CurrentRoute /></>, "/onboarding");
+  await fill('input[autocomplete="given-name"]', "Founder"); await submit();
+  await fill('input[maxlength="200"]', "My idea");
+  await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
+  await submit(); await submit();
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
+  await submit();
+  expect(state.post).toHaveBeenCalledWith('/v1/ventures/ven_created/start');
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe('/dashboard');
+  expect(sessionStorage.getItem('foundry.just-launched')).toBe('ven_created');
+});
+
+it("keeps the founder on onboarding if the actual backend start fails", async () => {
+  state.post.mockResolvedValueOnce({ id: "ven_created", name: "My idea" });
+  await render(<><Onboarding /><CurrentRoute /></>, "/onboarding");
+  await fill('input[autocomplete="given-name"]', "Founder"); await submit();
+  await fill('input[maxlength="200"]', "My idea");
+  await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
+  await submit(); await submit();
+  state.post.mockRejectedValueOnce(new Error('Server authorization required'));
+  await submit();
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
+  expect(element.textContent).toContain('Server authorization required');
 });

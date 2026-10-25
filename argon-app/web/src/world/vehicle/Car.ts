@@ -2,15 +2,10 @@
 import {
   Group,
   Mesh,
-  MeshPhysicalMaterial,
   MeshStandardMaterial,
-  CylinderGeometry,
-  BoxGeometry,
   Object3D,
 } from "three";
-import { RoundedBoxGeometry } from "three/examples/jsm/geometries/RoundedBoxGeometry.js";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { MeshoptDecoder } from "three/examples/jsm/libs/meshopt_decoder.module.js";
+import { buildRoadster } from "./Roadster";
 import type { VehicleAsset } from "../assets/manifest.contract";
 import { moveCircle, type CollisionSource } from "../player/Collision";
 import { isOnRoad } from "../city/layout";
@@ -47,128 +42,14 @@ export class Car {
     this.sync();
   }
   private buildFallback(): void {
-    const paint = new MeshPhysicalMaterial({
-      color: "#b9542e",
-      metalness: 0.65,
-      roughness: 0.24,
-      clearcoat: 1,
-      clearcoatRoughness: 0.12,
-    });
-    const glass = new MeshPhysicalMaterial({
-      color: "#192934",
-      metalness: 0.15,
-      roughness: 0.08,
-      clearcoat: 1,
-    });
-    const rubber = new MeshStandardMaterial({
-      color: "#141719",
-      roughness: 0.88,
-    });
-    const chrome = new MeshStandardMaterial({
-      color: "#bac0c4",
-      metalness: 0.95,
-      roughness: 0.22,
-    });
-    const add = (
-      geometry: BoxGeometry | RoundedBoxGeometry,
-      material: MeshStandardMaterial,
-      x: number,
-      y: number,
-      z: number,
-    ) => {
-      const mesh = new Mesh(geometry, material);
-      mesh.position.set(x, y, z);
-      mesh.castShadow = mesh.receiveShadow = true;
-      this.model.add(mesh);
-      return mesh;
-    };
-    add(new RoundedBoxGeometry(2, 0.65, 4.2, 2, 0.16), paint, 0, 0.77, 0);
-    add(
-      new RoundedBoxGeometry(1.72, 0.68, 2.05, 2, 0.12),
-      glass,
-      0,
-      1.37,
-      0.12,
-    );
-    add(
-      new RoundedBoxGeometry(1.74, 0.09, 1.95, 1, 0.04),
-      paint,
-      0,
-      1.73,
-      0.12,
-    );
-    add(new BoxGeometry(1.55, 0.15, 0.07), rubber, 0, 0.66, -2.1);
-    for (const x of [-0.72, 0.72]) {
-      add(
-        new RoundedBoxGeometry(0.42, 0.16, 0.07, 1, 0.03),
-        new MeshStandardMaterial({
-          color: "#fff0d2",
-          emissive: "#fff1da",
-          emissiveIntensity: 2,
-        }),
-        x,
-        0.93,
-        -2.08,
-      );
-      add(new BoxGeometry(0.42, 0.14, 0.07), this.tail, x, 0.94, 2.08);
-      add(
-        new RoundedBoxGeometry(0.23, 0.13, 0.33, 1, 0.04),
-        paint,
-        x * 1.46,
-        1.35,
-        -0.45,
-      );
-    }
-    for (const x of [-1, 1])
-      for (const z of [-1.3, 1.3]) {
-        const wheel = new Group();
-        wheel.position.set(x, 0.39, z);
-        const tire = new Mesh(
-          new CylinderGeometry(0.38, 0.38, 0.3, 20),
-          rubber,
-        );
-        tire.rotation.z = Math.PI / 2;
-        tire.castShadow = true;
-        wheel.add(tire);
-        const hub = new Mesh(
-          new CylinderGeometry(0.23, 0.23, 0.315, 12),
-          chrome,
-        );
-        hub.rotation.z = Math.PI / 2;
-        wheel.add(hub);
-        this.model.add(wheel);
-        this.wheels.push(wheel);
-      }
+    const roadster = buildRoadster(this.tail);
+    this.model.add(roadster.model);
+    this.wheels = roadster.wheels;
   }
-  async loadAsset(asset?: VehicleAsset): Promise<boolean> {
-    if (!asset) return false;
-    try {
-      const gltf = await new GLTFLoader()
-        .setMeshoptDecoder(MeshoptDecoder)
-        .loadAsync(asset.url);
-      if (this.disposed) {
-        this.disposeObject(gltf.scene);
-        return false;
-      }
-      this.disposeObject(this.model);
-      this.model.clear();
-      const loaded = gltf.scene;
-      loaded.rotation.y = Math.PI;
-      loaded.traverse((o) => {
-        if (o instanceof Mesh) {
-          o.castShadow = o.receiveShadow = true;
-        }
-      });
-      this.model.add(loaded);
-      this.wheels = asset.wheels
-        ? Object.values(asset.wheels)
-            .map((n) => loaded.getObjectByName(n))
-            .filter((x): x is Object3D => !!x)
-        : [];
-      return true;
-    } catch {
-      return false;
-    }
+  /** The original roadster is the runtime vehicle, not a transient loading placeholder.
+   * Legacy manifest URLs are intentionally ignored: cached generic GLBs must not replace it. */
+  async loadAsset(_asset?: VehicleAsset): Promise<boolean> {
+    return false;
   }
   teleport(x: number, z: number, heading = 0): void {
     Object.assign(this.state, { x, z, heading, speed: 0 });
@@ -254,16 +135,19 @@ export class Car {
   }
   private disposeObject(root: Object3D): void {
     const mats = new Set<MeshStandardMaterial>();
+    const geometries = new Set<import("three").BufferGeometry>();
     root.traverse((o) => {
       if (o instanceof Mesh) {
-        o.geometry.dispose();
+        geometries.add(o.geometry);
         for (const m of Array.isArray(o.material) ? o.material : [o.material])
           mats.add(m);
       }
     });
+    geometries.forEach((g) => g.dispose());
     mats.forEach((m) => m.dispose());
   }
   dispose(): void {
+    if (this.disposed) return;
     this.disposed = true;
     this.disposeObject(this.group);
     this.group.clear();
