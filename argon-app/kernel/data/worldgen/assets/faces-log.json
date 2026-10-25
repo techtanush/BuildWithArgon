@@ -1,0 +1,15 @@
+{
+  "at": "2026-10-25T18:52:46.500Z",
+  "calls": [
+    {
+      "interaction_id": "v1_ChdfMF9lYXJEYUthQ3BfdU1QbXNud2dRYxIXXzBfZWFyRGFLYUNwX3VNUG1zbndnUWM",
+      "tokens": [
+        3265,
+        6135
+      ]
+    }
+  ],
+  "fallback": [],
+  "errors": [],
+  "variety_warnings": []
+}
