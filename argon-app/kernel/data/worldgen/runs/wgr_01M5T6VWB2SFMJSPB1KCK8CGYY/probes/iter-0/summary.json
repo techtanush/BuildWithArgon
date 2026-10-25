@@ -1,0 +1,156 @@
+{
+  "intake": {
+    "probe_score": 1,
+    "critical_pass": true,
+    "failed": [],
+    "report": "probes/iter-0/intake.json"
+  },
+  "office-hours": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.67% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/office-hours.json"
+  },
+  "market-research": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.78% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/market-research.json"
+  },
+  "outreach": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.73% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/outreach.json"
+  },
+  "synthetic-population": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.87% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/synthetic-population.json"
+  },
+  "pivot": {
+    "probe_score": 0.8,
+    "critical_pass": false,
+    "failed": [
+      {
+        "id": "P5",
+        "pass": false,
+        "details": "interior: Unreachable approaches: s1"
+      },
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.68% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/pivot.json"
+  },
+  "engineering": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.78% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/engineering.json"
+  },
+  "growth": {
+    "probe_score": 0.8,
+    "critical_pass": false,
+    "failed": [
+      {
+        "id": "P5",
+        "pass": false,
+        "details": "interior: Unreachable approaches: s1"
+      },
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.65% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/growth.json"
+  },
+  "lead-intel": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.69% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/lead-intel.json"
+  },
+  "sales": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.96% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/sales.json"
+  },
+  "finance-people": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.93% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/finance-people.json"
+  },
+  "support": {
+    "probe_score": 0.9,
+    "critical_pass": true,
+    "failed": [
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "exterior: Sign 0.68% of image; center visible"
+      }
+    ],
+    "report": "probes/iter-0/support.json"
+  },
+  "chief-of-staff": {
+    "probe_score": 1,
+    "critical_pass": true,
+    "failed": [],
+    "report": "probes/iter-0/chief-of-staff.json"
+  }
+}

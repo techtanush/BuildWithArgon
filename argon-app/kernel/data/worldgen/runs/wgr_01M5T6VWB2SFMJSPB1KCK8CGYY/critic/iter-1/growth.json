@@ -1,0 +1,82 @@
+{
+  "scores": {
+    "realism": 3.0,
+    "department_identity": 5.0,
+    "composition": 4.0,
+    "readability": 4.0,
+    "craft": 3.0
+  },
+  "issues": [
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The lighthouse tower is completely swallowed inside a massive visible square box collider (`lighthouse_col` size [6.4, 16.0, 6.4], mat: 'stucco'), completely hiding the tapered cylindrical lighthouse shaft, yellow accent stripes, and slit windows. The stone base clips through the corners of this square box.",
+      "fix": "Remove the separate `colliders` group with oversized visible boxes, or make the lighthouse collider smaller than the minimum cylinder diameter (e.g. size [3.8, 16.0, 3.8]) so it stays inside the tapered cylinder, and set `collide: true` directly on `cottage_walls`."
+    },
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The exterior point light at `[0, 3.8, 7.9]` sits directly in front of the `GROWTH` sign (`[0, 4.35, 7.25]`), creating a bright specular hotspot that washes out the text and makes the sign nearly unreadable.",
+      "fix": "Move the exterior entrance light lower or to the side (e.g. `pos: [2.2, 3.2, 7.5]` with lower intensity `0.8`) so it does not glare directly on the sign face."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-3",
+      "description": "The keeper's cottage roof is built from two flat stepped boxes (`roof_red`), which looks blocky and toy-like, and the east, north, and west cottage facades are completely blank windowless walls.",
+      "fix": "Add proper architectural roof detailing (overhanging eaves/fascia, pitched gable or hipped roof geometry/parapet) and add framed windows with sills and mullions to the east, north, and west facades of the cottage."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-2",
+      "description": "The exterior plot feels bare and lacks civic landscaping\u2014only two barrels, one tiny flowerbed, and a bench sitting on raw grass.",
+      "fix": "Extend the paved stone forecourt path, add low hedges, planters with trees/plants, street lamps, and nautical bollards to dress the frontage."
+    },
+    {
+      "severity": "medium",
+      "where": "interior",
+      "camera": "int-2",
+      "description": "The interior room feels sparse and cavernous with furniture pushed against the far walls and empty floor space around the central map table.",
+      "fix": "Add chairs around the central map table, a lounge/meeting corner, additional bookshelves, wall charts/whiteboards on the side walls, and ceiling pendant fixtures at the light positions so the light sources do not look like glowing spots on a bare ceiling."
+    }
+  ],
+  "keep": [
+    "The central map table with 3D plotted launch route tubes (`accent` and `fabric_coral`) and the miniature lighthouse model on top.",
+    "The rising 3D bar chart on the north interior wall in department colors.",
+    "The lantern room at the top of the lighthouse with storm bars, gallery railing, and conical red cap.",
+    "Nautical interior touches including the coiled rope torus stack, barrels, and brass telescope by the window."
+  ],
+  "visual_score": 0.38,
+  "realism": 0.3,
+  "interaction_id": "v1_Chd5M0RlYXVfU0I1ZVZfdU1QOEt1YjZRaxIXeTNEZWF1X1NCNWVWX3VNUDhLdWI2UWs",
+  "model": "gemini-4-argon",
+  "job": "worldgen_critic",
+  "thinking_level": "medium",
+  "tokens": {
+    "in": 15938,
+    "out": 761
+  },
+  "cost_usd": 0.039486,
+  "inputs": {
+    "screenshots": [
+      "captures/iter-1/growth/ext-1.png",
+      "captures/iter-1/growth/ext-2.png",
+      "captures/iter-1/growth/ext-3.png",
+      "captures/iter-1/growth/int-1.png",
+      "captures/iter-1/growth/int-2.png",
+      "captures/iter-1/growth/int-3.png"
+    ],
+    "videos": [
+      "captures/iter-1/growth/ext.webm",
+      "captures/iter-1/growth/int.webm"
+    ],
+    "frames": [],
+    "video_input": true,
+    "probe_score": 1,
+    "tsc_errors": false
+  },
+  "budget_cumulative_spend_usd": 0.348214
+}

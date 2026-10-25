@@ -1,0 +1,22 @@
+// @vitest-environment jsdom
+import {act} from 'react';
+import {createRoot,type Root} from 'react-dom/client';
+import {it,expect,vi,afterEach,beforeEach} from 'vitest';
+import {AvatarSelection} from '../../../src/world/player/AvatarSelection';
+import {loadManifest} from '../../../src/world/assets/loadManifest';
+import {EMPTY_MANIFEST,type CharacterAsset} from '../../../src/world/assets/manifest.contract';
+vi.mock('../../../src/world/assets/loadManifest',()=>({loadManifest:vi.fn()}));
+vi.mock('three',async importOriginal=>({...await importOriginal<typeof import('three')>(),WebGLRenderer:class{constructor(){throw Error('No GPU in unit tests');}}}));
+vi.mock('../../../src/world/player/CameraAvatarCapture',async()=>{const {fallbackFace}=await import('../../../src/world/npc/faces');return {default:({onCancel,onPersonalized}:any)=><><button onClick={onCancel}>Cancel photo</button><button onClick={()=>onPersonalized({...fallbackFace('player'),skin:'#123456',outfit_color:'#654321'})}>Mock photo result</button></>};});
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT=true;
+let host:HTMLDivElement,root:Root;
+beforeEach(()=>{host=document.createElement('div');document.body.append(host);root=createRoot(host);vi.stubGlobal('localStorage',{getItem:()=>null,setItem:vi.fn()});});
+afterEach(()=>{act(()=>root.unmount());host.remove();vi.unstubAllGlobals();});
+const asset={id:'rocketbox/Female1',url:'/assets/female1.glb',credit:{source:'Microsoft Rocketbox',license:'MIT'}} as CharacterAsset;
+async function render(assets:CharacterAsset[],ventureId:string|null=null){vi.mocked(loadManifest).mockResolvedValue({...EMPTY_MANIFEST,characters:assets});const onSelect=vi.fn();await act(async()=>{root.render(<AvatarSelection ventureId={ventureId} onSelect={onSelect}/>);});return onSelect;}
+it('lists real licensed base and enters in third person by default',async()=>{const select=await render([asset]);expect(host.textContent).toContain('Female1');expect(host.textContent).toContain('Microsoft Rocketbox · MIT');act(()=>host.querySelector<HTMLButtonElement>('.avatar-card')!.click());expect(select).toHaveBeenCalledWith(expect.objectContaining({assetId:'rocketbox/Female1'}),'third');});
+it('offers explicit first person without forcing it',async()=>{const select=await render([asset]);act(()=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='First person')!.click());act(()=>host.querySelector<HTMLButtonElement>('.avatar-card')!.click());expect(select).toHaveBeenCalledWith(expect.any(Object),'first');});
+it('empty manifest honestly uses procedural styles',async()=>{const select=await render([]);expect(host.textContent).toContain('No licensed character models');expect(host.querySelectorAll('.avatar-card')).toHaveLength(3);act(()=>host.querySelector<HTMLButtonElement>('.avatar-card')!.click());expect(select).toHaveBeenCalledWith(expect.objectContaining({assetId:null}),'third');});
+it('photo flow is opt-in and only available with venture context',async()=>{await render([], 'venture1');expect(host.textContent).not.toContain('Cancel photo');act(()=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='Personalize with a photo')!.click());expect(host.textContent).toContain('Cancel photo');act(()=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='Cancel photo')!.click());expect(host.textContent).toContain('Personalize with a photo');});
+
+it('photo colors belong only to the separate procedural card, never a licensed base',async()=>{const select=await render([asset],'venture1');act(()=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='Personalize with a photo')!.click());act(()=>Array.from(host.querySelectorAll('button')).find(b=>b.textContent==='Mock photo result')!.click());const photo=host.querySelector<HTMLButtonElement>('.avatar-photo-card')!;expect(photo.textContent).toContain('Photo-inspired procedural style');expect(photo.textContent).toContain('Not a 3D scan or an exact likeness');expect(photo.querySelector('canvas')?.getAttribute('aria-label')).toBe('Procedural style preview');act(()=>photo.click());expect(select).toHaveBeenLastCalledWith({assetId:null,styleId:'slate',face:expect.objectContaining({skin:'#123456',outfit_color:'#654321'})},'third');act(()=>host.querySelector<HTMLButtonElement>('.avatar-card:not(.avatar-photo-card)')!.click());expect(select).toHaveBeenLastCalledWith({assetId:'rocketbox/Female1',styleId:'slate',face:undefined},'third');expect(JSON.stringify(vi.mocked(localStorage.setItem).mock.calls)).not.toContain('#123456');});

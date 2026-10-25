@@ -1,5 +1,149 @@
 {
-  "run_id": null,
-  "generated_at": null,
-  "modules": {}
+  "run_id": "wgr_01M5T6VWB2SFMJSPB1KCK8CGYY",
+  "generated_at": "2026-10-25T21:17:51.428Z",
+  "modules": {
+    "intake": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "e9add7e08eb90e20098960311d7bda85054b16a2d4bd69c43ed5d2e56a440592",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "office-hours": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "0b9d75a68052d034dde3084b144fc7d7cf63a4fb5a2a52943e29597727df8927",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "market-research": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "cfa12f7ce40f98daa4ac774b22f4e5c1830aed59227ce2f27d9047a7e30b12ea",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "outreach": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "9c9bdcba6f333d5d9ea0216d65f94f4ca29ddea887e68e8defe4615722be6a67",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "synthetic-population": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "55916b48f0ee978e11fe4cbe9cde6cbe47e51d110f165f895c3ab3b5fd7e0cbe",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "pivot": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "d24421b1b3fac017077df19363535a3361200f0d0778ff6d3cb16547a1aec821",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "engineering": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": 0.56,
+      "realism": 0.5,
+      "source_sha256": "4a6853a0b04a2496877d444dcdb0084ecdf9611dbc0fdcfa065f38cd74d5f3dd",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": true
+    },
+    "growth": {
+      "status": "generated",
+      "iteration": 2,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "da87179f1592be8b3661e29758bcbb077969b496ec4a476c50d271bfb6244e09",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": false
+    },
+    "lead-intel": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "48a69995ffb23088cdd40f90b311a2a24dfb1a94ac9304b76085460a87d26422",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": true
+    },
+    "sales": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "15ae0eec30ec76ca8e9fda5b61edfd796a50ab8d5afcb24eed18d09265cc2ea8",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": true
+    },
+    "finance-people": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "2814738b8da4e06d36a389e138ff9673005798e1ddda016b2e6bb66603f7b6a4",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": true
+    },
+    "support": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "dcfeb4f387fe50a4720a606681a4c96a3261b0d79606390990a066469c24bd0b",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": true
+    },
+    "chief-of-staff": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "856819b0f5412afd113faae644a4214f5836d6150bf32c18fd2325dfef9b7ff5",
+      "capture_provenance": "real",
+      "photoreal_verified": false,
+      "walkthrough_validated": true
+    }
+  }
 }

@@ -765,6 +765,97 @@
       }
     }
   ],
-  "characters": [],
+  "characters": [
+    {
+      "id": "microsoft-rocketbox/Female_Adult_01-jaw",
+      "url": "/assets/models/characters/rocketbox-female-adult-01-active.glb",
+      "lods": [],
+      "skinTone": 1,
+      "hair": "short",
+      "build": "average",
+      "heightM": 1.78,
+      "bones": {
+        "head": "Bip01 Head",
+        "neck": "Bip01 Neck",
+        "spine": "Bip01 Spine",
+        "jaw": "Bip01 MJaw",
+        "armL": "Bip01 L UpperArm",
+        "armR": "Bip01 R UpperArm"
+      },
+      "animations": [
+        "idle",
+        "talk",
+        "walk",
+        "sit"
+      ],
+      "triangles": 8732,
+      "credit": {
+        "source": "Microsoft Rocketbox",
+        "url": "https://github.com/microsoft/Microsoft-Rocketbox",
+        "author": "Microsoft",
+        "license": "MIT"
+      }
+    },
+    {
+      "id": "microsoft-rocketbox/Male_Adult_01-active",
+      "url": "/assets/models/characters/rocketbox-male-adult-01-active.glb",
+      "lods": [],
+      "skinTone": 1,
+      "hair": "short",
+      "build": "average",
+      "heightM": 1.78,
+      "bones": {
+        "head": "Bip01 Head",
+        "neck": "Bip01 Neck",
+        "spine": "Bip01 Spine",
+        "jaw": "Bip01 MJaw",
+        "armL": "Bip01 L UpperArm",
+        "armR": "Bip01 R UpperArm"
+      },
+      "animations": [
+        "idle",
+        "talk",
+        "walk",
+        "sit"
+      ],
+      "triangles": 8732,
+      "credit": {
+        "source": "Microsoft Rocketbox",
+        "url": "https://github.com/microsoft/Microsoft-Rocketbox/tree/master/Assets/Avatars/Adults/Male_Adult_01",
+        "author": "Microsoft",
+        "license": "MIT"
+      }
+    },
+    {
+      "id": "microsoft-rocketbox/Female_Adult_02-active",
+      "url": "/assets/models/characters/rocketbox-female-adult-02-active.glb",
+      "lods": [],
+      "skinTone": 1,
+      "hair": "short",
+      "build": "average",
+      "heightM": 1.78,
+      "bones": {
+        "head": "Bip01 Head",
+        "neck": "Bip01 Neck",
+        "spine": "Bip01 Spine",
+        "jaw": "Bip01 MJaw",
+        "armL": "Bip01 L UpperArm",
+        "armR": "Bip01 R UpperArm"
+      },
+      "animations": [
+        "idle",
+        "talk",
+        "walk",
+        "sit"
+      ],
+      "triangles": 8732,
+      "credit": {
+        "source": "Microsoft Rocketbox",
+        "url": "https://github.com/microsoft/Microsoft-Rocketbox/tree/master/Assets/Avatars/Adults/Female_Adult_02",
+        "author": "Microsoft",
+        "license": "MIT"
+      }
+    }
+  ],
   "vehicles": []
 }

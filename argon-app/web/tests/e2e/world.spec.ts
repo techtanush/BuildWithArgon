@@ -145,3 +145,21 @@ test('western hills ground feet and the bayfront is visible', async ({ page }) =
     await page.waitForTimeout(200);
     expect((await page.evaluate(() => (window as any).__foundryDebug.playerPos()))[1]).toBeCloseTo(1.65, 1);
 });
+
+test("Nova opens remotely by button or N, guards text input, and restores driving", async ({ page }) => {
+  await page.goto("/view?mock=1&quality=low");
+  await page.waitForFunction(() => !!(window as any).__foundryDebug?.ready);
+  await page.getByRole("button", { name: "Ask Nova · N" }).click();
+  await expect(page.getByText("REMOTE CONNECTION · NOVA")).toBeVisible();
+  await expect(page.getByRole("region", { name: "Conversation with Nova" })).toBeVisible();
+  const input = page.getByRole("textbox", { name: "Message Nova" });
+  await input.press("KeyN");
+  await expect(input).toHaveValue("n");
+  await page.getByRole("button", { name: "Close conversation" }).click();
+  await page.getByRole("button", { name: "Drive the city" }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__foundryDebug.mode)).toBe("car");
+  await page.keyboard.press("KeyN");
+  await expect(page.getByRole("region", { name: "Conversation with Nova" })).toBeVisible();
+  await page.getByRole("button", { name: "Close conversation" }).click();
+  await expect.poll(() => page.evaluate(() => (window as any).__foundryDebug.mode)).toBe("car");
+});

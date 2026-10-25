@@ -60,7 +60,7 @@ describe("navigation", () => {
       ],
       "b-test",
     );
-    for (let i = 0; i < 8; i++) r.update(0.25, [0, 180]);
+    for (let i = 0; i < 12; i++) r.update(0.25, [0, 180]);
     expect(r.state).toBe("running");
     expect(r.nextCheckpoint).toBe(0);
     r.update(0.1, [20, 180]);

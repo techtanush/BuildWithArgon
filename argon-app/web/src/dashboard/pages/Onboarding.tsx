@@ -2,7 +2,7 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { get, post } from "../../api/client";
-import { invalidateQueries } from "../../api/hooks";
+import { invalidateQueries, useQuery } from "../../api/hooks";
 import type { ListPage, Approval, Venture } from "../../shared/contracts";
 import { useCompany } from "../context";
 import { ErrorNotice, Icon, useAction } from "../components/Shared";
@@ -12,6 +12,7 @@ export default function Onboarding() {
     [founder, setFounder] = useState(""),
     [name, setName] = useState(""),
     [idea, setIdea] = useState(""),
+    [intent, setIntent] = useState<"bring" | "discover">("bring"),
     [budget, setBudget] = useState("25");
   const [created, setCreated] = useState<Venture | null>(null),
     [files, setFiles] = useState<{ file: File; status: string }[]>([]),
@@ -19,8 +20,13 @@ export default function Onboarding() {
     [integration, setIntegration] = useState("");
   const action = useAction(),
     navigate = useNavigate(),
-    { selectVenture } = useCompany(),
+    { selectVenture, system } = useCompany(),
     input = useRef<HTMLInputElement>(null);
+  const connections = useQuery<ListPage<{ provider: string; status: string }>>(
+    created ? `/v1/ventures/${created.id}/integrations` : null,
+    () => get(`/v1/ventures/${created!.id}/integrations`),
+  );
+  const github = connections.data?.items.find((item) => item.provider === "github");
   function chooseFiles(selected: File[]) {
     if (action.working) return;
     setValidation("");
@@ -64,7 +70,7 @@ export default function Onboarding() {
         Number(budget) <= 0
       ) {
         setValidation(
-          "Add a venture name, an idea of 50–4,000 characters, and a positive budget.",
+          "Add a venture name, an idea or discovery brief of 50–4,000 characters, and a positive planning budget.",
         );
         return;
       }
@@ -73,7 +79,9 @@ export default function Onboarding() {
         if (!venture) {
           venture = await post<Venture>("/v1/ventures", {
             name: name.trim(),
-            idea: idea.trim(),
+            idea: `${intent === "discover" ? "Founder intent: Discover an idea for me. Research candidate ideas and present evidence and options for founder review before choosing what to build. No idea has been discovered or validated yet." : "Founder intent: Bring my idea."}
+
+${idea.trim()}`,
             founder_name: founder.trim(),
             budget_usd: Number(budget),
           });
@@ -119,21 +127,25 @@ export default function Onboarding() {
     }
   }
   async function connect() {
+    setIntegration("");
     await action.run(async () => {
       try {
         const result = await post<{ redirect_url: string }>(
           `/v1/ventures/${created!.id}/integrations/github/connect`,
           { callback_url: `${location.origin}/integrations?connected=github` },
         );
-        if (result.redirect_url && /^https:\/\//.test(result.redirect_url))
-          location.assign(result.redirect_url);
+        if (!result.redirect_url || !/^https:\/\//i.test(result.redirect_url))
+          throw new Error("The provider did not return a secure sign-in link. Retry or review Integrations.");
+        const redirect = new URL(result.redirect_url);
+        if (redirect.username || redirect.password) throw new Error("Unsafe sign-in link rejected.");
+        location.assign(redirect.href);
       } catch (error) {
         const pending = await get<ListPage<Approval>>(
           `/v1/ventures/${created!.id}/approvals?status=pending`,
         ).catch(() => ({ items: [] }));
         if (pending.items.some((a) => a.gate_type === "integration"))
           setIntegration(
-            "The connection is waiting for your approval. You can review it on the Approvals page after launch.",
+            "The connection is waiting for your approval. Review it on the Approvals page. Nothing has been connected yet.",
           );
         else throw error;
       }
@@ -183,7 +195,7 @@ export default function Onboarding() {
               "You stay in control of the decisions that matter.",
               "Tell the team who this is for and what a useful first version does.",
               "Share research, notes, requirements or a brief. This step is optional.",
-              "Connect GitHub when you’re ready, or launch with the context you have.",
+              "Review funding and optional connections, then explicitly start when you’re ready.",
             ][step]
           }
         </p>
@@ -215,6 +227,12 @@ export default function Onboarding() {
           )}
           {step === 2 && (
             <>
+              <fieldset disabled={Boolean(created)}>
+                <legend>Your starting point</legend>
+                <label><input type="radio" name="intent" checked={intent === "bring"} onChange={() => setIntent("bring")} /> Bring my idea</label>
+                <label><input type="radio" name="intent" checked={intent === "discover"} onChange={() => setIntent("discover")} /> Discover an idea for me</label>
+              </fieldset>
+              {intent === "discover" && <p className="notice">Save a discovery request with your interests, audience and constraints. No discovery has run yet. Starting asks the team to research options, not claim an idea is already validated.</p>}
               <label>
                 Venture name
                 <input
@@ -225,14 +243,14 @@ export default function Onboarding() {
                 />
               </label>
               <label>
-                Idea
+                {intent === "discover" ? "Discovery brief: interests, audience and constraints" : "Idea"}
                 <textarea
                   readOnly={Boolean(created)}
                   value={idea}
                   onChange={(event) => setIdea(event.target.value)}
                   rows={5}
                   maxLength={4000}
-                  placeholder="A pantry companion for busy families that tracks what they have, highlights food about to expire, and suggests simple recipes."
+                  placeholder={intent === "discover" ? "Tell the team about the people you want to help, your interests, constraints and problems worth researching." : "A pantry companion for busy families that tracks what they have, highlights food about to expire, and suggests simple recipes."}
                 />
                 <small>{idea.length} / 4,000 characters · minimum 50</small>
               </label>
@@ -248,7 +266,7 @@ export default function Onboarding() {
                   onChange={(event) => setBudget(event.target.value)}
                 />
                 <small>
-                  The company will ask before spending beyond this amount.
+                  This is a planning budget, not a deposit or wallet balance. It does not authorize a transfer or purchase. Funding and consequential spending require separate review.
                 </small>
               </label>
             </>
@@ -317,23 +335,35 @@ export default function Onboarding() {
                 <div>
                   <strong>{created?.name}</strong>
                   <p>
-                    {founder} · ${Number(budget).toFixed(2)} starting budget
+                    {founder} · ${Number(budget).toFixed(2)} planning budget (not deposited)
                   </p>
                 </div>
               </div>
               <div className="integration-card">
                 <div>
                   <h3>Connect GitHub</h3>
-                  <p>Optional. Give the engineering team a place to build.</p>
+                  <p>Optional. Authorization uses secure provider sign-in; credentials stay on the server.</p>
+                  <p role="status">{connections.error ? "Connection status unavailable. Retry below." : connections.loading ? "Checking connection…" : `GitHub: ${github?.status ?? "not connected"}`}</p>
+                  <p>{system?.providers?.composio?.configured === false ? "Connection provider is not configured on the server." : "Provider configuration alone does not mean connected."}</p>
                 </div>
                 <button
                   type="button"
                   className="button"
-                  disabled={action.working}
+                  disabled={action.working || github?.status === "connected" || system?.providers?.composio?.configured === false}
                   onClick={() => void connect()}
                 >
                   Connect
                 </button>
+              </div>
+              <div className="actions">
+                <button className="button" type="button" onClick={() => void connections.refetch()}>Refresh connection status</button>
+                <Link className="button" to="/approvals">Review connection approvals</Link>
+                <Link className="button" to="/integrations">Review integrations</Link>
+              </div>
+              <div className="notice">
+                <h3>Review funding</h3>
+                <p>No funds have been deposited or transferred by onboarding. Review wallet readiness, funding instructions and approvals in Treasury. Starting may create agent work and provider usage; it does not connect GitHub or fund a wallet.</p>
+                <Link className="button" to="/treasury">Review funding in Treasury →</Link>
               </div>
               {integration && (
                 <p role="status" className="notice">

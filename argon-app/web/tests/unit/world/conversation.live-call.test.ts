@@ -78,3 +78,22 @@ it.each(["typing", "ptt"] as const)("ends an established live call before switch
   expect(x.c.state.callStatus).toBe("ended"); expect(x.c.state.callTurns).toEqual([]);
   expect(x.c.state.phase).toBe(action === "typing" ? "thinking" : "listening"); x.c.dispose();
 });
+it('continues checking the last grounded answer after the user ends a live call',async()=>{
+  vi.useFakeTimers();const x=setup();await x.c.startCall();
+  x.opts().onAnswer?.({...answer,check:{status:'pending',per_citation:[],reason:''}});x.c.endCall();
+  await vi.advanceTimersByTimeAsync(6);expect(x.api.answer).toHaveBeenCalledWith(answer.answer_id);expect(x.c.state.response?.check.status).toBe(answer.check.status);expect(x.c.state.callStatus).toBe('ended');x.c.dispose();
+});
+it("uses optional voice lookup without bypassing grounded onAnswer UI", async () => {
+  const x = setup();
+  const fast = vi.fn(async () => answer);
+  x.api.voiceAsk = fast;
+  await x.c.startCall();
+  const req = { text: "What is your role?", history: [] };
+  const grounded = await x.opts().talk!(req);
+  expect(fast).toHaveBeenCalledWith("exact-venture", npc.agent_id, req);
+  expect(x.api.talk).not.toHaveBeenCalled();
+  expect(x.c.state.response).toBeNull();
+  x.opts().onAnswer?.(grounded);
+  expect(x.c.state.response?.citations).toEqual(answer.citations);
+  x.c.dispose();
+});

@@ -1,0 +1,20 @@
+[
+  {
+    "category": "bug",
+    "severity": "high",
+    "summary": "Expiry badge is missing on items that expire tomorrow",
+    "repro_steps": ["Open the pantry list", "Add milk with an expiry date of tomorrow", "Look at the milk row"],
+    "suspected_area": "src/components/PantryItem.tsx",
+    "reply_draft": "Thanks for reporting this! We could reproduce the missing expiry badge for items that expire tomorrow, and our engineering team is working on a fix. We'll update this issue when it ships.",
+    "duplicate_of": null
+  },
+  {
+    "category": "question",
+    "severity": "low",
+    "summary": "User asks how to export the pantry list",
+    "repro_steps": [],
+    "suspected_area": "",
+    "reply_draft": "Thanks for the question! Right now the pantry list can't be exported yet. We've noted your interest so the team can consider it.",
+    "duplicate_of": null
+  }
+]

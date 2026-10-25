@@ -17,8 +17,9 @@ export class Mic {
     if (this.pending) return this.pending;
     if (this.recording) return Promise.resolve();
     const generation = ++this.generation;
-    this.pending = this.begin(generation).finally(() => { this.pending = null; });
-    return this.pending;
+    const pending = this.begin(generation).finally(() => { if (this.pending === pending) this.pending = null; });
+    this.pending = pending;
+    return pending;
   }
   private async begin(generation: number): Promise<void> {
     if (!Mic.supported()) throw new Error('Microphone recording is unavailable. Type instead.');
@@ -45,13 +46,23 @@ export class Mic {
     } catch { this.cleanup(null); throw new Error('Microphone recording could not start. Type instead.'); }
   }
   async stop(): Promise<Blob | null> {
-    await this.pending?.catch(() => {});
-    if (this.recorder?.state === 'recording') this.recorder.stop();
+    // Permission prompts cannot be aborted, but releasing must never wait for one.
+    if (this.pending && !this.recorder) { this.cancel(); return null; }
+    try {
+      if (this.recorder?.state === 'recording') {
+        clearTimeout(this.timer);
+        this.timer = setTimeout(() => this.cancel(), 1500);
+        this.recorder.stop();
+      }
+    } catch { this.cancel(); }
+    // Stop capture immediately, even when the recorder delays its final data event.
+    this.stream?.getTracks().forEach(t => t.stop()); this.stream = null;
     this.recording = false;
     return this.result;
   }
   cancel(): void {
     ++this.generation;
+    this.pending = null;
     try { if (this.recorder?.state === 'recording') this.recorder.stop(); } catch { /* already stopped */ }
     this.cleanup(null);
   }

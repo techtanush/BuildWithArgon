@@ -18,6 +18,7 @@ from starlette.exceptions import HTTPException
 
 from . import agent_wallets, scheduler, treasury, wallet_monitor, wallet_payments
 from .api import ROUTERS
+from .api import player_avatar, voice_fast
 from .computers import manager as computer_manager
 from .config import Settings, get_settings
 from .db import Database, redact_value
@@ -146,6 +147,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     for module in ROUTERS:
         app.include_router(module.router)
+    app.include_router(player_avatar.router)
+    app.include_router(voice_fast.router)
     app.include_router(treasury.router)
     app.include_router(agent_wallets.router)
     app.include_router(wallet_payments.router)

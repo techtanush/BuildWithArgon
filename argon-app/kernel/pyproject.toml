@@ -20,7 +20,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.7"]
-computers = ["cua"]
+computers = ["cua==0.5.0", "cua-sandbox==0.9.1"]  # matched pair (newer cua breaks cua_sandbox._sdk.embedded); ayan 2026-10-25
 
 [project.scripts]
 foundry-worldgen = "foundry_kernel.worldgen.cli:main"

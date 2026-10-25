@@ -12,6 +12,7 @@ import { createLookKit } from "../kit/LookKit";
 import { createLights, applyEnvironment } from "../kit/lights";
 import { City } from "../city/City";
 import {createUrbanManifest,cityHeight,cityOnRoad,urbanEnabled,CITY_LIMIT,cityDistrict} from "../city/urbanLayout";
+import { selectedFace, type AvatarSelection, type CameraMode } from "../player/avatarPreferences";
 import { Player } from "../player/Player";
 import { Car } from "../vehicle/Car";
 import { ChaseCamera } from "../vehicle/ChaseCamera";
@@ -35,7 +36,10 @@ import { SceneManager } from "./SceneManager";
 import type { Interior } from "../interiors/Interior";
 import type { Collider } from "../player/Collision";
 import { speak } from "../conversation/Speech";
+import {poll} from "../activity/network";
+import {CompletionTracker, loadActivity, type Activity} from "../activity/workplace";
 export type Mode =
+  | "workplace"
   | "loading"
   | "foot"
   | "car"
@@ -45,6 +49,10 @@ export type Mode =
   | "paused"
   | "transition";
 export interface WorldState {
+  ventureId: string | null;
+  workplace: {departmentId: string; name: string} | null;
+  activity: Activity | null;
+  activityError: string | null;
   ready: boolean;
   error: string | null;
   mode: Mode;
@@ -55,6 +63,7 @@ export interface WorldState {
   mock: boolean;
   prompt: string;
   conversation: ConversationState | null;
+  remoteConcierge: boolean;
   fps: number;
   calls: number;
   triangles: number;
@@ -69,12 +78,17 @@ export interface WorldState {
     state: string;
     time: number;
     countdown: number;
+    countdownLabel?: string;
     checkpoint: number;
     total: number;
     best?: number;
   } | null;
 }
 export const initialWorldState: WorldState = {
+  ventureId: null,
+  workplace: null,
+  activity: null,
+  activityError: null,
   ready: false,
   error: null,
   mode: "loading",
@@ -85,6 +99,7 @@ export const initialWorldState: WorldState = {
   mock: false,
   prompt: "",
   conversation: null,
+  remoteConcierge: false,
   fps: 0,
   calls: 0,
   triangles: 0,
@@ -136,6 +151,8 @@ export class Engine {
   private publishTime = 0;
   private target: (() => void) | null = null;
   private resumeMode: Mode = "foot";
+  /** The vehicle/race stays where it is while a remote Nova overlay is open. */
+  private conversationResumeMode: "foot" | "car" | "race" = "foot";
   private hotReload = () => {
     if (this.state.ready) location.reload();
   };
@@ -144,15 +161,22 @@ export class Engine {
   private transitionToken = 0;
   private timers = new Set<ReturnType<typeof setTimeout>>();
   private observer: ResizeObserver;
+  private seenArtifacts: Set<string> | null = null;
+  private activityStartedAt = Date.now();
+  private stopActivity?: () => void;
+  private readonly completions = new CompletionTracker();
   private voice?: ReturnType<typeof speak>;
   constructor(
     readonly canvas: HTMLCanvasElement,
     private opts: {
       ventureId: string | null;
       goto?: string;
+      avatar?: AvatarSelection;
+      cameraMode?: CameraMode;
       onChange: (state: WorldState) => void;
     },
   ) {
+    this.state = {...this.state, ventureId: opts.ventureId};
     this.input = new Input(
       canvas,
       (x, y) => {
@@ -195,6 +219,9 @@ export class Engine {
       this.city = new City(this.manifest, this.materials, this.assets);
       this.city.setQuality(this.quality.current);
       this.world.add(this.city.group, this.car.group, this.gps.group);
+      const selection=this.opts.avatar ?? {assetId:null,styleId:'slate'};
+      this.world.add(this.player.setAvatar(selectedFace(selection),this.assets.characters.find(a=>a.id===selection.assetId)));
+      this.player.setCameraMode(this.opts.cameraMode ?? 'third');
       this.cityNpcs = new NpcManager({
         scene: this.city.group,
         manifest: this.manifest,
@@ -222,6 +249,7 @@ export class Engine {
       this.lighting("exterior");
       this.resize();
       this.race = new Race({
+        heightAt: urbanEnabled()?cityHeight:undefined,
         onFinish: () => {
           this.toast("You arrived. Heading inside…");
           this.later(() => {
@@ -241,6 +269,17 @@ export class Engine {
           mode === "race" ? this.startRace(id) : void this.travel(id),
       });
       this.patch({ ready: true, mode: "foot",place:urbanEnabled()?"Founders Square":"Founders Plaza" });
+      if(this.opts.ventureId && !this.state.mock && !result.offline) {
+        this.stopActivity = poll(signal => loadActivity(this.opts.ventureId!, signal), data => {
+          this.patch({activity:data,activityError:null});
+          this.applyActivity();
+          if(this.seenArtifacts) {
+            for(const artifact of data.artifacts) if(!this.seenArtifacts.has(artifact.id) && artifact.created_at && Date.parse(artifact.created_at)>this.activityStartedAt) this.toast(`New recorded artifact: ${artifact.title}. Open a workspace to inspect it.`,8000);
+          }
+          const seen=this.seenArtifacts ?? new Set<string>(); for(const artifact of data.artifacts) seen.add(artifact.id); while(seen.size>1000) seen.delete(seen.values().next().value!); this.seenArtifacts=seen;
+          for(const run of this.completions.observe(data.runs)) this.toast(`${run.job || run.kind} · ${run.status}. Open a workspace for the recorded run.`,8000);
+        }, error => this.patch({activityError:error.message}));
+      }
       this.installDebug();
       this.loop.start();
       if (this.opts.goto) void this.travel(this.opts.goto);
@@ -332,6 +371,9 @@ export class Engine {
       this.race.update(dt, [this.car.state.x, this.car.state.z]);
       this.gps.update(dt, [this.car.state.x, this.car.state.z]);
     }
+    const footView = this.state.mode === "foot" || this.state.mode === "conversation";
+    this.player.present(dt, footView, this.state.mode === 'foot' && moving && this.player.velocity.lengthSq()>0.01,
+      this.interior ? 0 : urbanEnabled() ? cityHeight(this.player.position.x,this.player.position.z) : 0, this.colliders());
     if (mode !== "map" && mode !== "paused" && mode !== "transition") {
       this.city.update(this.elapsed);
       this.npcs.update(dt, this.camera.position);
@@ -357,6 +399,7 @@ export class Engine {
                 state: this.race.state,
                 time: this.race.elapsed,
                 countdown: this.race.countdown,
+                countdownLabel: this.race.countdownLabel,
                 checkpoint: this.race.nextCheckpoint,
                 total: this.race.checkpoints.length,
                 best: this.race.result?.best,
@@ -444,6 +487,7 @@ export class Engine {
     if (label !== this.state.prompt) this.patch({ prompt: label });
   }
   interact() {
+    if (!["foot","car","race","conversation"].includes(this.state.mode)) return;
     if (this.state.mode === "conversation") {
       this.closeConversation();
       return;
@@ -464,6 +508,17 @@ export class Engine {
     if (!this.state.ready) return;
     if (!down) {
       if (code === "KeyV") void this.conversation.stopPushToTalk();
+      return;
+    }
+    if (this.state.mode === "workplace") {
+      if(code === "Escape") this.closeWorkplace();
+      return;
+    }
+    if (
+      code === "KeyN" &&
+      ["foot", "car", "race"].includes(this.state.mode)
+    ) {
+      this.openNova();
       return;
     }
     if (code === "Escape") {
@@ -517,7 +572,7 @@ export class Engine {
     this.voice?.stop();
     this.npcs.setActive(npc.npc.agent_id);
     this.conversation.open(npc.npc);
-    this.patch({ mode: "conversation", prompt: "" });
+    this.patch({ mode: "conversation", prompt: "", remoteConcierge: false });
     this.input.unlock();
     if (greeting) {
       void this.conversation.greet();
@@ -530,11 +585,29 @@ export class Engine {
     this.voice?.stop();
     this.conversation?.close();
     this.npcs?.setActive(null);
-    this.patch({ mode: "foot" });
+    const mode = this.state.remoteConcierge ? this.conversationResumeMode : "foot";
+    this.patch({ mode, remoteConcierge: false });
+  }
+  /** Opens the real concierge endpoint without moving the player to Nova's plaza slot. */
+  openNova() {
+    if (!this.state.ready || !["foot", "car", "race"].includes(this.state.mode)) return;
+    const nova = this.manifest.npcs.find(
+      (npc) => npc.agent_id === this.manifest.plaza.concierge.agent_id,
+    );
+    if (!nova) {
+      this.toast("Nova is not available in this town.");
+      return;
+    }
+    this.voice?.stop();
+    this.conversationResumeMode = this.state.mode as "foot" | "car" | "race";
+    this.conversation.open(nova);
+    this.input.unlock();
+    this.patch({ mode: "conversation", prompt: "", remoteConcierge: true });
   }
   sendText(text: string) {
     return this.conversation.send(text);
   }
+  setAudioEnabled(enabled:boolean) { this.conversation?.setAudioEnabled(enabled); if(!enabled)this.voice?.stop(); }
   toggleCall() { this.conversation.toggleCall(); }
   endCall() { this.conversation.endCall(); }
   muteCall(muted: boolean) { this.conversation.setCallMuted(muted); }
@@ -551,7 +624,31 @@ export class Engine {
         : "foot";
     this.conversation?.close();
     this.input.unlock();
-    this.patch({ mode: "map" });
+    this.patch({ mode: "map", workplace:null, remoteConcierge: false });
+  }
+  openWorkplace() {
+    const building=this.interior?.building;
+    if(!building || !["foot","conversation"].includes(this.state.mode)) return;
+    this.conversation?.close(); this.npcs?.setActive(null); this.input.unlock();
+    this.patch({mode:"workplace", prompt:"", workplace:{departmentId:building.department_id,name:building.name}, remoteConcierge:false});
+  }
+  closeWorkplace() {
+    this.input.unlock(); this.patch({mode:"foot",workplace:null});
+  }
+  async meetDepartmentLeads() {
+    const building=this.manifest?.buildings.find(b=>b.department_id==="chief-of-staff");
+    if(building) await this.enterInterior(building);
+    else this.toast("The executive building is not available in this town.");
+  }
+  private applyActivity() {
+    const activity=this.state.activity; if(!activity)return;
+    const map: Record<string,{status:string;current_ticket_id?:string;active_run_id?:string;run_status?:string;ticket_status?:string}>={};
+    for(const agent of activity.agents) {
+      const run=activity.runs.find(r=>r.agent_id===agent.id && r.status==="running");
+      const ticket=activity.tickets.find(t=>t.id===run?.ticket_id || (t.id===agent.state.current_ticket_id && t.status==="in_progress"));
+      map[agent.id]={status:agent.state.status, ...(run?{active_run_id:run.id,run_status:run.status}:{}), ...(ticket?{current_ticket_id:ticket.id,ticket_status:ticket.status}:{})};
+    }
+    for(const manager of new Set([this.cityNpcs,this.npcs])) (manager as NpcManager & {applyActivity?:(value:Record<string,{status:string;current_ticket_id?:string;active_run_id?:string;run_status?:string;ticket_status?:string}>)=>void})?.applyActivity?.(map);
   }
   pause() {
     this.resumeMode =
@@ -559,7 +656,7 @@ export class Engine {
         ? this.state.mode
         : "foot";
     this.input.unlock();
-    this.patch({ mode: "paused" });
+    this.patch({ mode: "paused", remoteConcierge: false });
   }
   resume() {
     this.patch({ mode: this.resumeMode });
@@ -568,7 +665,7 @@ export class Engine {
     const token = ++this.transitionToken;
     this.conversation.close();
     this.input.unlock();
-    this.patch({ mode: "transition", fade: true });
+    this.patch({ mode: "transition", fade: true, workplace:null, remoteConcierge:false });
     await new Promise((r) => setTimeout(r, 320));
     if (this.disposed || token !== this.transitionToken) return;
     fn();
@@ -586,6 +683,7 @@ export class Engine {
       this.race.group.visible = false;
       this.world.add(this.interior.group);
       this.npcs = this.interior.npcs;
+      this.applyActivity();
       this.scenes.current = `interior:${building.department_id}`;
       this.player.teleport([0, 1.65, 5.4], 0);
       this.lighting("interior");
@@ -626,6 +724,7 @@ export class Engine {
       return;
     }
     this.race.cancel();
+    this.patch({ remoteConcierge: false });
     this.gps.setPath([]);
     const b = this.manifest.buildings.find(
       (b) => b.building_id === npc.building_id,
@@ -647,6 +746,8 @@ export class Engine {
     void this.conversation.greet();
   }
   enterCar() {
+    if(this.interior || this.state.mode !== "foot") return;
+    if(this.player.position.distanceTo(this.car.group.position.clone().setY(this.player.position.y)) > 3.5) {this.toast("Walk up to the parked company car, then press E.");return;}
     this.conversation.close();
     if(urbanEnabled())this.car.followTerrain(cityHeight);
     this.chase.update(0,this.car.state,true,urbanEnabled()?cityHeight(this.car.state.x,this.car.state.z):0,urbanEnabled()?cityHeight:undefined);
@@ -662,6 +763,7 @@ export class Engine {
       return;
     }
     this.conversation.close();
+    this.patch({ remoteConcierge: false });
     if (this.interior) {
       const departure = this.interior.building;
       this.showCity();
@@ -721,6 +823,7 @@ export class Engine {
       this.toast("Standup playback unavailable.");
     }
   }
+  setCameraMode(mode: CameraMode) { this.player.setCameraMode(mode); }
   setQuality(choice: QualityChoice) {
     this.quality.set(choice);
     this.applyQuality();
@@ -763,7 +866,7 @@ export class Engine {
         interact: () => self.interact(),
         exit: () => self.exitInterior(),
         renderInfo: () => ({ ...self.view.renderer.info.render }),
-        pose:(pos:[number,number,number],yaw:number,pitch=0)=>{self.closeConversation();self.player.teleport(pos,yaw);self.camera.rotation.x=pitch;},
+        pose:(pos:[number,number,number],yaw:number,pitch=0)=>{self.closeConversation();self.player.teleport(pos,yaw);self.player.look(0,-pitch/0.0022);self.camera.rotation.x=pitch;},
         cityManifest:()=>self.manifest,
         visualAssets:()=>({environment:self.world.userData.environmentSource,textures:[...self.materials.cache].filter(([,m])=>!!m.userData.assetTexture).map(([key,m])=>({key,source:m.userData.assetTexture})),hdris:self.assets.hdris.map(h=>h.id)}),
         inspectView:(pos:[number,number,number],target:[number,number,number])=>{self.closeConversation();self.loop.stop();self.camera.position.fromArray(pos);self.camera.lookAt(new THREE.Vector3(...target));self.lights?.update();self.view.render();},
@@ -773,6 +876,7 @@ export class Engine {
     }
   }
   dispose() {
+    this.stopActivity?.();
     this.disposed = true;
     window.removeEventListener("foundry:buildings-changed", this.hotReload);
     this.transitionToken++;
@@ -786,6 +890,7 @@ export class Engine {
     this.cityNpcs?.dispose();
     this.scenes?.dispose();
     this.city?.dispose();
+    this.player.dispose();
     this.car.dispose();
     this.gps.dispose();
     this.race?.dispose();

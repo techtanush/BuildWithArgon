@@ -1,7 +1,7 @@
 // OWNER: karthik
 import type { TtsResponse } from '../../shared/contracts';
 import type { LipSync } from '../npc/LipSync';
-export interface SpeakOptions { lipSync?: LipSync; onCaption?: (text: string) => void; voiceHint?: string }
+export interface SpeakOptions { audioEnabled?: boolean; lipSync?: LipSync; onCaption?: (text: string) => void; voiceHint?: string }
 export interface SpeakHandle { started: Promise<number>; done: Promise<void>; stop(): void }
 let context: AudioContext | null = null;
 export function speak(text: string, tts: TtsResponse | null, opts: SpeakOptions = {}): SpeakHandle {
@@ -9,15 +9,16 @@ export function speak(text: string, tts: TtsResponse | null, opts: SpeakOptions 
   const started = new Promise<number>((resolve, reject) => { resolveStart = resolve; rejectStart = reject; });
   void started.catch(() => {}); // Callers may only await done, so avoid an unhandled rejection.
   const done = new Promise<void>(r => { resolveDone = r; });
+  let startupTimer: ReturnType<typeof setTimeout> | undefined;
   let finished = false, sounding = false, audio: HTMLAudioElement | null = null;
   let source: MediaElementAudioSourceNode | null = null, analyser: AnalyserNode | null = null;
   let utter: SpeechSynthesisUtterance | null = null;
   const synth = typeof window !== 'undefined' ? window.speechSynthesis : undefined;
-  const start = () => { if (!finished && !sounding) { sounding = true; resolveStart(performance.now()); } };
+  const start = () => { if (!finished && !sounding) { sounding = true; clearTimeout(startupTimer); resolveStart(performance.now()); } };
   const finish = () => {
-    if (finished) return; finished = true;
+    if (finished) return; finished = true; clearTimeout(startupTimer);
     // Never publish a latency sample for audio that did not start.
-    if (!sounding) rejectStart(new Error('Speech ended before audio started.'));
+    if (!sounding) { rejectStart(new Error('Speech ended before audio started.')); if (utter) synth?.cancel(); }
     audio?.pause(); source?.disconnect(); analyser?.disconnect(); opts.lipSync?.stop(); resolveDone();
   };
   const browser = () => {
@@ -31,7 +32,9 @@ export function speak(text: string, tts: TtsResponse | null, opts: SpeakOptions 
     utter.onend = finish; utter.onerror = finish;
     try { synth.speak(utter); } catch { finish(); }
   };
+  startupTimer = setTimeout(finish, 20_000);
   opts.onCaption?.(text);
+  if (opts.audioEnabled === false) { finish(); return { started, done, stop() {} }; }
   if (tts?.audio_url && tts.provider !== 'browser' && typeof Audio !== 'undefined') {
     audio = new Audio(tts.audio_url);
     audio.onplaying = () => { if (finished) return; start();
@@ -51,5 +54,5 @@ export function speak(text: string, tts: TtsResponse | null, opts: SpeakOptions 
     }
     try { void audio.play().catch(failed); } catch { failed(); }
   } else browser();
-  return { started, done, stop() { if (finished) return; finish(); if (utter) synth?.cancel(); } };
+  return { started, done, stop() { if (finished) return; const wasSounding = sounding; finish(); if (utter && wasSounding) synth?.cancel(); } };
 }

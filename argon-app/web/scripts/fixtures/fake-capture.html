@@ -1,0 +1,78 @@
+<!doctype html>
+<!-- OWNER: ayan — fake capture page for developing/testing scripts/capture.ts without Mahin's real page.
+     Implements the window.__foundryProbe handshake (src/world/probes/types.ts) with canned probe results.
+     Query: building, mode (exterior|interior|portrait), source, agent, fail=P5,P6 (probes to fail), fast=1 (1 s paths). -->
+<html>
+<head>
+<meta charset="utf-8">
+<title>fake capture</title>
+<style>html,body{margin:0;background:#9FC7E8;overflow:hidden}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<script>
+(() => {
+  const q = new URLSearchParams(location.search);
+  const building = q.get('building') || 'unknown';
+  const mode = q.get('mode') || 'exterior';
+  const source = q.get('source') || 'staging';
+  const fail = (q.get('fail') || '').split(',').filter(Boolean);
+  const fast = q.get('fast') === '1';
+  const cv = document.getElementById('c');
+  const W = mode === 'portrait' ? 768 : 1280, H = mode === 'portrait' ? 768 : 720;
+  cv.width = W; cv.height = H;
+  const g = cv.getContext('2d');
+  let seed = 0;
+  for (const ch of building) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+  const hue = seed % 360;
+
+  function draw(camera, t) {
+    const grd = g.createLinearGradient(0, 0, 0, H);
+    grd.addColorStop(0, `hsl(${(hue + 200) % 360} 50% 75%)`);
+    grd.addColorStop(1, `hsl(${(hue + 90) % 360} 35% 40%)`);
+    g.fillStyle = grd; g.fillRect(0, 0, W, H);
+    const k = (camera.length * 37 + (t || 0) * 60) % W;
+    for (let i = 0; i < 9; i++) {
+      g.fillStyle = `hsl(${(hue + i * 25) % 360} 45% ${30 + i * 5}%)`;
+      g.fillRect((k + i * 140) % W, H * 0.35 + (i % 3) * 40, 120, H * 0.4 - (i % 4) * 30);
+    }
+    g.fillStyle = '#f5ead2'; g.fillRect(W / 2 - 160, 60, 320, 80);
+    g.fillStyle = '#3a2a1a'; g.font = '28px serif'; g.textAlign = 'center';
+    g.fillText(`${building} · ${camera}`, W / 2, 112);
+  }
+
+  const applies = {
+    exterior: ['P1', 'P2', 'P3', 'P6', 'P7', 'P8', 'P10'],
+    interior: ['P1', 'P2', 'P4', 'P5', 'P6', 'P7', 'P8'],
+    portrait: [],
+  }[mode] || [];
+  const probes = applies.map((id) => fail.includes(id)
+    ? { id, pass: false, details: `fake failure of ${id} (requested via ?fail=)` }
+    : { id, pass: true, details: '' });
+
+  draw(mode === 'interior' ? 'int-1' : mode === 'portrait' ? 'portrait' : 'ext-1', 0);
+  window.__foundryProbe = {
+    ready: true,
+    result: {
+      building, mode, source, probes,
+      stats: { triangles: 42000 + (seed % 5000), drawCalls: 60 + (seed % 20), lights: 1, kitCalls: 120 },
+      consoleErrors: [],
+    },
+    async setCamera(name) { draw(name, 0); await new Promise((r) => requestAnimationFrame(() => r())); },
+    playPath(name) {
+      const secs = fast ? 1 : (name === 'ext-orbit' ? 8 : 6);
+      const start = performance.now();
+      return new Promise((resolve) => {
+        const step = (now) => {
+          const t = (now - start) / 1000;
+          draw(name, t);
+          if (t >= secs) resolve(); else requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+      });
+    },
+  };
+})();
+</script>
+</body>
+</html>

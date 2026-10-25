@@ -35,6 +35,7 @@ import {
 } from "./pages/Company";
 import WorldLab from "./pages/WorldLab";
 import Treasury from "./pages/Treasury";
+import { AgentComputerViewer } from "../components/AgentComputerViewer";
 import "./dashboard.css";
 
 const navigation = [
@@ -247,7 +248,8 @@ function Dashboard() {
             <Route path="chat" element={<Chat />} />
             <Route path="chat/:channelSlug" element={<Chat />} />
             <Route path="org" element={<Org />} />
-            <Route path="computers" element={<Computers />} />
+            <Route path="computers" element={<ComputerMonitor />} />
+            <Route path="computers/history" element={<Computers />} />
             <Route path="computer-tasks/:id" element={<ComputerTask />} />
             <Route path="artifacts" element={<Artifacts />} />
             <Route path="artifacts/:id" element={<ArtifactPage />} />
@@ -279,6 +281,11 @@ function Dashboard() {
     </div>
   );
 }
+function ComputerMonitor() {
+  const { ventureId } = useCompany();
+  return <AgentComputerViewer ventureId={ventureId ?? ""} />;
+}
+
 export default function DashboardRoutes() {
   return (
     <CompanyProvider>

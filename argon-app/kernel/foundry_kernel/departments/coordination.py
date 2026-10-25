@@ -13,7 +13,7 @@ from ..contracts import AnswerCheck, AskAnswer, Citation, CitationCheck, TalkReq
 from ..db import json_dumps, json_loads_or
 from ..errors import ConflictError, NotImplementedYet
 from ..ids import new_id, utc_now
-from ..models import job as get_job
+from ..models import effective_job
 from ..records import create_ticket, get_row, serialize_message, serialize_run
 
 
@@ -73,7 +73,7 @@ class TrackedLLM:
                     kind = {"orchestrate_plan": "plan", "cos_report": "standup", "check_citation": "check", "talk": "talk", "concierge": "concierge"}.get(job_name, "ask")
                     async with self.db.tx() as tx:
                         await tx.execute("INSERT INTO runs(id,venture_id,agent_id,kind,job,model,status,created_at,started_at) VALUES(?,?,?,?,?,?,'running',?,?)",
-                            (run_id, context["venture_id"], context["agent_id"], kind, job_name, get_job(job_name).model, utc_now(), utc_now()))
+                            (run_id, context["venture_id"], context["agent_id"], kind, job_name, effective_job(job_name, self.settings).model, utc_now(), utc_now()))
                         row = serialize_run(await get_row(tx, "runs", run_id))
                         row.pop("output_text", None)
                         await bus.emit(tx, venture_id=context["venture_id"], type="run.started", entity_kind="run", entity_id=run_id, data=row)

@@ -48,12 +48,22 @@ export class Interior {
     const slots: Record<string, NpcSlot> = {};
     for (const s of this.build.recording.slots)
       slots[s.id] = { position: s.pos, facingY: s.facingY };
+    const staticColliders = movementColliders(this.build.recording);
+    staticColliders.push(
+      {kind:"obb",x:-9,z:0,hw:.1,hd:7,rotY:0},
+      {kind:"obb",x:9,z:0,hw:.1,hd:7,rotY:0},
+      {kind:"obb",x:0,z:-7,hw:9,hd:.1,rotY:0},
+      {kind:"obb",x:0,z:7,hw:9,hd:.1,rotY:0},
+    );
     this.npcs = new NpcManager({
       scene: this.group,
       manifest,
       buildingId: building.building_id,
       slots,
       assetManifest: assets,
+      colliders: staticColliders,
+      walkable: (x:number,z:number,r:number) => x-r > -8.8 && x+r < 8.8 && z-r > -6.8 && z+r < 6.8,
+      executiveMeeting: building.department_id === "chief-of-staff",
     });
     this.colliders = movementColliders(this.build.recording);
     this.colliders.push(
@@ -63,12 +73,7 @@ export class Interior {
       { kind: "obb", x: 0, z: 7, hw: 9, hd: 0.1, rotY: 0 },
     );
     for (const n of this.npcs.entries.values())
-      this.colliders.push({
-        kind: "circle",
-        x: n.position.x,
-        z: n.position.z,
-        r: 0.35,
-      });
+      this.colliders.push(n.collider);
   }
   dispose() {
     this.npcs.dispose();

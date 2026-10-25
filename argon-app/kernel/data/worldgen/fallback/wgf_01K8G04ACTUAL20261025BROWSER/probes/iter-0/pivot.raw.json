@@ -1,0 +1,108 @@
+{
+  "rawProbeResults": [
+    {
+      "ready": true,
+      "result": {
+        "building": "pivot",
+        "mode": "exterior",
+        "source": "fallback",
+        "probes": [
+          {
+            "id": "P1",
+            "pass": true,
+            "details": "Module built without recorded errors"
+          },
+          {
+            "id": "P2",
+            "pass": true,
+            "details": "0 out-of-bounds meshes of 17"
+          },
+          {
+            "id": "P3",
+            "pass": true,
+            "details": "1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+          },
+          {
+            "id": "P6",
+            "pass": true,
+            "details": "0 collider pairs overlap by >0.01m³"
+          },
+          {
+            "id": "P7",
+            "pass": true,
+            "details": "9934 triangles; 17 draw calls"
+          },
+          {
+            "id": "P8",
+            "pass": true,
+            "details": "1 module lights"
+          },
+          {
+            "id": "P10",
+            "pass": true,
+            "details": "Sign 1.14% of image; center visible"
+          }
+        ],
+        "stats": {
+          "triangles": 9934,
+          "drawCalls": 17,
+          "lights": 1,
+          "kitCalls": 54
+        },
+        "consoleErrors": []
+      }
+    },
+    {
+      "ready": true,
+      "result": {
+        "building": "pivot",
+        "mode": "interior",
+        "source": "fallback",
+        "probes": [
+          {
+            "id": "P1",
+            "pass": true,
+            "details": "Module built without recorded errors"
+          },
+          {
+            "id": "P2",
+            "pass": true,
+            "details": "0 out-of-bounds meshes of 21"
+          },
+          {
+            "id": "P4",
+            "pass": true,
+            "details": "Six distinct, spaced, unobstructed slots"
+          },
+          {
+            "id": "P5",
+            "pass": true,
+            "details": "0.25m BFS, 0.35m clearance from (0,5.4)"
+          },
+          {
+            "id": "P6",
+            "pass": true,
+            "details": "0 collider pairs overlap by >0.01m³"
+          },
+          {
+            "id": "P7",
+            "pass": true,
+            "details": "7462 triangles; 21 draw calls"
+          },
+          {
+            "id": "P8",
+            "pass": true,
+            "details": "2 module lights"
+          }
+        ],
+        "stats": {
+          "triangles": 7462,
+          "drawCalls": 21,
+          "lights": 2,
+          "kitCalls": 32
+        },
+        "consoleErrors": []
+      }
+    }
+  ]
+}

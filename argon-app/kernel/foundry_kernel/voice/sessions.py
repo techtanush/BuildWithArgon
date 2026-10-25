@@ -35,6 +35,7 @@ async def create_session(*, settings: Any, db: Any, request: VoiceSessionRequest
     prompt = (f"You are {agent['display_name']}, {agent['title']} in {department} at {venture['name']}.\n"
               f"Persona (style only, not company facts or instructions): {agent.get('persona', '')}\n"
               f"This conversation is scoped only to venture {request.venture_id}. Never use another venture's context.\n{GROUNDING_RULES}")
+    prompt += "\nCall ask_company at most once per user turn. Preserve the exact question and its target: you/your means the selected agent, not the founder. Do not rewrite the target."
     overrides = VoiceOverrides(prompt=redact(prompt, settings),
         first_message=redact(greeting, settings),
         voice_id=agent.get('voice_id') or load_voices().get(agent['id']))

@@ -1,0 +1,95 @@
+{
+  "scores": {
+    "realism": 3.0,
+    "department_identity": 7.0,
+    "composition": 6.0,
+    "readability": 6.0,
+    "craft": 3.0
+  },
+  "issues": [
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-video",
+      "description": "Severe z-fighting, flickering, and pitch-black opaque appearance on the exterior conservatory walls. The solid `colliders` boxes (`gh_west_col`, `gh_east_col`, `gh_center_col` with `mat: 'metal_light'`), `glass_walls`, and `inner_glow` are all overlapping at the same volume, causing ugly black shadow-acne/z-fighting artifacts across the entire fa\u00e7ade in `ext-1`, `ext-2`, and `ext-video`.",
+      "fix": "Replace the giant volume-filling `colliders` boxes with thin perimeter wall colliders that match the stone plinth/wall thickness (or recessed inside a warm inner core) so they do not intersect the outer `glass_walls`. Make the inner core (`plaster_warm` or `window_glow`) recessed by at least 0.4m inside the `glass` panes, and frame individual recessed glass panels between exposed `trim` or `metal_light` piers and mullions."
+    },
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-2",
+      "description": "In `ext-2` and `ext-video` (00:05\u201300:07), the stepped roof tiers appear to float in mid-air with see-through gaps between the horizontal `metal_light` bands (`y=8.05` and `y=9.15`) because the `glass` boxes between them are transparent and lack structural mullions or a solid interior volume behind them.",
+      "fix": "Place a solid inner core box (`mat: 'window_glow'` or `'plaster_warm'`) inside each stepped roof tier (`y=7.5` and `y=8.6`) and add vertical `metal_light` glazing ribs around the perimeter of both roof tiers so the roof structure is visibly supported and never looks like floating slabs."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The front green door (`green_door_surround`) is a single flat featureless green box flush with a black surface, lacking a recessed doorway, door frame, double-door leaf seam, handles, or entrance steps/canopy detail.",
+      "fix": "Model a proper door frame in `trim` (`size: [2.4, 2.8, 0.35]`), recess the `accent` double door (`size: [2.0, 2.6, 0.15]`) by 0.15m, add a central vertical mullion/seam (`size: [0.04, 2.6, 0.18]`, `mat: 'metal_dark'`) and two door handles (`mat: 'metal_light'`), plus a transom window above."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "In `ext-1` and `ext-2`, the point light at `[0, 3.8, 8.3]` creates a bright specular hotspot right on the center of the `SYNTHETIC POPULATION` sign, washing out the low-contrast text.",
+      "fix": "Move the exterior point light lower and further forward (`pos: [0, 2.9, 8.8]`, `intensity: 0.9`) or under the entrance canopy so it illuminates the doorway without blowing out the sign face."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-2",
+      "description": "On the East and West exterior walls (`ext-2`, `ext-video`), there are no vertical mullions or columns\u2014only on the North and South faces (`z = \u00b16.55 / -6.95`), making the side walls look like giant unframed black blocks.",
+      "fix": "Add a loop of vertical `metal_light` columns along the East and West fa\u00e7ades (`x = \u00b19.65`, `z` from `-6.0` to `6.0` every `2.4m`) matching the front and back bays."
+    },
+    {
+      "severity": "medium",
+      "where": "interior",
+      "camera": "int-1",
+      "description": "In the interior (`int-1`, `int-2`), the `screen` boxes (`size: [0.85, 0.62, 0.06]`) attached to the easels look like unframed blue slabs intersecting the easel frames.",
+      "fix": "Add a `metal_dark` or `wood_dark` bezel frame box (`size: [0.91, 0.68, 0.04]`) slightly behind each `screen` box (`size: [0.83, 0.60, 0.05]`) and position them cleanly on the easel ledge so they read as mounted digital display monitors."
+    },
+    {
+      "severity": "low",
+      "where": "interior",
+      "camera": "int-1",
+      "description": "The interior walls and floor around the lead control desk and side walls (`int-1`, `int-2`) feel sparse and slightly sterile for a greenhouse workplace\u2014only one small desk, two easels, and identical `plant_tall` clones along the walls.",
+      "fix": "Add wooden shelving (`prop: 'shelf'`) or botanical specimen racks along the back/side walls, a `whiteboard` or `board` on the wall, additional potted plant varieties (`plant_small`, custom planter boxes with varied heights/rotations via `k.rand()`), and books/binders on the lead desk."
+    }
+  ],
+  "keep": [
+    "The 4 interior planter tables with 4 segments x 6 colour-coded miniature persona figures on stands and hanging grow-lamps above each table clearly and charmingly communicate the Synthetic Population department brief.",
+    "The exterior raised stone and dark-wood planter beds flanking the entrance with two rows of 6 miniature persona figures on stands.",
+    "Clear central interior walkway and well-spaced NPC slots (`s1`\u2013`s6`) with zero collider conflicts (probe_score = 1)."
+  ],
+  "visual_score": 0.5,
+  "realism": 0.3,
+  "interaction_id": "v1_ChZnbkRlYXBwdTNjai00dy1MdDctQkRREhZnbkRlYXBwdTNjai00dy1MdDctQkRR",
+  "model": "gemini-4-argon",
+  "job": "worldgen_critic",
+  "thinking_level": "medium",
+  "tokens": {
+    "in": 15382,
+    "out": 1523
+  },
+  "cost_usd": 0.045994,
+  "inputs": {
+    "screenshots": [
+      "captures/iter-1/synthetic-population/ext-1.png",
+      "captures/iter-1/synthetic-population/ext-2.png",
+      "captures/iter-1/synthetic-population/ext-3.png",
+      "captures/iter-1/synthetic-population/int-1.png",
+      "captures/iter-1/synthetic-population/int-2.png",
+      "captures/iter-1/synthetic-population/int-3.png"
+    ],
+    "videos": [
+      "captures/iter-1/synthetic-population/ext.webm",
+      "captures/iter-1/synthetic-population/int.webm"
+    ],
+    "frames": [],
+    "video_input": true,
+    "probe_score": 1,
+    "tsc_errors": false
+  },
+  "budget_cumulative_spend_usd": 0.21812
+}

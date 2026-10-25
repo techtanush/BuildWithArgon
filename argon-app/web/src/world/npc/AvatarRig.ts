@@ -1,9 +1,85 @@
 // OWNER: mahin
 import * as THREE from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
+import { clone as cloneSkeleton } from "three/addons/utils/SkeletonUtils.js";
 import type { CharacterAsset } from "../assets/manifest.contract";
 import type { FaceSpec } from "./FaceSpec";
 import { VISEMES, type MouthShape } from "./visemes";
+/** A parsed GLB is immutable shared data; each lease gets independent bones and materials. */
+export interface AvatarAssetLease {
+  gltf: GLTF;
+  release(): void;
+}
+type CachedAvatar = { gltf?: GLTF; refs: number; promise: Promise<GLTF> };
+const avatarAssets = new Map<string, CachedAvatar>();
+
+/**
+ * Share decoding, geometry and textures by URL. SkeletonUtils gives every NPC its own
+ * bones; materials are cloned so outfit tinting cannot bleed between actors.
+ */
+export function acquireAvatarAsset(
+  url: string,
+  load: () => Promise<GLTF>,
+): Promise<AvatarAssetLease> {
+  let cached = avatarAssets.get(url);
+  if (!cached) {
+    cached = { refs: 0, promise: load() };
+    avatarAssets.set(url, cached);
+    cached.promise.then(
+      (gltf) => { cached!.gltf = gltf; },
+      () => { if (avatarAssets.get(url) === cached) avatarAssets.delete(url); },
+    );
+  }
+  cached.refs++;
+  return cached.promise.then((gltf) => {
+    let released = false;
+    return {
+      gltf,
+      release() {
+        if (released) return;
+        released = true;
+        if (--cached!.refs === 0 && avatarAssets.get(url) === cached) {
+          avatarAssets.delete(url);
+          disposeNpcObject(cached!.gltf!.scene);
+        }
+      },
+    };
+  }, (error) => {
+    cached!.refs--;
+    throw error;
+  });
+}
+
+/** Clone only per-instance state. Shared geometry, textures and source GLTF live in a lease. */
+export function instantiateAvatar(gltf: GLTF): GLTF {
+  const scene = cloneSkeleton(gltf.scene) as THREE.Group;
+  const materials = new Map<THREE.Material, THREE.Material>();
+  scene.traverse((obj) => {
+    if (!(obj instanceof THREE.Mesh)) return;
+    const localize = (material: THREE.Material) => {
+      let local = materials.get(material);
+      if (!local) { local = material.clone(); materials.set(material, local); }
+      return local;
+    };
+    obj.material = Array.isArray(obj.material)
+      ? obj.material.map(localize)
+      : localize(obj.material);
+  });
+  return { ...gltf, scene, scenes: [scene] };
+}
+
+/** Dispose only objects cloned for one avatar. Never close lease-owned ImageBitmaps. */
+export function disposeAvatarInstance(root: THREE.Object3D): void {
+  const materials = new Set<THREE.Material>(), skeletons = new Set<THREE.Skeleton>();
+  root.traverse((obj) => {
+    if (obj instanceof THREE.Mesh)
+      for (const material of Array.isArray(obj.material) ? obj.material : [obj.material]) materials.add(material);
+    if (obj instanceof THREE.SkinnedMesh) skeletons.add(obj.skeleton);
+  });
+  for (const skeleton of skeletons) skeleton.dispose();
+  for (const material of materials) material.dispose();
+}
+
 /** GLTFLoader creates resources per load. Release each unique owned resource exactly once. */
 export function disposeNpcObject(root: THREE.Object3D): void {
   const geometries = new Set<THREE.BufferGeometry>(),
@@ -51,6 +127,7 @@ export class AvatarRig {
   private idle?: THREE.AnimationAction;
   private talk?: THREE.AnimationAction;
   private sit?: THREE.AnimationAction;
+  private walk?: THREE.AnimationAction;
   private action?: THREE.AnimationAction;
   private disposed = false;
   constructor(
@@ -93,9 +170,11 @@ export class AvatarRig {
     const idle = gltf.animations.find((a) => /idle/i.test(a.name));
     const talk = gltf.animations.find((a) => /talk|speak/i.test(a.name));
     const sit = gltf.animations.find((a) => /sit/i.test(a.name));
+    const walk = gltf.animations.find((a) => /walk|run|locomot/i.test(a.name));
     if (idle) this.idle = this.mixer.clipAction(idle);
     if (talk) this.talk = this.mixer.clipAction(talk);
     if (sit) this.sit = this.mixer.clipAction(sit);
+    if (walk) this.walk = this.mixer.clipAction(walk);
   }
   get supportsSitting(): boolean {
     return !!this.sit;
@@ -107,10 +186,13 @@ export class AvatarRig {
     blink: number,
     speaking: boolean,
     seated: boolean,
+    walking = false,
   ): void {
     if (this.disposed) return;
     const action = seated
       ? this.sit
+      : walking
+        ? (this.walk ?? this.idle)
       : speaking
         ? (this.talk ?? this.idle)
         : this.idle;
@@ -178,7 +260,7 @@ export class AvatarRig {
     this.disposed = true;
     this.mixer.stopAllAction();
     this.mixer.uncacheRoot(this.root);
-    disposeNpcObject(this.root);
+    disposeAvatarInstance(this.root);
     this.root.removeFromParent();
   }
 }

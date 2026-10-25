@@ -4,7 +4,7 @@ const sdk = vi.hoisted(()=>({startSession:vi.fn()}));
 vi.mock('@elevenlabs/client',()=>({Conversation:sdk}));
 import { startVoiceCall } from '../../../src/world/conversation/VoiceCall';
 beforeEach(()=>{vi.stubGlobal('window',{});});
-afterEach(()=>{vi.unstubAllGlobals(); vi.clearAllMocks(); vi.useRealTimers();});
+afterEach(()=>{vi.unstubAllGlobals(); vi.clearAllMocks(); vi.restoreAllMocks(); vi.useRealTimers();});
 const info={session_id:'s1',provider:'elevenlabs',connection:'webrtc',conversation_token:'temporary',overrides:{prompt:'grounded',first_message:'hello',voice_id:'voice'},dynamic_variables:{venture:'v'}};
 const response=(data:unknown)=>({ok:true,json:async()=>({data})});
 it('missing credentials are unavailable, never an imaginary successful call',async()=>{
@@ -16,7 +16,7 @@ it('maps SDK callbacks, grounds tool responses and posts an idempotent summary',
   const fetcher=vi.fn().mockResolvedValue(response(info));vi.stubGlobal('fetch',fetcher);
   const conversation={endSession:vi.fn().mockResolvedValue(undefined),getOutputVolume:()=>0.4,getId:()=> 'conversation',setMicMuted:vi.fn()};
   let config:any; sdk.startSession.mockImplementation(async c=>{config=c;return conversation;});
-  const answer={answer_id:'answer',text:'Grounded answer',citations:[],check:{status:'pending'},latency_ms:2};
+  const answer={answer_id:'answer',text:'Grounded answer',citations:[],check:{status:'verified'},latency_ms:2};
   const talk=vi.fn().mockResolvedValue(answer), onAnswer=vi.fn(), onTranscript=vi.fn();
   const handle=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',talk,onAnswer,onTranscript});
   await vi.waitFor(()=>expect(handle.status).toBe('listening')); expect(config.overrides.tts.voiceId).toBe('voice');
@@ -84,7 +84,7 @@ it('bounds a startup HTTP transport that ignores abort and does not revive after
 });
 
 it('passes bounded grounded follow-up history and captures venture/agent routing once',async()=>{
-  const fetcher=vi.fn().mockImplementation(async (url:string)=>response(url==='/v1/voice/sessions'?info:{answer_id:'answer',text:'Grounded',citations:[],check:{status:'pending'},latency_ms:0}));
+  const fetcher=vi.fn().mockImplementation(async (url:string)=>response(url==='/v1/voice/sessions'?info:{answer_id:'answer',text:'Grounded',citations:[],check:{status:'verified'},latency_ms:0}));
   vi.stubGlobal('fetch',fetcher); let config:any;
   sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
   const opts={ventureId:'v /1',agentId:'a /1',surface:'world' as const};
@@ -114,4 +114,64 @@ it('remembers mute until a late SDK connection is ready',async()=>{
   await vi.waitFor(()=>expect(sdk.startSession).toHaveBeenCalledOnce());const setMicMuted=vi.fn();
   resolve({endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted});
   await vi.waitFor(()=>expect(h.status).toBe('listening'));expect(setMicMuted).toHaveBeenCalledWith(true);await h.end();
+});
+it('serializes overlapping tools and ends a hung grounded request without publishing late facts',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));let config:any,resolve!:(a:any)=>void;
+  sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
+  const talk=vi.fn().mockImplementationOnce(()=>new Promise(r=>resolve=r)).mockResolvedValue({answer_id:'second',text:'Second grounded',citations:[],check:{status:'verified'}}),onAnswer=vi.fn();
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',talk,onAnswer});await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  const one=config.clientTools.ask_company({question:'first'}),two=config.clientTools.ask_company({question:'second'});
+  await vi.waitFor(()=>expect(talk).toHaveBeenCalledTimes(1));resolve({answer_id:'first',text:'First grounded',citations:[],check:{status:'verified'}});await one;await two;
+  expect(talk.mock.calls[1][0].history).toEqual([{role:'user',text:'first'},{role:'agent',text:'First grounded'}]);
+  talk.mockImplementationOnce(()=>new Promise(()=>{}));const pending=config.clientTools.ask_company({question:'hang'});
+  await vi.waitFor(()=>expect(talk).toHaveBeenCalledTimes(3));await h.end();expect(await pending).toBe('The call has ended.');expect(onAnswer).toHaveBeenCalledTimes(2);
+});
+it('times out a hung tool and rejects malformed facts without updating grounded history',async()=>{
+  vi.useFakeTimers();vi.spyOn(AbortSignal,'timeout').mockImplementation(ms=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return c.signal;});vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));let config:any;
+  sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
+  const talk=vi.fn().mockImplementationOnce(()=>new Promise(()=>{})).mockResolvedValueOnce({answer_id:'bad',text:'unverifiable'}).mockResolvedValueOnce({answer_id:'good',text:'grounded',citations:[],check:{status:'verified'}}),onAnswer=vi.fn();
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',talk,onAnswer});await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  const pending=config.clientTools.ask_company({question:'hang'});await vi.waitFor(()=>expect(talk).toHaveBeenCalledOnce());await vi.advanceTimersByTimeAsync(20_001);expect(await pending).toContain('I do not know');expect(h.status).toBe('listening');
+  expect(await config.clientTools.ask_company({question:'bad'})).toContain('I do not know');await config.clientTools.ask_company({question:'good'});
+  expect(talk.mock.calls[2][0].history).toEqual([]);expect(onAnswer).toHaveBeenCalledOnce();await h.end();
+});
+it('bounds SDK shutdown that never settles while keeping end idempotent',async()=>{
+  vi.useFakeTimers();vi.spyOn(AbortSignal,'timeout').mockImplementation(ms=>{const c=new AbortController();setTimeout(()=>c.abort(),ms);return c.signal;});
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));const endSession=vi.fn(()=>new Promise<void>(()=>{}));
+  sdk.startSession.mockResolvedValue({endSession,getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}});
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world'});await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  const ending=h.end();expect(h.end()).toBe(ending);await vi.advanceTimersByTimeAsync(5001);await ending;expect(endSession).toHaveBeenCalledOnce();expect(h.status).toBe('ended');
+});
+
+it('publishes unsupported answers to the UI but speaks an abstention and excludes them from history',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));let config:any;
+  sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
+  const unsupported={answer_id:'unsupported',text:'Unverified revenue claim',citations:[{kind:'artifact',id:'x',label:'X',quote:'claim'}],check:{status:'unsupported'}};
+  const verified={answer_id:'verified',text:'Verified company fact',citations:[],check:{status:'verified'}};
+  const talk=vi.fn().mockResolvedValueOnce(unsupported).mockResolvedValueOnce(verified),onAnswer=vi.fn();
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',talk,onAnswer});await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  expect(await config.clientTools.ask_company({question:'unsupported?'})).toBe('I cannot verify that from company records yet; review sources/dashboard.');
+  expect(onAnswer).toHaveBeenCalledWith(unsupported);
+  expect(await config.clientTools.ask_company({question:'verified?'})).toBe('Verified company fact');
+  expect(talk.mock.calls[1][0].history).toEqual([]);await h.end();
+});
+it('speaks verified answers and keeps them in follow-up history',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));let config:any;
+  sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
+  const first={answer_id:'one',text:'Verified one',citations:[],check:{status:'verified'}}, second={answer_id:'two',text:'Verified two',citations:[],check:{status:'verified'}};
+  const talk=vi.fn().mockResolvedValueOnce(first).mockResolvedValueOnce(second);
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',talk});await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  expect(await config.clientTools.ask_company({question:'one?'})).toBe('Verified one');
+  expect(await config.clientTools.ask_company({question:'two?'})).toBe('Verified two');
+  expect(talk.mock.calls[1][0].history).toEqual([{role:'user',text:'one?'},{role:'agent',text:'Verified one'}]);await h.end();
+});
+it('cannot revive a cancelled pending verification poll',async()=>{
+  let resolvePoll!:(value:unknown)=>void;const fetcher=vi.fn().mockImplementation((url:string)=>url==='/v1/voice/sessions'||url.endsWith('/end')?Promise.resolve(response(url.endsWith('/end')?{stored:true}:info)):new Promise(r=>resolvePoll=r));
+  vi.stubGlobal('fetch',fetcher);let config:any;
+  sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
+  const onAnswer=vi.fn(),talk=vi.fn().mockResolvedValue({answer_id:'pending',text:'Pending claim',citations:[],check:{status:'pending'}});
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',talk,onAnswer});await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  const result=config.clientTools.ask_company({question:'wait?'});await vi.waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));await h.end();
+  resolvePoll(response({id:'pending',text:'Late verified claim',citations:[],check:{status:'verified'}}));
+  expect(await result).toBe('The call has ended.');expect(onAnswer).toHaveBeenCalledTimes(1);expect(h.status).toBe('ended');
 });

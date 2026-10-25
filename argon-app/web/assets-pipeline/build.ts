@@ -50,6 +50,18 @@ const out: AssetManifest = {
   characters: [],
   vehicles: [],
 };
+// Reviewed licensed human bases are versioned with hashes, not regenerated as duplicate identities.
+try {
+  const approved = JSON.parse(await readFile(new URL("./approved-characters.json", import.meta.url), "utf8"));
+  for (const character of approved.characters ?? []) {
+    const receipt = approved.validation?.find((item: { id: string }) => item.id === character.id);
+    if (!receipt || hash(await readFile(safePath(assetRoot, character.url.replace("/assets/", "")))) !== receipt.sha256)
+      throw new Error(`Approved character integrity failed: ${character.id}`);
+    out.characters.push(character);
+  }
+} catch (error) {
+  if ((error as NodeJS.ErrnoException).code !== "ENOENT") throw error;
+}
 const textureCache = path.join(raw, ".texture-cache");
 await mkdir(textureCache, { recursive: true });
 for (const t of l.textures) {
@@ -275,6 +287,7 @@ for (const t of out.textures)
 for (const m of out.models)
   for (const url of [m.url, ...m.lods]) keep.add(url.replace("/assets/", ""));
 for (const h of out.hdris) keep.add(h.url.replace("/assets/", ""));
+for (const c of out.characters) for (const url of [c.url, ...c.lods]) keep.add(url.replace("/assets/", ""));
 async function cleanGenerated(relative: string) {
   const dir = path.join(assetRoot, relative);
   for (const item of await readdir(dir, { withFileTypes: true }).catch(
@@ -293,7 +306,7 @@ await writeFile(
 await writeFile(
   path.join(assetRoot, "CREDITS.md"),
   "# Asset credits\n\nGenerated from assets.lock.json; Poly Haven assets are CC0: https://polyhaven.com/license\n\n" +
-    [...l.textures, ...l.models, ...l.hdris]
+    [...l.textures, ...l.models, ...l.hdris, ...out.characters]
       .map(
         (a) =>
           `- ${a.id}: [${a.credit.source}](${a.credit.url}), ${a.credit.author}; ${a.credit.license}`,

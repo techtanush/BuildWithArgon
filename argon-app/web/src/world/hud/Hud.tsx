@@ -4,6 +4,7 @@ import type { QualityChoice } from "../engine/Quality";
 import {MiniMap} from "./MiniMap";
 import { MapOverlay } from "./MapOverlay";
 import { ConversationPanel } from "./ConversationPanel";
+import {WorkplacePanel} from "./WorkplacePanel";
 export function Hud({
   state,
   engine,
@@ -26,7 +27,11 @@ export function Hud({
     location.href = "/";
   };
   return (
-    <div className="world-hud">
+    <div className="world-hud" onKeyDown={event=>{
+      if((event.target as HTMLElement).closest("button,a,select,input,textarea")) {
+        if(["Space","Enter","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(event.code)) event.stopPropagation();
+      }
+    }}>
       <header className="world-topbar">
         <a className="world-brand" href="/" aria-label="Back to dashboard">
           <span className="brand-mark">f.</span>
@@ -41,6 +46,13 @@ export function Hud({
           <span>{state.scene === "city" ? "OUTDOORS" : "INTERIOR"}</span>
         </div>
         <nav>
+          {state.ready && ["foot", "car", "race"].includes(state.mode) && (
+            <button onClick={() => engine?.openNova()}>
+              Ask Nova · <kbd>N</kbd>
+            </button>
+          )}
+          {state.ready&&["foot","conversation"].includes(state.mode)&&state.scene!=="city"&&<button onClick={()=>engine?.openWorkplace()}>See communications</button>}
+          {state.ready&&state.mode!=="transition"&&<button onClick={()=>void engine?.meetDepartmentLeads()}>Meet department leads</button>}
           {state.ready&&state.scene==="city"&&state.mode==="foot"&&<button onClick={()=>engine?.enterCar()}>Drive the city</button>}
           <button onClick={() => engine?.showMap()}>
             City map <kbd>M</kbd>
@@ -97,7 +109,7 @@ export function Hud({
               {state.prompt}
             </button>
           )}
-          {state.mode !== "conversation" &&
+          {state.mode !== "workplace" && state.mode !== "conversation" &&
             state.mode !== "map" &&
             state.mode !== "paused" && (
               <div className="world-caption">
@@ -114,7 +126,7 @@ export function Hud({
                 </p>
               </div>
             )}
-          {state.manifest&&state.scene==="city"&&!["map","paused","conversation"].includes(state.mode)&&<MiniMap manifest={state.manifest} position={state.position} yaw={state.yaw} onOpen={()=>engine?.showMap()}/>}
+          {state.manifest&&state.scene==="city"&&!["map","paused","conversation","workplace"].includes(state.mode)&&<MiniMap manifest={state.manifest} position={state.position} yaw={state.yaw} onOpen={()=>engine?.showMap()}/>}
           <footer className="world-bottom">
             <div className="control-guide">
               <span>
@@ -131,6 +143,9 @@ export function Hud({
               </span>
               <span>
                 <kbd>M</kbd>Map
+              </span>
+              <span>
+                <kbd>N</kbd>Ask Nova
               </span>
             </div>
             <button className="quality-readout" onClick={() => engine?.pause()}>
@@ -159,10 +174,11 @@ export function Hud({
                   : "FOLLOW THE GOLDEN ROUTE"}
               </span>
               <strong>
-                {state.race.state === "countdown"
+                {state.race.countdownLabel || (state.race.state === "countdown"
                   ? state.race.countdown
-                  : state.race.time.toFixed(1) + "s"}
+                  : state.race.time.toFixed(1) + "s")}
               </strong>
+              <small>Route ghost · scripted pace car</small>
               <span>
                 Checkpoint{" "}
                 {Math.min(state.race.checkpoint + 1, state.race.total)} /{" "}
@@ -171,21 +187,25 @@ export function Hud({
             </div>
           )}
           {state.mode === "conversation" && state.conversation && (
-            <ConversationPanel
-              state={state.conversation}
-              mock={state.mock}
-              offline={state.offline}
-              onClose={() => engine?.closeConversation()}
-              onSend={(text) => void engine?.sendText(text)}
-              onTravel={(id) => void engine?.travel(id)}
-              onRace={(id) => engine?.startRace(id)}
-              onCall={() => engine?.toggleCall()}
-              onEndCall={() => engine?.endCall()}
-              onMuteCall={(muted) => engine?.muteCall(muted)}
-              onVoiceStart={() => void engine?.holdVoice()}
-              onVoiceStop={() => void engine?.releaseVoice()}
-            />
+            <>
+              {state.remoteConcierge && <div className="world-toast" role="status">REMOTE CONNECTION · NOVA</div>}
+              <ConversationPanel
+                state={state.conversation}
+                mock={state.mock}
+                offline={state.offline}
+                onClose={() => engine?.closeConversation()}
+                onSend={(text) => void engine?.sendText(text)}
+                onTravel={(id) => void engine?.travel(id)}
+                onRace={(id) => engine?.startRace(id)}
+                onCall={() => engine?.toggleCall()}
+                onEndCall={() => engine?.endCall()}
+                onMuteCall={(muted) => engine?.muteCall(muted)}
+                onVoiceStart={() => void engine?.holdVoice()}
+                onVoiceStop={() => void engine?.releaseVoice()}
+              />
+            </>
           )}
+          {state.mode === "workplace" && state.workplace && <WorkplacePanel ventureId={state.ventureId} departmentId={state.workplace.departmentId} name={state.workplace.name} mock={state.mock} activity={state.activity} activityError={state.activityError} onClose={()=>engine?.closeWorkplace()}/>}
           {state.mode === "map" && state.manifest && (
             <div className="modal-backdrop">
               <MapOverlay
@@ -221,6 +241,9 @@ export function Hud({
                     <option value="low">Low</option>
                   </select>
                 </label>
+                <button aria-pressed={state.conversation?.audioEnabled ?? true} onClick={()=>engine?.setAudioEnabled(!(state.conversation?.audioEnabled ?? true))}>
+                  Automatic speech: {(state.conversation?.audioEnabled ?? true) ? "on" : "off"}
+                </button>
                 <p>
                   Higher quality uses more GPU. Voice and generated assets are
                   supplied by your team’s integrations.

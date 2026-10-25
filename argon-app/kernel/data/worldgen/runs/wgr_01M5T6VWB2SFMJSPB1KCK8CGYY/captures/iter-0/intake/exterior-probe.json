@@ -1,0 +1,61 @@
+{
+  "mode": "exterior",
+  "url": "http://127.0.0.1:15174/view/capture?building=intake&mode=exterior&source=staging&assetBase=http%3A%2F%2F127.0.0.1%3A15175%2Fassets",
+  "ready": true,
+  "result": {
+    "building": "intake",
+    "mode": "exterior",
+    "source": "staging",
+    "probes": [
+      {
+        "id": "P1",
+        "pass": true,
+        "details": "Module built without recorded errors"
+      },
+      {
+        "id": "P2",
+        "pass": true,
+        "details": "0 out-of-bounds meshes of 23"
+      },
+      {
+        "id": "P3",
+        "pass": true,
+        "details": "1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+      },
+      {
+        "id": "P6",
+        "pass": true,
+        "details": "0 collider pairs overlap by >0.01m³"
+      },
+      {
+        "id": "P7",
+        "pass": true,
+        "details": "17818 triangles; 23 draw calls"
+      },
+      {
+        "id": "P8",
+        "pass": true,
+        "details": "1 module lights"
+      },
+      {
+        "id": "P10",
+        "pass": true,
+        "details": "Sign 1.01% of image; center visible"
+      }
+    ],
+    "stats": {
+      "triangles": 17818,
+      "drawCalls": 23,
+      "lights": 1,
+      "kitCalls": 126
+    },
+    "consoleErrors": []
+  },
+  "consoleErrors": [],
+  "screenshots": {
+    "ext-1": "captures/iter-0/intake/ext-1.png",
+    "ext-2": "captures/iter-0/intake/ext-2.png",
+    "ext-3": "captures/iter-0/intake/ext-3.png"
+  },
+  "frames": []
+}

@@ -43,13 +43,22 @@ describe("cross-department static exterior batch",()=>{
   it("repairs reflected winding without changing source geometry",()=>{
     const common=new MaterialLibrary(),root=new THREE.Group();const g=new THREE.BufferGeometry();g.setAttribute("position",new THREE.Float32BufferAttribute([0,0,0,1,0,0,0,1,0],3));g.setIndex([0,1,2]);g.computeVertexNormals();const a=mesh(root,common.get("trim"),g),b=mesh(root,common.get("trim"),g);a.scale.x=-1;b.position.x=3;const result=batchExteriors([root],common),p=(result.group.children[0] as THREE.Mesh).geometry.getAttribute("position"),pts=[0,1,2].map(i=>new THREE.Vector3().fromBufferAttribute(p,i));expect(pts[1].sub(pts[0]).cross(pts[2].sub(pts[0])).z).toBeGreaterThan(0);expect(g.index!.array).toEqual(new Uint16Array([0,1,2]));result.dispose();common.dispose();
   });
-  it("reduces real 13-department exteriors while preserving canvas signs and original owners",()=>{
+  const buildDepartmentExteriors=(source:"fallback"|"generated")=>{
     vi.stubGlobal("navigator",{userAgent:"urban-batch-test"});vi.stubGlobal("document",{createElement:()=>({width:0,height:0,getContext:()=>({fillRect(){},strokeRect(){},fillText(){}})})});
     const common=new MaterialLibrary(),libraries=fallback.buildings.map(b=>new MaterialLibrary({accent:b.color,accentDark:new THREE.Color(b.color).multiplyScalar(.55).getStyle()}));
-    const builds=fallback.buildings.map((b,i)=>{const build=buildBuilding(b.department_id,"exterior",{materials:libraries[i]});build.group.position.set(b.plot_center[0],0,b.plot_center[1]);build.group.rotation.y=b.rotation_y;build.group.updateMatrixWorld(true);return build;});
-    const roots=builds.map(b=>b.group),before=visible(roots),signs:THREE.Mesh[]=[];roots.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh && (o.material as THREE.MeshStandardMaterial).map instanceof THREE.CanvasTexture)signs.push(o);}));
-    const result=batchExteriors(roots,common),stats=result.group.userData.stats;console.log("Cross-department exterior draw inventory",JSON.stringify(stats));
-    expect(signs).toHaveLength(13);expect(signs.every(s=>s.visible)).toBe(true);expect(stats.before).toBe(before);expect(stats.after).toBe(visible([...roots,result.group]));expect(stats.after).toBeLessThan(90);expect(stats.after).toBeLessThan(before*.4);expect(stats.glassSources).toBe(59);
-    result.dispose();expect(visible(roots)).toBe(before);builds.forEach(b=>b.dispose());libraries.forEach(l=>l.dispose());common.dispose();
+    const builds=fallback.buildings.map((b,i)=>{const build=buildBuilding(b.department_id,"exterior",{materials:libraries[i],source});build.group.position.set(b.plot_center[0],0,b.plot_center[1]);build.group.rotation.y=b.rotation_y;build.group.updateMatrixWorld(true);return build;});
+    const roots=builds.map(b=>b.group),signs:THREE.Mesh[]=[];let glassSources=0;
+    roots.forEach(g=>g.traverse(o=>{if(o instanceof THREE.Mesh){const material=o.material as THREE.MeshStandardMaterial;if(material.map instanceof THREE.CanvasTexture)signs.push(o);if(material.name==="glass")glassSources++;}}));
+    return {common,libraries,builds,roots,signs,glassSources};
+  };
+  it("reduces fallback 13-department exteriors while preserving canvas signs and original owners",()=>{
+    const fixture=buildDepartmentExteriors("fallback"),before=visible(fixture.roots),result=batchExteriors(fixture.roots,fixture.common),stats=result.group.userData.stats;console.log("Fallback cross-department exterior draw inventory",JSON.stringify(stats));
+    expect(fixture.glassSources).toBe(59);expect(fixture.signs).toHaveLength(13);expect(fixture.signs.every(s=>s.visible)).toBe(true);expect(stats.before).toBe(before);expect(stats.after).toBe(visible([...fixture.roots,result.group]));expect(stats.after).toBeLessThan(90);expect(stats.after).toBeLessThan(before*.4);expect(stats.glassSources).toBe(59);
+    result.dispose();expect(visible(fixture.roots)).toBe(before);fixture.builds.forEach(b=>b.dispose());fixture.libraries.forEach(l=>l.dispose());fixture.common.dispose();
+  });
+  it("batches generated 13-department exteriors without taking sign or source ownership",()=>{
+    const fixture=buildDepartmentExteriors("generated"),before=visible(fixture.roots),signMaterials=fixture.signs.map(s=>s.material),signTextures=fixture.signs.map(s=>(s.material as THREE.MeshStandardMaterial).map),signDisposes=signTextures.map(texture=>vi.spyOn(texture!,"dispose")),result=batchExteriors(fixture.roots,fixture.common),stats=result.group.userData.stats;
+    expect(fixture.glassSources).toBeGreaterThan(0);expect(fixture.signs).toHaveLength(13);expect(fixture.signs.every(s=>s.visible)).toBe(true);expect(fixture.signs.map(s=>s.material)).toEqual(signMaterials);expect(fixture.signs.map(s=>(s.material as THREE.MeshStandardMaterial).map)).toEqual(signTextures);expect(stats.glassSources).toBe(fixture.glassSources);expect(stats.after).toBe(visible([...fixture.roots,result.group]));
+    result.dispose();expect(visible(fixture.roots)).toBe(before);expect(fixture.signs.every((s,i)=>s.material===signMaterials[i]&&(s.material as THREE.MeshStandardMaterial).map===signTextures[i])).toBe(true);expect(signDisposes.every(dispose=>dispose.mock.calls.length===0)).toBe(true);fixture.builds.forEach(b=>b.dispose());fixture.libraries.forEach(l=>l.dispose());fixture.common.dispose();
   });
 });

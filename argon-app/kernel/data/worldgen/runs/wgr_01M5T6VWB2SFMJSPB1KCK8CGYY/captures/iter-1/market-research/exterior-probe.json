@@ -1,0 +1,76 @@
+{
+  "mode": "exterior",
+  "url": "http://127.0.0.1:15174/view/capture?building=market-research&mode=exterior&source=staging&assetBase=http%3A%2F%2F127.0.0.1%3A15175%2Fassets",
+  "ready": true,
+  "result": {
+    "building": "market-research",
+    "mode": "exterior",
+    "source": "staging",
+    "probes": [
+      {
+        "id": "P1",
+        "pass": true,
+        "details": "Module built without recorded errors"
+      },
+      {
+        "id": "P2",
+        "pass": true,
+        "details": "0 out-of-bounds meshes of 15"
+      },
+      {
+        "id": "P3",
+        "pass": true,
+        "details": "1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+      },
+      {
+        "id": "P6",
+        "pass": true,
+        "details": "0 collider pairs overlap by >0.01m³"
+      },
+      {
+        "id": "P7",
+        "pass": true,
+        "details": "6530 triangles; 15 draw calls"
+      },
+      {
+        "id": "P8",
+        "pass": true,
+        "details": "1 module lights"
+      },
+      {
+        "id": "P10",
+        "pass": true,
+        "details": "Sign 1.38% of image; center visible"
+      }
+    ],
+    "stats": {
+      "triangles": 6530,
+      "drawCalls": 15,
+      "lights": 1,
+      "kitCalls": 51
+    },
+    "consoleErrors": []
+  },
+  "consoleErrors": [],
+  "screenshots": {
+    "ext-1": "captures/iter-1/market-research/ext-1.png",
+    "ext-2": "captures/iter-1/market-research/ext-2.png",
+    "ext-3": "captures/iter-1/market-research/ext-3.png"
+  },
+  "frames": [],
+  "provenance": {
+    "capture": "real",
+    "browser": "Aside Browser REPL",
+    "assetBase": "http://127.0.0.1:15175/assets"
+  },
+  "video": "captures/iter-1/market-research/ext.webm",
+  "walkthrough": {
+    "path": "ext-orbit",
+    "mime": "video/webm;codecs=vp9",
+    "durationMs": 8010.29999999702,
+    "bytes": 1147439,
+    "method": "HTMLCanvasElement.captureStream(20) + MediaRecorder; actual __foundryProbe.playPath real-time render",
+    "width": 1280,
+    "height": 720
+  }
+}

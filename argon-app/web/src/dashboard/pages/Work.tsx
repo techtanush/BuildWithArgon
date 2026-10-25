@@ -12,6 +12,7 @@ import type {
   Ticket,
 } from "../../shared/contracts";
 import { useCompany } from "../context";
+import { BuildNotifications } from "../components/BuildNotifications";
 import type { AgentDetail, TicketDetail } from "../types";
 import { currency, safeUrl, titleCase } from "../types";
 import { ApprovalCard } from "../components/ApprovalCard";
@@ -281,6 +282,7 @@ export function Runs() {
         title="Runs"
         description="The model calls and managed-agent interactions behind every result."
       />
+      <BuildNotifications />
       <ErrorNotice error={query.error} retry={query.refetch} />
       <Card>
         {query.loading ? (

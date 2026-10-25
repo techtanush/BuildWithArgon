@@ -1,0 +1,61 @@
+{
+  "mode": "exterior",
+  "url": "http://127.0.0.1:15174/view/capture?building=pivot&mode=exterior&source=staging&assetBase=http%3A%2F%2F127.0.0.1%3A15175%2Fassets",
+  "ready": true,
+  "result": {
+    "building": "pivot",
+    "mode": "exterior",
+    "source": "staging",
+    "probes": [
+      {
+        "id": "P1",
+        "pass": true,
+        "details": "Module built without recorded errors"
+      },
+      {
+        "id": "P2",
+        "pass": true,
+        "details": "0 out-of-bounds meshes of 14"
+      },
+      {
+        "id": "P3",
+        "pass": true,
+        "details": "1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+      },
+      {
+        "id": "P6",
+        "pass": true,
+        "details": "0 collider pairs overlap by >0.01m³"
+      },
+      {
+        "id": "P7",
+        "pass": true,
+        "details": "7206 triangles; 14 draw calls"
+      },
+      {
+        "id": "P8",
+        "pass": true,
+        "details": "1 module lights"
+      },
+      {
+        "id": "P10",
+        "pass": false,
+        "details": "Sign 0.68% of image; center visible"
+      }
+    ],
+    "stats": {
+      "triangles": 7206,
+      "drawCalls": 14,
+      "lights": 1,
+      "kitCalls": 73
+    },
+    "consoleErrors": []
+  },
+  "consoleErrors": [],
+  "screenshots": {
+    "ext-1": "captures/iter-0/pivot/ext-1.png",
+    "ext-2": "captures/iter-0/pivot/ext-2.png",
+    "ext-3": "captures/iter-0/pivot/ext-3.png"
+  },
+  "frames": []
+}

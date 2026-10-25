@@ -1,0 +1,45 @@
+{
+  "run_id": "wgr_01M5T6VWB2SFMJSPB1KCK8CGYY",
+  "created_at": "2026-10-25T18:58:44.706Z",
+  "status": "succeeded",
+  "stage": "real-capture-iter-2",
+  "generated": [
+    "chief-of-staff",
+    "engineering",
+    "finance-people",
+    "growth",
+    "intake",
+    "lead-intel",
+    "market-research",
+    "office-hours",
+    "outreach",
+    "pivot",
+    "sales",
+    "support",
+    "synthetic-population"
+  ],
+  "missing": [],
+  "valid": [
+    "chief-of-staff",
+    "engineering",
+    "finance-people",
+    "growth",
+    "intake",
+    "lead-intel",
+    "market-research",
+    "office-hours",
+    "outreach",
+    "pivot",
+    "sales",
+    "support",
+    "synthetic-population"
+  ],
+  "tokens": {
+    "in": 84058,
+    "out": 75050
+  },
+  "cost_usd": 0.9186,
+  "wall_minutes": 11.72,
+  "iterations": 3,
+  "photoreal_verified": false
+}

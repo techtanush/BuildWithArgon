@@ -1,0 +1,26 @@
+[
+  {
+    "architecture_md": "## Overview\nA single pure module `src/lib/core.ts` holds the domain logic; `src/App.tsx` renders it.\n\n## Modules\n- `src/lib/core.ts` \u2014 domain logic (pure, tested)\n- `src/App.tsx` \u2014 UI",
+    "tasks": [
+      {
+        "key": "T1",
+        "title": "Core logic and UI",
+        "body": "Implement the domain logic in src/lib/core.ts and show it in App. Cover every acceptance criterion with vitest tests in tests/core.test.ts.",
+        "acceptance_refs": [
+          "AC-1",
+          "AC-2",
+          "AC-3"
+        ],
+        "files_hint": [
+          "src/lib/core.ts",
+          "tests/core.test.ts",
+          "src/App.tsx"
+        ],
+        "depends_on": []
+      }
+    ],
+    "risks": [
+      "Acceptance criteria may be ambiguous (fake fixture)."
+    ]
+  }
+]

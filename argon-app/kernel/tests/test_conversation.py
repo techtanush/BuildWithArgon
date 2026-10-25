@@ -76,6 +76,7 @@ def test_history_is_limited_to6_and_question_secrets_are_redacted(client):
     assert response.status_code==200,response.text
     prompt=next(prompt for name,prompt in client.app.state.llm.calls if name=="talk")
     assert "Turn0" not in prompt and "Turn3" not in prompt and "Turn4" in prompt and "Turn9" in prompt
+    assert json.loads(prompt)["source_refs"]  # provider schema derives its allowed citation refs from this pack
     assert secret not in prompt and secret not in json.dumps(rows(client,"SELECT * FROM answers"))
 
 

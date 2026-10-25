@@ -111,3 +111,30 @@ it('thirty-second limit starts at invocation even while permission remains unans
   await vi.advanceTimersByTimeAsync(30_001);resolve({getTracks:()=>[{stop:stopTrack}]});
   await vi.waitFor(()=>expect(stopTrack).toHaveBeenCalledOnce());expect(recorder).not.toHaveBeenCalled();expect(transcribe).not.toHaveBeenCalled();expect((await session.stop()).provider).toBe('none');
 });
+it('releasing Mic directly never waits for permission and permits a fresh attempt',async()=>{
+  let resolve!: (value:any)=>void; const oldTrack=vi.fn(),newTrack=vi.fn();
+  const getUserMedia=vi.fn().mockImplementationOnce(()=>new Promise(r=>resolve=r)).mockResolvedValueOnce({getTracks:()=>[{stop:newTrack}]});
+  class Recorder {static isTypeSupported(){return true;} state='inactive';start(){this.state='recording';}stop(){this.state='inactive';}}
+  vi.stubGlobal('navigator',{mediaDevices:{getUserMedia}});vi.stubGlobal('MediaRecorder',Recorder);
+  const mic=new Mic(), first=mic.start();expect(await mic.stop()).toBeNull();
+  await mic.start();expect(mic.recording).toBe(true);
+  resolve({getTracks:()=>[{stop:oldTrack}]});await first;expect(oldTrack).toHaveBeenCalledOnce();expect(mic.recording).toBe(true);
+  mic.cancel();expect(newTrack).toHaveBeenCalledOnce();
+});
+it('releases tracks immediately and bounds a recorder that never fires onstop',async()=>{
+  vi.useFakeTimers();const track=vi.fn();
+  class Recorder {static isTypeSupported(){return true;}state='inactive';start(){this.state='recording';}stop(){this.state='inactive';}}
+  vi.stubGlobal('MediaRecorder',Recorder);vi.stubGlobal('navigator',{mediaDevices:{getUserMedia:async()=>({getTracks:()=>[{stop:track}]})}});
+  const mic=new Mic();await mic.start();const pending=mic.stop();expect(track).toHaveBeenCalledOnce();
+  await vi.advanceTimersByTimeAsync(1501);expect(await pending).toBeNull();expect(mic.recording).toBe(false);
+});
+it('explicitly disabled speech captions without constructing any audio or browser speech',async()=>{
+  const audio=vi.fn(),synth=vi.fn(),caption=vi.fn();vi.stubGlobal('Audio',audio);vi.stubGlobal('window',{speechSynthesis:{speak:synth}});
+  const h=speak('Caption only',{audio_url:'/audio',provider:'elevenlabs'} as any,{audioEnabled:false,onCaption:caption});
+  await h.done;await expect(h.started).rejects.toThrow('before audio started');expect(audio).not.toHaveBeenCalled();expect(synth).not.toHaveBeenCalled();expect(caption).toHaveBeenCalledWith('Caption only');
+});
+it('speech startup cannot leave a conversation speaking forever when autoplay never settles',async()=>{
+  vi.useFakeTimers();const pause=vi.fn();vi.stubGlobal('Audio',class {pause=pause;play(){return new Promise(()=>{});}});
+  const h=speak('hello',{audio_url:'/audio',provider:'elevenlabs'} as any);
+  await vi.advanceTimersByTimeAsync(20_001);await h.done;await expect(h.started).rejects.toThrow('before audio started');expect(pause).toHaveBeenCalled();
+});

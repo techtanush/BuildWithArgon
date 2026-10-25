@@ -1,0 +1,9 @@
+{
+  "path": "int-walk",
+  "video": "captures/iter-0/engineering/int.webm",
+  "mime": "video/webm;codecs=vp9",
+  "durationMs": 6004.5999999940395,
+  "bytes": 710861,
+  "method": "HTMLCanvasElement.captureStream(20) + MediaRecorder; actual __foundryProbe.playPath real-time render",
+  "frame": "captures/iter-0/engineering/frames/interior-path-end.png"
+}

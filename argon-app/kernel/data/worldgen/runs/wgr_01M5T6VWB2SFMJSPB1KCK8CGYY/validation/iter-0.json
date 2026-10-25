@@ -1,0 +1,93 @@
+{
+  "intake": {
+    "dept": "intake",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "office-hours": {
+    "dept": "office-hours",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "market-research": {
+    "dept": "market-research",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "outreach": {
+    "dept": "outreach",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "synthetic-population": {
+    "dept": "synthetic-population",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "pivot": {
+    "dept": "pivot",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "engineering": {
+    "dept": "engineering",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "growth": {
+    "dept": "growth",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "lead-intel": {
+    "dept": "lead-intel",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "sales": {
+    "dept": "sales",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "finance-people": {
+    "dept": "finance-people",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "support": {
+    "dept": "support",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  },
+  "chief-of-staff": {
+    "dept": "chief-of-staff",
+    "static_ok": true,
+    "errors": [],
+    "tsc_ok": true,
+    "tsc_errors": ""
+  }
+}

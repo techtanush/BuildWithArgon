@@ -65,3 +65,11 @@ Generated from assets.lock.json; Poly Haven assets are CC0: https://polyhaven.co
   "bench": "PropKind bench expects 0.45m total height/backless seat; backed scan retained only as native-height street furniture to avoid squashing.",
   "metal_light": "No verified brushed-aluminium scan in inspected Poly Haven catalog; physical brushed-metal approximation remains."
 }
+
+## Licensed human bases
+
+Microsoft Rocketbox, Copyright (c) 2020 Microsoft, MIT. Three distinct base actors (Female Adult 01, Male Adult 01, Female Adult 02), repaired and mechanically animated. Not 29 unique people, not Argon-generated meshes, not mocap. Full license: assets-pipeline/LICENSE-Microsoft-Rocketbox.md. Source: https://github.com/microsoft/Microsoft-Rocketbox
+
+- microsoft-rocketbox/Male_Adult_01-active: [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox/tree/master/Assets/Avatars/Adults/Male_Adult_01); Microsoft, MIT.
+
+- microsoft-rocketbox/Female_Adult_02-active: [Microsoft Rocketbox](https://github.com/microsoft/Microsoft-Rocketbox/tree/master/Assets/Avatars/Adults/Female_Adult_02); Microsoft, MIT.

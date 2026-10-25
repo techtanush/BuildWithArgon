@@ -27,6 +27,8 @@ export interface ConversationState {
   callStatus: VoiceCallStatus | null;
   callMuted: boolean;
   callTurns: ChatTurn[];
+  /** Automatic greeting/reply audio only. Live calls remain an explicit, separate action. */
+  audioEnabled: boolean;
 }
 export interface ConversationOptions {
   api: WorldApi;
@@ -40,6 +42,7 @@ export interface ConversationOptions {
   speak?: typeof speak;
   pollIntervalMs?: number;
   startCall?: typeof startVoiceCall;
+  audioEnabled?: boolean;
 }
 /** Returns only local, encoded dashboard routes. Unknown citation kinds have no unsafe URL fallback. */
 export function sourceRoute(
@@ -63,6 +66,10 @@ export function sourceRoute(
       return null;
   }
 }
+const AUDIO_PREFERENCE = "foundry.audioEnabled";
+function savedAudioPreference(): boolean {
+  try { return globalThis.localStorage?.getItem(AUDIO_PREFERENCE) !== "false"; } catch { return true; }
+}
 export class ConversationController {
   state: ConversationState = {
     npc: null,
@@ -75,6 +82,7 @@ export class ConversationController {
     callStatus: null,
     callMuted: false,
     callTurns: [],
+    audioEnabled: savedAudioPreference(),
   };
   private call?: VoiceCallHandle;
   private greeted = new Set<string>();
@@ -85,11 +93,27 @@ export class ConversationController {
   private audio?: SpeakHandle;
   private playbackCancelled?: () => void;
   private session?: SttSession;
+  private transcribing?: SttSession;
   private starting?: Promise<void>;
   private poll?: ReturnType<typeof setTimeout>;
   private maxListen?: ReturnType<typeof setTimeout>;
   private disposed = false;
-  constructor(private options: ConversationOptions) {}
+  private audioGeneration = 0;
+  constructor(private options: ConversationOptions) {
+    if (options.audioEnabled !== undefined) this.state.audioEnabled = options.audioEnabled;
+  }
+  /** Persistent opt-out for automatic TTS. Never mutes or blocks an explicitly started call. */
+  setAudioEnabled(enabled: boolean): void {
+    if (this.disposed) return;
+    try { globalThis.localStorage?.setItem(AUDIO_PREFERENCE, String(enabled)); } catch { /* private browsing */ }
+    if (enabled === this.state.audioEnabled) return;
+    this.audioGeneration++;
+    this.patch({ audioEnabled: enabled });
+    if (!enabled && !this.isCalling()) {
+      this.stopAudio();
+      if (!this.isCalling() && this.state.phase === "speaking") this.patch({ phase: "engaged" });
+    }
+  }
   subscribe(listener: (state: ConversationState) => void): () => void {
     this.listeners.add(listener);
     listener(this.state);
@@ -141,6 +165,7 @@ export class ConversationController {
     this.generation++;
     this.stopCall();
     this.stopAudio();
+    this.transcribing?.cancel(); this.transcribing = undefined;
     this.session?.cancel();
     this.session = undefined;
     clearTimeout(this.poll);
@@ -174,6 +199,7 @@ export class ConversationController {
     this.stopCall();
     this.stopAudio();
     this.patch({ phase: this.state.npc ? "engaged" : "idle" });
+    if (this.state.response) this.scheduleCheck(this.state.response.answer_id, this.generation, 0);
   }
   setCallMuted(muted: boolean): void {
     if (!this.isCalling()) return;
@@ -194,6 +220,7 @@ export class ConversationController {
     const token = ++this.generation;
     this.stopCall();
     this.stopAudio();
+    this.transcribing?.cancel(); this.transcribing = undefined;
     this.session?.cancel(); this.session = undefined;
     clearTimeout(this.poll); clearTimeout(this.maxListen);
     this.patch({ callStatus: "connecting", callMuted: false, callTurns: [], phase: "engaged", error: null, caption: "", voiceUnavailable: false });
@@ -206,7 +233,9 @@ export class ConversationController {
         lipSync: this.options.getLipSync?.(npc.agent_id),
         talk: async (req) => {
           if (!current()) throw new Error("Call ended");
-          const answer = await (npc.agent_id === (this.options.conciergeId ?? "concierge") || npc.department_id === "concierge"
+          const answer = await (this.options.api.voiceAsk
+            ? this.options.api.voiceAsk(venture, npc.agent_id, req)
+            : npc.agent_id === (this.options.conciergeId ?? "concierge") || npc.department_id === "concierge"
             ? this.options.api.concierge(venture, req)
             : this.options.api.talk(venture, npc.agent_id, req));
           if (current()) questions.set(answer.answer_id, req.text);
@@ -215,7 +244,7 @@ export class ConversationController {
         onStatus: (status, reason) => {
           if (!current()) return;
           const terminal = ["ended", "unavailable", "error"].includes(status);
-          this.patch({ callStatus: status, phase: terminal || status === "connecting" ? "engaged" : status as ConversationPhase,
+          this.patch({ callStatus: status, ...(terminal ? { callMuted: false } : {}), phase: terminal || status === "connecting" ? "engaged" : status as ConversationPhase,
             ...(status === "unavailable" || status === "error" ? { error: (reason ? reason + " " : "") + "Use push-to-talk or typing." } : {}) });
           if (terminal) { active = false; this.call = undefined; this.options.getLipSync?.(npc.agent_id)?.stop(); }
         },
@@ -269,6 +298,8 @@ export class ConversationController {
       voiceUnavailable: false,
       phase: "speaking",
     });
+    if (!this.state.audioEnabled) { this.patch({ phase: "engaged" }); return; }
+    const audioToken = this.audioGeneration;
     let tts: TtsResponse | null = null;
     if (!this.options.offline) {
       const key = npc.agent_id + "\n" + line;
@@ -285,6 +316,7 @@ export class ConversationController {
       }
     } else this.patch({ voiceUnavailable: true });
     if (token !== this.generation) return;
+    if (!this.state.audioEnabled || audioToken !== this.audioGeneration) { this.patch({ phase: "engaged" }); return; }
     try {
       const audio = (this.options.speak ?? speak)(line, tts, {
         lipSync: this.options.getLipSync?.(npc.agent_id),
@@ -325,6 +357,7 @@ export class ConversationController {
     const token = ++this.generation;
     this.stopCall();
     this.stopAudio();
+    this.transcribing?.cancel(); this.transcribing = undefined;
     this.session?.cancel();
     this.session = undefined;
     clearTimeout(this.poll);
@@ -362,6 +395,8 @@ export class ConversationController {
         caption: response.text,
       });
       this.scheduleCheck(response.answer_id, token, 0);
+      if (!this.state.audioEnabled) { this.patch({ phase: "engaged" }); return; }
+      const audioToken = this.audioGeneration;
       let tts = null;
       const ttsStarted = performance.now();
       try {
@@ -370,6 +405,7 @@ export class ConversationController {
         if (token === this.generation) this.patch({ voiceUnavailable: true });
       }
       if (token !== this.generation) return;
+      if (!this.state.audioEnabled || audioToken !== this.audioGeneration) { this.patch({ phase: "engaged" }); return; }
       const ttsMs = performance.now() - ttsStarted;
       this.patch({ phase: "speaking" });
       const audio = (this.options.speak ?? speak)(response.text, tts, {
@@ -420,6 +456,7 @@ export class ConversationController {
     const token = ++this.generation;
     this.stopCall();
     this.stopAudio();
+    this.transcribing?.cancel(); this.transcribing = undefined;
     this.session?.cancel();
     this.session = undefined;
     clearTimeout(this.maxListen);
@@ -455,11 +492,13 @@ export class ConversationController {
     const session = this.session;
     if (!session) return;
     this.session = undefined;
+    this.transcribing = session;
     clearTimeout(this.maxListen);
     const released = performance.now();
     this.patch({ phase: "transcribing" });
     try {
       const result = await session.stop();
+      if (this.transcribing === session) this.transcribing = undefined;
       if (token !== this.generation) return;
       if (!result.text.trim()) {
         this.patch({

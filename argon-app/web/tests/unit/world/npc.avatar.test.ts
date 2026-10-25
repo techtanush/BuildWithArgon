@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import * as THREE from "three";
 import type { GLTF } from "three/addons/loaders/GLTFLoader.js";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { AvatarRig, disposeNpcObject } from "../../../src/world/npc/AvatarRig";
+import { acquireAvatarAsset, AvatarRig, disposeNpcObject, instantiateAvatar } from "../../../src/world/npc/AvatarRig";
 import { Character } from "../../../src/world/npc/Character";
 import { fallbackFace } from "../../../src/world/npc/faces";
 import type { CharacterAsset } from "../../../src/world/assets/manifest.contract";
@@ -66,6 +66,46 @@ describe("avatar ownership and animation", () => {
       Math.PI / 10,
     );
     rig.dispose();
+  });
+  it("selects a walking clip when locomotion is requested", () => {
+    const model = gltf();
+    const walk = new THREE.AnimationClip("Walk", 1, []);
+    model.animations = [walk];
+    const rig = new AvatarRig(model, asset, fallbackFace("x"));
+    rig.update(0.1, new THREE.Euler(), { open: 0, width: 0.07 }, 0, false, false, true);
+    expect(rig.mixer.existingAction(walk)?.isRunning()).toBe(true);
+    rig.dispose();
+  });
+  it("shares one decoded asset while cloning material and skeleton state per actor", async () => {
+    const source = gltf();
+    const material = (source.scene.children.find((n) => n instanceof THREE.Mesh) as THREE.Mesh).material as THREE.Material;
+    const skinned = new THREE.SkinnedMesh(new THREE.BoxGeometry(), material);
+    const bone = new THREE.Bone();
+    skinned.add(bone);
+    skinned.bind(new THREE.Skeleton([bone]));
+    source.scene.add(skinned);
+    let loads = 0;
+    const load = async () => { loads++; return source; };
+    const [first, second] = await Promise.all([
+      acquireAvatarAsset("/shared.glb", load),
+      acquireAvatarAsset("/shared.glb", load),
+    ]);
+    expect(loads).toBe(1);
+    const one = instantiateAvatar(first.gltf), two = instantiateAvatar(second.gltf);
+    const oneMesh = one.scene.getObjectByProperty("type", "Mesh") as THREE.Mesh;
+    const twoMesh = two.scene.getObjectByProperty("type", "Mesh") as THREE.Mesh;
+    expect(oneMesh.geometry).toBe(twoMesh.geometry);
+    expect(oneMesh.material).not.toBe(twoMesh.material);
+    const oneSkin = one.scene.getObjectByProperty("type", "SkinnedMesh") as THREE.SkinnedMesh;
+    const twoSkin = two.scene.getObjectByProperty("type", "SkinnedMesh") as THREE.SkinnedMesh;
+    expect(oneSkin.skeleton).not.toBe(twoSkin.skeleton);
+    expect(oneSkin.skeleton.bones[0]).not.toBe(twoSkin.skeleton.bones[0]);
+    const dispose = vi.spyOn(oneMesh.geometry, "dispose");
+    first.release();
+    expect(dispose).not.toHaveBeenCalled();
+    expect(twoMesh.geometry.getAttribute("position")).toBeTruthy();
+    second.release();
+    expect(dispose).toHaveBeenCalledTimes(1);
   });
   it("supports closed M and clears mouth morphs when speech stops", () => {
     const model = gltf(),

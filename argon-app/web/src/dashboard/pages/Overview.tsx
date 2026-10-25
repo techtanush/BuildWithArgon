@@ -12,6 +12,7 @@ import type {
   Venture,
 } from "../../shared/contracts";
 import { useCompany } from "../context";
+import { BuildNotifications } from "../components/BuildNotifications";
 import { colors, currency, entityLink, titleCase } from "../types";
 import { ApprovalCard } from "../components/ApprovalCard";
 import {
@@ -38,7 +39,7 @@ function eventText(event: SseEvent) {
   );
 }
 export default function Overview() {
-  const { venture, ventureId } = useCompany();
+  const { venture, ventureId, live } = useCompany();
   const action = useAction();
   const departments = useQuery<ListPage<Department>>(
     ventureId ? `/v1/ventures/${ventureId}/departments` : null,
@@ -152,11 +153,12 @@ export default function Overview() {
           </div>
         </Card>
         <Card>
-          <span className="overline">Builds shipped</span>
+          <span className="overline">Pull requests merged</span>
           <strong className="kpi-value">{shipped}</strong>
-          <span className="muted small-text">Verified and merged work</span>
+          <span className="muted small-text">Recorded merged pull requests</span>
         </Card>
       </div>
+      <BuildNotifications />
       <div className="overview-columns">
         <div>
           <div className="section-heading">
@@ -233,7 +235,7 @@ export default function Overview() {
         </div>
         <Card
           title="Company activity"
-          action={<span className="subtle-dot" />}
+          action={<span role="status">{live === "live" ? "Live" : "Offline / reconnecting; may be stale"}</span>}
           className="activity-card"
         >
           <p className="card-intro">The latest from across the company.</p>

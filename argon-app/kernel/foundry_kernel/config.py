@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     web_public_dir: Path = APP_DIR / "web" / "public"
     web_url: str = "http://localhost:5173"  # running web dev server (World Lab live round captures)
     llm_mode: Literal["live", "fake"] = "live"
+    conversation_model: Literal["gemini-3.8-flash", "gemini-3.5-flash-lite"] | None = None
     # gemini
     gemini_api_key: SecretStr | None = None
     long_decode_poll_seconds: float = 5.0

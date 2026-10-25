@@ -1,0 +1,175 @@
+{
+  "at": "2026-10-25T18:53:39.908Z",
+  "job": "sign",
+  "signs": {
+    "intake": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Arrivals Hall\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Intake\" below. Warm cream painted background with a thin warm orange border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Arrivals Hall\nIntake",
+          "interaction_id": "v1_ChZOVkRlYXNibkROZnVfdU1QeGRHUVVBEhZOVkRlYXNibkROZnVfdU1QeGRHUVVB"
+        }
+      ]
+    },
+    "office-hours": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Clocktower\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Office Hours\" below. Warm cream painted background with a thin antique gold border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "THE CLOCKTOWER\nOFFICE HOURS",
+          "interaction_id": "v1_ChdRbERlYXBxRklQM1ZfdU1QM3JHOHVBVRIXUWxEZWFwcUZJUDNWX3VNUDNyRzh1QVU"
+        }
+      ]
+    },
+    "market-research": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Observatory\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Market Research\" below. Warm cream painted background with a thin steel blue border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Observatory\nMARKET RESEARCH",
+          "interaction_id": "v1_ChdVMURlYXFtNUFvV1JfdU1QanR1czJBSRIXVTFEZWFxbTVBb1dSX3VNUGp0dXMyQUk"
+        }
+      ]
+    },
+    "outreach": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Telegraph House\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Outreach & Validation\" below. Warm cream painted background with a thin teal border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Telegraph House\nOutreach & Validation",
+          "interaction_id": "v1_ChZaRkRlYW9pOUpPbWJfdU1QXzdUTkVBEhZaRkRlYW9pOUpPbWJfdU1QXzdUTkVB"
+        }
+      ]
+    },
+    "synthetic-population": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Greenhouse\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Synthetic Population\" below. Warm cream painted background with a thin leaf green border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Greenhouse\nSynthetic Population",
+          "interaction_id": "v1_ChdkRkRlYW96MUlaamFfdU1QeThxYm1RYxIXZEZEZWFvejFJWmphX3VNUHk4cWJtUWM"
+        }
+      ]
+    },
+    "pivot": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Rotunda\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Pivot & Decision\" below. Warm cream painted background with a thin lavender purple border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Rotunda\nPivot & Decision",
+          "interaction_id": "v1_ChdoRkRlYXJPUk9yX3VfdU1QOXByVTBBWRIXaEZEZWFyT1JPcl91X3VNUDlwclUwQVk"
+        }
+      ]
+    },
+    "engineering": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Foundry Works\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Engineering & Build\" below. Warm cream painted background with a thin brick red-orange border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Foundry Works\nEngineering & Build",
+          "interaction_id": "v1_ChZsRkRlYXZIYk5zblNfUFVQLThYY0dBEhZsRkRlYXZIYk5zblNfUFVQLThYY0dB"
+        }
+      ]
+    },
+    "growth": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Lighthouse\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Strategy & Growth\" below. Warm cream painted background with a thin sunflower yellow border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Lighthouse\nStrategy & Growth",
+          "interaction_id": "v1_ChdwbERlYXJQLUdfamVfdU1Qbkl1aC1BNBIXcGxEZWFyUC1HX2plX3VNUG5JdWgtQTQ"
+        }
+      ]
+    },
+    "lead-intel": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Archive\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Lead Intelligence\" below. Warm cream painted background with a thin slate blue border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Archive\nLead Intelligence",
+          "interaction_id": "v1_Chd0bERlYXBtWExlbmdfdU1QaHNTc29BURIXdGxEZWFwbVhMZW5nX3VNUGhzU3NvQVE"
+        }
+      ]
+    },
+    "sales": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Market Hall\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Sales\" below. Warm cream painted background with a thin magenta rose border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Market Hall\nSales",
+          "interaction_id": "v1_Chd4VkRlYXVPSE5vUGdfdU1QMllmNjZBNBIXeFZEZWF1T0hOb1BnX3VNUDJZZjY2QTQ"
+        }
+      ]
+    },
+    "finance-people": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Bank & Guild\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Finance & People\" below. Warm cream painted background with a thin emerald green border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Bank & Guild\nFinance & People",
+          "interaction_id": "v1_ChcxVkRlYXZURU9PdVVfdU1QeTZETzBRWRIXMVZEZWF2VEVPT3VVX3VNUHk2RE8wUVk"
+        }
+      ]
+    },
+    "support": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"The Harbor House\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Support & Retention\" below. Warm cream painted background with a thin sky blue border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "The Harbor House\nSupport & Retention",
+          "interaction_id": "v1_Chc1bERlYXJDakphUE9fdU1QMTZQTTZBTRIXNWxEZWFyQ2pKYVBPX3VNUDE2UE02QU0"
+        }
+      ]
+    },
+    "chief-of-staff": {
+      "prompt": "A real painted wooden shop sign for a building in a prosperous town, photographed straight-on in natural daylight, subtle real-world wear. The words \"Town Hall\" in large, perfectly spelled, legible serif lettering, and a small subtitle \"Chief of Staff\" below. Warm cream painted background with a thin slate grey-blue border, real wood grain and a carved frame, front-on with no perspective, filling the whole wide 4:1 frame. No other text, no logos, no watermark, no wall or surroundings.",
+      "written": true,
+      "attempts": [
+        {
+          "attempt": 0,
+          "mime": "image/jpeg",
+          "legible": true,
+          "read_as": "TOWN HALL\nCHIEF OF STAFF",
+          "interaction_id": "v1_Chc5VkRlYXZmUEI2YVZfdU1QcE0tc21RSRIXOVZEZWF2ZlBCNmFWX3VNUHBNLXNtUUk"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,71 @@
+{
+  "run": "wgr_01M5T6VWB2SFMJSPB1KCK8CGYY",
+  "observedAt": "2026-10-25T21:07:28.730Z",
+  "capture": "real",
+  "browser": "Aside Browser REPL",
+  "source": "staging",
+  "renderer": "http://127.0.0.1:15174/view/capture",
+  "assetBase": "http://127.0.0.1:15175/assets",
+  "assetManifest": {
+    "status": 200,
+    "textures": 13,
+    "hdris": 2
+  },
+  "iterations": {
+    "iter-0": {
+      "buildings": 13,
+      "pngs": 78,
+      "rawProbeResults": 26,
+      "webm": 2,
+      "criticalPass": [
+        "intake",
+        "office-hours",
+        "market-research",
+        "outreach",
+        "synthetic-population",
+        "engineering",
+        "lead-intel",
+        "sales",
+        "finance-people",
+        "support",
+        "chief-of-staff"
+      ],
+      "criticalFailures": {
+        "pivot": "P5 Unreachable approaches: s1",
+        "growth": "P5 Unreachable approaches: s1"
+      },
+      "noncriticalFailures": "P10 sign area below1% for11buildings, all except intake/chief-of-staff"
+    },
+    "iter-1": {
+      "buildings": 13,
+      "pngs": 78,
+      "rawProbeResults": 26,
+      "webm": 26,
+      "allProbesPass": true,
+      "criticalPass": [
+        "intake",
+        "office-hours",
+        "market-research",
+        "outreach",
+        "synthetic-population",
+        "pivot",
+        "engineering",
+        "growth",
+        "lead-intel",
+        "sales",
+        "finance-people",
+        "support",
+        "chief-of-staff"
+      ]
+    }
+  },
+  "pngMethod": "Canvas locator screenshots margin0 atDPR2; resized1280x720 PNG; actual P9 capture.ts luminance algorithm rerun after resize",
+  "videoMethod": "Authentic1280x720 WebGL canvas.captureStream(20) + MediaRecorderVP9 while awaiting __foundryProbe.playPath; exterior8sec/interior6sec. Not native Playwright recordVideo. No fabricated or still-frame videos.",
+  "sourceFingerprint": "captures/source-sha256.json; per iter1 report provenance.moduleHashes",
+  "publication": "No registration or generated module publication performed. Parent approval required.",
+  "limitations": [
+    "No human/Gemini realism score inferred from technical probe pass.",
+    "Asset bridge dependency is local and explicit; repository asset binaries were not modified.",
+    "Baseline walkthroughs only engineering; iter1 all13bothmodes recorded."
+  ]
+}

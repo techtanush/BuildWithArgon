@@ -31,6 +31,7 @@ export interface WorldApi {
     agentId: string,
     req: TalkRequest,
   ): Promise<TalkResponse>;
+  voiceAsk?(ventureId: string, agentId: string, req: TalkRequest): Promise<TalkResponse | ConciergeResponse>;
   concierge(ventureId: string, req: TalkRequest): Promise<ConciergeResponse>;
   tts(agentId: string, text: string): Promise<TtsResponse>;
   transcribe(audio: Blob): Promise<SttResponse>;
@@ -113,6 +114,8 @@ export const liveApi: WorldApi = {
       `/v1/ventures/${encodeURIComponent(v)}/agents/${encodeURIComponent(a)}/talk`,
       json(req),
     ),
+  voiceAsk: (v, a, req) =>
+    call(`/v1/ventures/${encodeURIComponent(v)}/agents/${encodeURIComponent(a)}/voice-ask`, json(req)),
   concierge: (v, req) =>
     call(`/v1/ventures/${encodeURIComponent(v)}/concierge/ask`, json(req)),
   tts: (agent_id, text) => call("/v1/voice/tts", json({ agent_id, text })),

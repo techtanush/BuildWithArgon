@@ -1,6 +1,6 @@
 // OWNER: tanush
-import { useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { get, post } from "../../api/client";
 import { invalidateQueries, useQuery } from "../../api/hooks";
 import type {
@@ -239,8 +239,14 @@ export function ChannelView({ channelId }: { channelId: string }) {
       setCursor(page.next_cursor ?? "");
     });
   }
+  const participants = [...new Map([...(query.data?.items ?? []), ...older].filter((message) => message.author_id).map((message) => [`${message.author_kind}:${message.author_id}`, { id: message.author_id!, kind: message.author_kind }])).values()];
   return (
     <div className="channel-view">
+      <details>
+        <summary>Participants in loaded messages ({participants.length})</summary>
+        <ul aria-label="Recorded participants">{participants.map((participant) => <li key={`${participant.kind}:${participant.id}`}>{participant.kind === "agent" ? <Link to={`/agents/${encodeURIComponent(participant.id)}`}>{participant.id}</Link> : participant.id} · {participant.kind}</li>)}</ul>
+        {!participants.length && <p>No participants recorded in the loaded messages yet.</p>}
+      </details>
       <div className="channel-toolbar">
         <span className="muted">A shared record of decisions and work.</span>
         <button
@@ -272,7 +278,7 @@ export function ChannelView({ channelId }: { channelId: string }) {
         <Loading />
       ) : (
         <>
-          <div className="messages-scroll">
+          <div className="messages-scroll" role="log" aria-label="Recorded group messages">
             {(cursor === null ? query.data?.next_cursor : cursor) && (
               <button
                 className="button small"
@@ -296,7 +302,7 @@ export function ChannelView({ channelId }: { channelId: string }) {
                 channelId={channelId}
               />
             ))}
-            {!query.data?.items.length && (
+            {!query.error && !query.data?.items.length && (
               <Empty title="The conversation starts here">
                 Updates, handoffs and your messages will appear in this channel.
               </Empty>
@@ -310,14 +316,21 @@ export function ChannelView({ channelId }: { channelId: string }) {
 }
 export default function Chat() {
   const { channelSlug } = useParams(),
-    { ventureId } = useCompany();
+    [search] = useSearchParams(),
+    { ventureId, ventures, selectVenture, loading: companyLoading, live } = useCompany();
+  const requestedVenture = search.get("venture");
+  const ventureMatches = !requestedVenture || requestedVenture === ventureId;
+  useEffect(() => {
+    if (requestedVenture && !ventureMatches && ventures?.some((venture) => venture.id === requestedVenture))
+      selectVenture(requestedVenture);
+  }, [requestedVenture, ventureId, ventures]);
   const query = useQuery<ListPage<Channel>>(
-    ventureId ? `/v1/ventures/${ventureId}/channels` : null,
+    ventureId && ventureMatches ? `/v1/ventures/${ventureId}/channels` : null,
     () => get(`/v1/ventures/${ventureId}/channels`),
   );
-  const channel = query.data?.items.find(
-    (c) => c.slug === (channelSlug ?? "all-hands"),
-  );
+  if (!ventureMatches) return companyLoading || ventures?.some((venture) => venture.id === requestedVenture) ? <Loading /> : <Empty title="Requested company is unavailable">Choose an available company before opening this group conversation.</Empty>;
+  const requested = search.get("channel") ?? channelSlug ?? "all-hands";
+  const channel = query.data?.items.find((c) => c.slug === requested || c.id === requested);
   return (
     <>
       <PageHeader
@@ -326,12 +339,13 @@ export default function Chat() {
       />
       <ErrorNotice error={query.error} retry={query.refetch} />
       <div className="chat-layout">
-        <aside className="channel-sidebar">
+        <aside className="channel-sidebar" aria-label="Group channels">
           <p className="overline">Company channels</p>
           {query.data?.items.map((item) => (
             <Link
               key={item.id}
-              to={`/chat/${item.slug}`}
+              to={`/chat/${encodeURIComponent(item.slug)}?venture=${encodeURIComponent(ventureId ?? "")}`}
+              aria-current={item.id === channel?.id ? "page" : undefined}
               className={item.id === channel?.id ? "active" : ""}
             >
               <span>#</span>
@@ -343,6 +357,7 @@ export default function Chat() {
           {channel ? (
             <>
               <h2 className="channel-title"># {channel.slug}</h2>
+              <p role="status">{live === "live" ? "Live company updates" : "Updates offline or reconnecting. Displayed messages may be stale."}</p>
               <ChannelView key={channel.id} channelId={channel.id} />
             </>
           ) : query.loading ? (

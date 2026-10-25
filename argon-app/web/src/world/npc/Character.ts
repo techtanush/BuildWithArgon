@@ -5,9 +5,10 @@ import { MeshoptDecoder } from "three/addons/libs/meshopt_decoder.module.js";
 import type { CharacterAsset } from "../assets/manifest.contract";
 import type { FaceSpec } from "./FaceSpec";
 import { LipSync } from "./LipSync";
-import { AvatarRig, disposeNpcObject } from "./AvatarRig";
+import { acquireAvatarAsset, AvatarRig, disposeNpcObject, instantiateAvatar, type AvatarAssetLease } from "./AvatarRig";
 import { hashSeed, mulberry32 } from "./faces";
 import { createHeadGeometry, headFrontZ, headProfile } from "./headGeometry";
+import { activityFromActual, type ActualNpcActivity, type NpcActivity } from "./activity";
 export type CharacterMood = "idle" | "listening" | "thinking" | "speaking";
 export class Character {
   readonly group = new THREE.Group();
@@ -23,6 +24,7 @@ export class Character {
   private arms: THREE.Group[] = [];
   private mouth!: THREE.Mesh;
   private rigs: AvatarRig[] = [];
+  private rigLeases: AvatarAssetLease[] = [];
   private lodLoading = false;
   private seated = false;
   private upper = new THREE.Group();
@@ -34,6 +36,27 @@ export class Character {
   private rng: () => number;
   private disposed = false;
   private waveUntil = 0;
+  private currentActivity: NpcActivity = activityFromActual();
+  private walking = false;
+  private posePhase = 0;
+  private rigPoseNodes = new Map<AvatarRig, { node: THREE.Object3D; rest: THREE.Quaternion; kind: "armL" | "armR" | "spine" }[]>();
+  private poseOffset = new THREE.Quaternion();
+  private poseAxis = new THREE.Vector3(1, 0, 0);
+  get activity(): Readonly<NpcActivity> { return this.currentActivity; }
+  get isSeated(): boolean { return this.seated; }
+  get isWalking(): boolean { return this.walking; }
+  /** Work poses must carry real active backend evidence. Conversation mood is independent. */
+  setActivity(actual?: ActualNpcActivity): void {
+    if (this.disposed) return;
+    this.currentActivity = activityFromActual(actual);
+    this.group.userData.activity = this.currentActivity.status;
+    this.group.userData.activityPose = this.currentActivity.pose;
+    if (this.currentActivity.status !== "idle") this.walking = false;
+  }
+  /** Locomotion is requested by NpcManager only after collision/path checks. */
+  setWalking(walking: boolean): void {
+    if (!this.disposed) this.walking = walking && !this.seated && this.currentActivity.status === "idle";
+  }
   constructor(
     face: FaceSpec,
     private options: { avatar?: CharacterAsset } = {},
@@ -41,6 +64,7 @@ export class Character {
     this.face = face;
     this.rng = mulberry32(hashSeed(face.agent_id));
     this.blinkAt = 2.5 + this.rng() * 3;
+    this.posePhase = this.rng() * Math.PI * 2;
     this.group.name = `npc:${face.agent_id}`;
     this.group.userData.agentId = face.agent_id;
     this.group.scale.set(face.build, face.height, face.build);
@@ -279,14 +303,17 @@ export class Character {
   }
   private async loadAvatar(asset: CharacterAsset, lod = false): Promise<void> {
     try {
+      const url = lod ? asset.lods[0] : asset.url;
       const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);
-      const gltf = await loader.loadAsync(lod ? asset.lods[0] : asset.url);
+      const lease = await acquireAvatarAsset(url, () => loader.loadAsync(url));
       if (this.disposed) {
-        disposeNpcObject(gltf.scene);
+        lease.release();
         return;
       }
-      const rig = new AvatarRig(gltf, asset, this.face);
-      this.rigs[lod ? 1 : 0] = rig;
+      const rig = new AvatarRig(instantiateAvatar(lease.gltf), asset, this.face);
+      const slot = lod ? 1 : 0;
+      this.rigs[slot] = rig;
+      this.rigLeases[slot] = lease;
       this.group.add(rig.root);
       rig.root.visible = !lod;
       this.body.visible = false;
@@ -298,7 +325,9 @@ export class Character {
   }
   /** Explicit slot metadata is required; never infer chair positions from arbitrary node names. */
   setSeated(seated: boolean): void {
+    if (this.disposed) return;
     this.seated = seated;
+    if (seated) this.walking = false;
     this.upper.position.y = seated ? -0.43 : 0;
     this.hips.forEach((hip) => {
       hip.position.y = seated ? 0.44 : 0.87;
@@ -307,13 +336,23 @@ export class Character {
     this.knees.forEach((knee) => (knee.rotation.x = seated ? Math.PI / 2 : 0));
   }
   greet(): void {
-    this.waveUntil = this.elapsed + 1;
+    if (!this.disposed) this.waveUntil = this.elapsed + 1;
   }
   update(dt: number, player?: THREE.Vector3): void {
     if (this.disposed) return;
     dt = Number.isFinite(dt) ? Math.max(0, Math.min(dt, 0.1)) : 0;
     this.elapsed += dt;
     const t = this.elapsed;
+    const p = t + this.posePhase;
+    const working = this.currentActivity.status === "working";
+    const typing = working && this.currentActivity.pose === "typing";
+    const reviewing = working && this.currentActivity.pose === "reviewing";
+    const presenting = working && this.currentActivity.pose === "presenting";
+    const conversational = this.mood !== "idle" || this.lipSync.speaking;
+    const gait = this.walking ? Math.sin(p * 7) : 0;
+    this.hips.forEach((hip, i) => { hip.rotation.x = this.seated ? -Math.PI / 2 : gait * (i ? -0.24 : 0.24); });
+    this.knees.forEach((knee, i) => { knee.rotation.x = this.seated ? Math.PI / 2 : Math.max(0, gait * (i ? 0.28 : -0.28)); });
+    this.upper.rotation.x = THREE.MathUtils.damp(this.upper.rotation.x, typing && this.seated && !conversational ? 0.09 : 0, 6, dt);
     this.torso.scale.y = 0.31 * (1 + 0.012 * Math.sin(t * 1.6));
     this.body.rotation.z = 0.006 * Math.sin(t * 0.9);
     if (t >= this.blinkAt) {
@@ -328,6 +367,11 @@ export class Character {
           ? 1 - (blinkTime - 0.06) / 0.08
           : 0;
     this.eyes.forEach((e) => (e.scale.y = Math.max(0.03, 1 - blink)));
+    let gazeYaw = 0.15 * Math.sin(p * 0.43), gazePitch = 0.035 * Math.sin(p * 0.7);
+    if (working && !conversational) {
+      gazeYaw = 0.06 * Math.sin(p * 0.6);
+      gazePitch = typing || reviewing ? 0.18 : -0.025;
+    }
     if (player) {
       const local = this.group.worldToLocal(player.clone());
       const yaw = THREE.MathUtils.clamp(
@@ -343,20 +387,21 @@ export class Character {
         -0.35,
         0.35,
       );
-      const near = local.length() < 6;
+      const near = local.length() < (working && !conversational ? 2 : 6);
+      if (near) { gazeYaw = yaw; gazePitch = pitch; }
+    }
       this.head.rotation.y = THREE.MathUtils.damp(
         this.head.rotation.y,
-        near ? yaw : 0,
+        gazeYaw,
         8,
         dt,
       );
       this.head.rotation.x = THREE.MathUtils.damp(
         this.head.rotation.x,
-        near ? pitch : 0,
+        gazePitch,
         8,
         dt,
       );
-    }
     this.head.rotation.z = this.mood === "listening" ? 0.08 : 0;
     const mouth = this.lipSync.update(dt);
     this.mouth.scale.set(
@@ -364,12 +409,18 @@ export class Character {
       Math.max(0.002, mouth.open / 2),
       0.006,
     );
+    this.arms[0].rotation.x = THREE.MathUtils.damp(this.arms[0].rotation.x,
+      !conversational && typing ? -0.95 + 0.045 * Math.sin(p * 15) : this.walking ? -gait * 0.2 : 0, 12, dt);
+    this.arms[0].rotation.z = -0.07;
     this.arms[1].rotation.x =
       this.mood === "thinking"
         ? -1.1
         : this.mood === "speaking"
           ? -0.25 + 0.15 * Math.sin(t * 2.2)
-          : 0;
+          : typing ? -0.95 + 0.045 * Math.sin(p * 15 + 1.8)
+          : reviewing ? -0.8 + 0.04 * Math.sin(p * 1.2)
+          : presenting ? -0.45 + 0.15 * Math.sin(p * 2.2)
+          : this.walking ? gait * 0.2 : 0;
     this.arms[1].rotation.z =
       this.waveUntil > t ? -2.4 + 0.15 * Math.sin(t * 18) : 0.07;
     const distance = player
@@ -391,7 +442,18 @@ export class Character {
     for (const rig of this.rigs) {
       if (!rig) continue;
       rig.root.visible = useRig && rig === chosen;
-      if (rig.root.visible)
+      if (rig.root.visible) {
+        let poseNodes = this.rigPoseNodes.get(rig);
+        if (!poseNodes) {
+          poseNodes = [];
+          for (const kind of ["armL", "armR", "spine"] as const) {
+            const name = rig.asset.bones[kind];
+            const node = name ? rig.root.getObjectByName(name) : undefined;
+            if (node) poseNodes.push({ node, rest: node.quaternion.clone(), kind });
+          }
+          this.rigPoseNodes.set(rig, poseNodes);
+        }
+        for (const pose of poseNodes) pose.node.quaternion.copy(pose.rest);
         rig.update(
           dt,
           this.head.rotation,
@@ -399,15 +461,34 @@ export class Character {
           blink,
           this.lipSync.speaking || this.mood === "speaking",
           this.seated,
+          this.walking,
         );
+        for (const pose of poseNodes) {
+          const sign = pose.kind === "armL" ? -1 : 1;
+          const x = pose.kind === "spine"
+            ? (typing && this.seated && !conversational ? 0.06 : 0.008 * Math.sin(p * 1.6))
+            : conversational ? (this.mood === "speaking" ? -0.12 + 0.07 * Math.sin(p * 2.2 + sign) : 0)
+            : typing ? -0.35 + 0.025 * Math.sin(p * 15 + sign)
+            : reviewing ? -0.22 + 0.025 * Math.sin(p * 1.2)
+            : presenting ? -0.2 + 0.09 * Math.sin(p * 2.2 + sign)
+            : this.walking ? sign * gait * 0.12 : 0;
+          this.poseOffset.setFromAxisAngle(this.poseAxis, x);
+          pose.node.quaternion.multiply(this.poseOffset);
+        }
+      }
     }
   }
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
+    this.walking = false;
+    this.currentActivity = activityFromActual();
     this.lipSync.stop();
     for (const rig of this.rigs) rig?.dispose();
+    for (const lease of this.rigLeases) lease?.release();
     this.rigs = [];
+    this.rigLeases = [];
+    this.rigPoseNodes.clear();
     disposeNpcObject(this.body);
     this.group.removeFromParent();
     this.group.clear();
