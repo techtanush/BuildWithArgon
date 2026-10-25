@@ -127,10 +127,13 @@ def write_registry(registry: dict[str, Any]) -> None:
 
 def write_outputs(run_id: str, best: dict[str, Version | None], *, reason_suffix: str = "") -> dict[str, Any]:
     """Final step of a run: generated/<dept>.ts for 'generated' buildings (stale files of fallback buildings are
-    removed), registry.json, index.ts."""
+    removed), registry.json, index.ts. Only the departments in `best` change (a `--only` run keeps the others'
+    entries and files)."""
     paths.GENERATED_DIR.mkdir(parents=True, exist_ok=True)
-    modules: dict[str, Any] = {}
+    modules: dict[str, Any] = dict(read_registry().get("modules", {}))
     for dept in paths.department_ids():
+        if dept not in best:
+            continue
         b = best.get(dept)
         entry = registry_entry(b, reason_suffix)
         target = paths.GENERATED_DIR / f"{dept}.ts"

@@ -68,3 +68,12 @@ def test_promote_updates_one_building(wg_paths: Path) -> None:
     reg = json.loads((paths.GENERATED_DIR / "registry.json").read_text())
     assert reg["modules"]["growth"]["status"] == "generated" and reg["modules"]["pivot"]["status"] == "fallback"
     assert "import growth from './growth';" in (paths.GENERATED_DIR / "index.ts").read_text()
+
+
+def test_partial_run_keeps_other_buildings(wg_paths: Path) -> None:
+    full = {d: Version(d, 0, module(d), rep([]), {"visual_score": 0.8, "realism": 0.8}) for d in paths.department_ids()}
+    write_outputs("wgr_FULL", full)
+    write_outputs("wgr_ONE", {"pivot": Version("pivot", 2, module("pivot", "/* v2 */ "), rep([]), {"visual_score": 0.9, "realism": 0.9})})
+    reg = json.loads((paths.GENERATED_DIR / "registry.json").read_text())["modules"]
+    assert all(e["status"] == "generated" for e in reg.values()) and reg["pivot"]["iteration"] == 2
+    assert (paths.GENERATED_DIR / "engineering.ts").exists() and "/* v2 */" in (paths.GENERATED_DIR / "pivot.ts").read_text()
