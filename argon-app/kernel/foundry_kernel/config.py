@@ -51,6 +51,9 @@ class Settings(BaseSettings):
     elevenlabs_model_id: str = "eleven_flash_v2_5"
     elevenlabs_output_format: str = "mp3_44100_128"
     tts_max_chars: int = 600
+    elevenlabs_agent_id: str | None = None  # base ElevenLabs agent for live voice calls (voice/agents_setup.py)
+    voice_agent_mode: Literal["client_tools", "custom_llm"] = "client_tools"
+    public_kernel_url: str | None = None  # only for voice_agent_mode=custom_llm
     stt_primary: Literal["gemini", "browser"] = "browser"
     # conversation & coordination
     checker_model_check: bool = True

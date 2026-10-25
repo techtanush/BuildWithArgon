@@ -105,3 +105,20 @@ def test_world_layout_matches_spec_table() -> None:
     assert len(m["roads"]["nodes"]) == 52 and len(m["roads"]["edges"]) == 65 and len(m["npcs"]) == 29
     eng = next(b for b in m["buildings"] if b["department_id"] == "engineering")
     assert abs(eng["plot_center"][0] - 31.59) < 0.05 and abs(eng["plot_center"][1] - 128.16) < 0.05
+
+
+def test_agent_capabilities_match_roster_and_jobs() -> None:
+    import json
+
+    from foundry_kernel.config import KERNEL_DIR
+
+    caps = json.loads((KERNEL_DIR / "data" / "agent_capabilities.json").read_text())
+    roster = json.loads((KERNEL_DIR / "data" / "roster.json").read_text())
+    assert set(caps["agents"]) == {a["id"] for a in roster["agents"]}
+    for agent in roster["agents"]:
+        entry = caps["agents"][agent["id"]]
+        assert sorted(entry["tools"]) == sorted(agent["tools"])
+        for key in ("work_jobs", "conversation_jobs", "coordination_jobs"):
+            assert set(entry[key]) <= set(JOBS), (agent["id"], key)
+    for system in caps["system_agents"].values():
+        assert set(system["jobs"]) <= set(JOBS)

@@ -1,0 +1,682 @@
+{
+  "version": 1,
+  "spec": "architecture-files/03-company-kernel/10-agent-model-matrix.md",
+  "managed_agent_ids": {
+    "antigravity": "antigravity-preview-09-2026 (agent_config.model = gemini-4-argon)",
+    "deep_research": "deep-research-preview-04-2026"
+  },
+  "agents": {
+    "concierge": {
+      "work_jobs": [],
+      "conversation_jobs": [
+        "concierge",
+        "route_rank",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [
+        "directory_search"
+      ],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "intake.brief-lead": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "intake.spec-writer": {
+      "work_jobs": [
+        "spec_write"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "oh.skeptic": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "clarification"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "oh.clarifier": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "clarification"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "mr.research-lead": {
+      "work_jobs": [
+        "deep_research",
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [
+        "deep_research"
+      ],
+      "tools": [
+        "deep_research"
+      ],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "mr.competitor-analyst": {
+      "work_jobs": [
+        "dept_artifact",
+        "computer_step",
+        "computer_plan",
+        "computer_guard"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [
+        "antigravity"
+      ],
+      "tools": [
+        "antigravity_web",
+        "cua"
+      ],
+      "gates": [
+        "computer_action"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "out.interview-designer": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "out.outreach-drafter": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "send"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "sp.sim-strategist": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "sp.panel-analyst": {
+      "work_jobs": [
+        "panel_simulation"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "pv.decision-analyst": {
+      "work_jobs": [
+        "decision_review"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "pivot"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "pv.risk-assessor": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "eng.tech-lead": {
+      "work_jobs": [
+        "engineering_design"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "ayan",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "eng.builder": {
+      "work_jobs": [
+        "engineering_build",
+        "engineering_fix"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [
+        "antigravity"
+      ],
+      "tools": [
+        "antigravity",
+        "github"
+      ],
+      "gates": [],
+      "handler_owner": "ayan",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "eng.reviewer": {
+      "work_jobs": [
+        "engineering_review"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "ayan",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "eng.qa": {
+      "work_jobs": [
+        "qa_analyze",
+        "computer_step",
+        "computer_plan",
+        "computer_guard"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [
+        "antigravity"
+      ],
+      "tools": [
+        "antigravity",
+        "cua"
+      ],
+      "gates": [
+        "merge",
+        "computer_action"
+      ],
+      "handler_owner": "ayan",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "gr.positioning-lead": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "gr.growth-planner": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "public_post"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "li.lead-researcher": {
+      "work_jobs": [
+        "dept_artifact",
+        "computer_step",
+        "computer_plan",
+        "computer_guard"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [
+        "antigravity"
+      ],
+      "tools": [
+        "antigravity_web",
+        "cua"
+      ],
+      "gates": [
+        "computer_action"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "li.account-mapper": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "sa.proposal-writer": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "send"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "sa.pipeline-manager": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "fp.cfo": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [
+        "ledger"
+      ],
+      "gates": [
+        "spend"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "fp.people-ops": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [
+        "registry"
+      ],
+      "gates": [
+        "new_capability"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "su.triager": {
+      "work_jobs": [
+        "triage",
+        "computer_step",
+        "computer_plan",
+        "computer_guard"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [
+        "github",
+        "cua"
+      ],
+      "gates": [
+        "computer_action"
+      ],
+      "handler_owner": "ayan",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "su.liaison": {
+      "work_jobs": [
+        "dept_artifact"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "send"
+      ],
+      "handler_owner": "ayan",
+      "is_lead": false,
+      "voice_call": true
+    },
+    "cos.orchestrator": {
+      "work_jobs": [
+        "orchestrate_plan",
+        "cos_report"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [
+        "standup_update",
+        "agent_request"
+      ],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "clarification"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": true,
+      "voice_call": true
+    },
+    "cos.improvement": {
+      "work_jobs": [
+        "capability_design"
+      ],
+      "conversation_jobs": [
+        "talk",
+        "check_citation"
+      ],
+      "coordination_jobs": [],
+      "managed_agents": [],
+      "tools": [],
+      "gates": [
+        "new_capability"
+      ],
+      "handler_owner": "tanush",
+      "is_lead": false,
+      "voice_call": true
+    }
+  },
+  "system_agents": {
+    "world.architect": {
+      "jobs": [
+        "worldgen_buildings",
+        "worldgen_building",
+        "worldgen_patch"
+      ],
+      "managed_agents": [
+        "antigravity"
+      ],
+      "owner": "ayan",
+      "where": "worldgen/generate.py, worldgen/live.py"
+    },
+    "world.critic": {
+      "jobs": [
+        "worldgen_critic"
+      ],
+      "managed_agents": [],
+      "owner": "ayan",
+      "where": "worldgen/critique.py"
+    },
+    "world.face-designer": {
+      "jobs": [
+        "face_spec"
+      ],
+      "managed_agents": [],
+      "owner": "ayan",
+      "where": "worldgen/faces.py"
+    },
+    "world.sign-painter": {
+      "jobs": [
+        "texture",
+        "portrait"
+      ],
+      "managed_agents": [],
+      "owner": "ayan",
+      "where": "worldgen/textures.py, worldgen/faces.py"
+    },
+    "computer.driver": {
+      "jobs": [
+        "computer_step",
+        "computer_plan",
+        "computer_guard"
+      ],
+      "managed_agents": [],
+      "owner": "ayan",
+      "where": "computers/loop.py, computers/guard.py"
+    },
+    "eval.engineering-baseline": {
+      "jobs": [
+        "eval_baseline"
+      ],
+      "managed_agents": [],
+      "owner": "ayan",
+      "where": "evals/engineering_eval.py (optional)"
+    },
+    "kernel.citation-checker": {
+      "jobs": [
+        "check_citation"
+      ],
+      "managed_agents": [],
+      "owner": "tanush",
+      "where": "conversation/checker.py"
+    },
+    "kernel.router-summarizer": {
+      "jobs": [
+        "route_rank",
+        "summarize"
+      ],
+      "managed_agents": [],
+      "owner": "tanush",
+      "where": "conversation/concierge.py, api/channels.py"
+    },
+    "voice.transcriber-tts": {
+      "jobs": [
+        "transcribe",
+        "tts_fallback"
+      ],
+      "managed_agents": [],
+      "owner": "karthik",
+      "where": "voice/stt.py, voice/tts.py"
+    },
+    "world.music": {
+      "jobs": [
+        "music_loop"
+      ],
+      "managed_agents": [],
+      "owner": "ayan",
+      "where": "worldgen (MAY)"
+    }
+  }
+}
