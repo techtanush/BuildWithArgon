@@ -151,7 +151,7 @@ class SupportHandler:
                              triage: TriageOut) -> tuple[str, str]:
         """Ana (su.liaison) writes the user-facing reply with dept_artifact (03-company-kernel/10 §2), starting from
         Yuki's draft; on any failure Yuki's draft is used and the note says so."""
-        prompt = (f"{_prompt('su.liaison')}\n\nDraft the reply to GitHub issue {label}.\nISSUE TITLE: {issue.get('title', '')}\n"
+        prompt = (f"{_prompt('su.liaison.md')}\n\nDraft the reply to GitHub issue {label}.\nISSUE TITLE: {issue.get('title', '')}\n"
                   f"ISSUE BODY:\n{str(issue.get('body', ''))[:4000]}\nTRIAGE: {triage.category}, {triage.severity}: {triage.summary}\n"
                   f"YUKI'S DRAFT: {triage.reply_draft}\nReturn ONLY JSON: {{\"reply\": \"<= 120 words\"}}")
         try:

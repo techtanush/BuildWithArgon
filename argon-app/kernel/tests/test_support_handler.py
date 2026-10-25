@@ -64,7 +64,7 @@ async def test_bug_creates_fix_and_outreach_gate(settings, db) -> None:
     assert fix.priority == 0 and fix.assigned_agent_id == "eng.builder" and fix.payload["issue_number"] == 12
     assert fix.payload["repro_steps"] == BUG["repro_steps"] and "Milk shows no badge" in fix.body
     assert res.approval and res.approval.gate_type == "outreach" and res.approval.title == "Reply to issue #12"
-    assert res.approval.payload == {"channel": "github_comment", "issue_number": 12, "url": ISSUE["url"], "body": "Thanks! We're on it."}
+    assert res.approval.payload == {"channel": "github_comment", "issue_number": 12, "url": ISSUE["url"], "body": "Thanks! We're on it.", "drafted_by": "su.triager"}
     assert res.artifacts[0].kind == "doc" and res.artifacts[0].meta["triage"]["category"] == "bug"
     assert {m.channel_slug for m in res.messages} >= {"dept-support", "dept-engineering"}
     assert ctx.llm.calls[0][0] == "triage"
