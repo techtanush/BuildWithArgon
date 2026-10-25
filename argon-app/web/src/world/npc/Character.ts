@@ -7,6 +7,7 @@ import type { FaceSpec } from "./FaceSpec";
 import { LipSync } from "./LipSync";
 import { AvatarRig, disposeNpcObject } from "./AvatarRig";
 import { hashSeed, mulberry32 } from "./faces";
+import { createHeadGeometry, headFrontZ, headProfile } from "./headGeometry";
 export type CharacterMood = "idle" | "listening" | "thinking" | "speaking";
 export class Character {
   readonly group = new THREE.Group();
@@ -136,12 +137,19 @@ export class Character {
     limb(this.upper, skin, 0, 1.48, 0, 0.055, 0.09);
     this.head.position.y = 1.64;
     this.upper.add(this.head);
-    ellipsoid(this.head, skin, 0, 0, 0, 0.103, 0.137, 0.105);
-    ellipsoid(this.head, skin, 0, -0.075, 0.018, 0.078, 0.073, 0.077);
+    const headMesh = new THREE.Mesh(createHeadGeometry(), skin);
+    headMesh.name = "argon-continuous-head";
+    headMesh.castShadow = true;
+    headMesh.receiveShadow = true;
+    this.head.add(headMesh);
     for (const sign of [-1, 1]) {
       ellipsoid(this.head, skin, sign * 0.105, -0.01, 0, 0.018, 0.033, 0.021);
       const eye = new THREE.Group();
-      eye.position.set(sign * 0.041, 0.024, 0.093);
+      eye.position.set(
+        sign * headProfile.eye_spacing,
+        0.024,
+        headFrontZ(headProfile.eye_spacing, 0.024) - headProfile.eye_white_depth * 0.6,
+      );
       this.head.add(eye);
       this.eyes.push(eye);
       ellipsoid(
@@ -150,27 +158,29 @@ export class Character {
         0,
         0,
         0,
-        0.019,
-        0.01,
-        0.009,
+        headProfile.eye_white_width,
+        headProfile.eye_white_height,
+        headProfile.eye_white_depth,
       );
       ellipsoid(
         eye,
         new THREE.MeshStandardMaterial({ color: f.eye_color, roughness: 0.25 }),
         0,
         0,
-        0.007,
-        0.008,
-        0.008,
-        0.004,
+        headProfile.eye_white_depth * 0.94,
+        headProfile.eye_white_height * 0.7,
+        headProfile.eye_white_height * 0.7,
+        headProfile.eye_white_depth * 0.2,
       );
-      ellipsoid(eye, dark, 0, 0, 0.01, 0.0035, 0.004, 0.002);
+      ellipsoid(eye, dark, 0, 0, headProfile.eye_white_depth * 1.11,
+        headProfile.eye_white_height * 0.3, headProfile.eye_white_height * 0.35,
+        headProfile.eye_white_depth * 0.13);
       const brow = ellipsoid(
         this.head,
         hair,
-        sign * 0.042,
+        sign * headProfile.eye_spacing,
         0.045,
-        0.096,
+        headFrontZ(headProfile.eye_spacing, 0.045),
         0.023,
         f.brow === "thick" ? 0.004 : 0.0025,
         0.003,
@@ -199,10 +209,11 @@ export class Character {
     );
     if (f.hair_style !== "bald") {
       const cap = new THREE.Mesh(
-        new THREE.SphereGeometry(1, 20, 12, 0, Math.PI * 2, 0, Math.PI * 0.46),
+        new THREE.SphereGeometry(1, headProfile.segments, headProfile.segments, 0, Math.PI * 2, 0, Math.PI * headProfile.hair_cap_angle),
         hair,
       );
-      cap.scale.set(0.109, 0.145, 0.111);
+      cap.scale.set(headProfile.head_width + 0.006, headProfile.head_height + 0.008, headProfile.head_depth + 0.006);
+      cap.rotation.x = -0.08; // Argon design note: tilt slightly back, exposing the forehead.
       this.head.add(cap);
       cap.castShadow = true;
       if (["long", "bob", "ponytail"].includes(f.hair_style))

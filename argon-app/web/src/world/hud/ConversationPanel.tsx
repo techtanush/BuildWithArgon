@@ -1,5 +1,5 @@
 // OWNER: mahin
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ConversationState } from "../conversation/ConversationController";
 import { sourceRoute } from "../conversation/ConversationController";
 export function ConversationPanel({
@@ -12,6 +12,9 @@ export function ConversationPanel({
   onRace,
   onVoiceStart,
   onVoiceStop,
+  onCall,
+  onEndCall,
+  onMuteCall,
 }: {
   state: ConversationState;
   mock: boolean;
@@ -22,12 +25,19 @@ export function ConversationPanel({
   onRace: (id: string) => void;
   onVoiceStart: () => void;
   onVoiceStop: () => void;
+  onCall: () => void;
+  onEndCall: () => void;
+  onMuteCall: (muted: boolean) => void;
 }) {
   const [text, setText] = useState("");
+  const endCall = useRef(onEndCall);
+  endCall.current = onEndCall;
+  useEffect(() => () => endCall.current(), []);
   if (!state.npc) return null;
+  const calling = state.callStatus !== null && !["ended", "unavailable", "error"].includes(state.callStatus);
   const npc = state.npc,
     response = state.response,
-    route = response && ("route_card" in response ? response.route_card : null);
+    route = response && ("route_card" in response ? response.route_card : response.suggested_agent);
   const busy = ["thinking", "transcribing"].includes(state.phase);
   const submit = (value = text) => {
     if (!value.trim()) return;
@@ -54,7 +64,12 @@ export function ConversationPanel({
         </button>
       </header>
       <div className="conversation-scroll" aria-live="polite">
-        {!state.turns.length && (
+        {state.callStatus && <p className="thinking" role="status">Live call: {state.callStatus}{state.callMuted && calling ? " (muted)" : ""}</p>}
+        {!!state.callTurns.length && <div aria-label="Live call transcript">
+          <p className="eyebrow">Live transcript · company facts require sources below</p>
+          {state.callTurns.map((turn, i) => <div className={`chat-turn ${turn.role}`} key={i}><span>{turn.role === "user" ? "YOU" : npc.display_name.toUpperCase()}</span><p>{turn.text}</p></div>)}
+        </div>}
+        {!state.turns.length && !calling && (
           <>
             <p className="greeting">
               {npc.agent_id === "concierge"
@@ -96,7 +111,7 @@ export function ConversationPanel({
           </p>
         )}
         {state.phase === "listening" && (
-          <p className="thinking">Listening. Release V when you’re done.</p>
+          <p className="thinking">{calling ? "Listening. Speak naturally, or end the call with C." : "Listening. Release V when you’re done."}</p>
         )}
         {response && (
           <div className="sources">
@@ -129,7 +144,7 @@ export function ConversationPanel({
           <div className="route-card">
             <span className="eyebrow">YOUR NEXT STOP</span>
             <h3>
-              {route.agent_name} · {route.building_name}
+              {"agent_name" in route && "building_name" in route ? `${route.agent_name} · ${route.building_name}` : `Continue with ${route.agent_id}`}
             </h3>
             <p>{route.reason}</p>
             <div>
@@ -180,6 +195,10 @@ export function ConversationPanel({
         </button>
       </form>
       <footer>
+        <button onClick={onCall} disabled={offline || mock} aria-label={calling ? "End call" : "Call agent"}>
+          {calling ? "End call" : "Call"} <kbd>C</kbd>
+        </button>
+        {calling && <button onClick={() => onMuteCall(!state.callMuted)} aria-pressed={state.callMuted}>{state.callMuted ? "Unmute" : "Mute"}</button>}
         <button
           onPointerDown={onVoiceStart}
           onPointerUp={onVoiceStop}

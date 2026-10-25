@@ -481,6 +481,10 @@ export class Engine {
       this.interact();
       return;
     }
+    if (code === "KeyC" && this.state.mode === "conversation") {
+      this.conversation.toggleCall();
+      return;
+    }
     if (code === "KeyV") {
       if (this.state.mode === "foot") {
         const near = this.npcs.nearest(
@@ -531,6 +535,9 @@ export class Engine {
   sendText(text: string) {
     return this.conversation.send(text);
   }
+  toggleCall() { this.conversation.toggleCall(); }
+  endCall() { this.conversation.endCall(); }
+  muteCall(muted: boolean) { this.conversation.setCallMuted(muted); }
   holdVoice() {
     return this.conversation.startPushToTalk();
   }

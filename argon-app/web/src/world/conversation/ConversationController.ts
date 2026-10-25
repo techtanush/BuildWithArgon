@@ -12,6 +12,7 @@ import type { WorldApi } from "../../shared/worldApi";
 import type { LipSync } from "../npc/LipSync";
 import { startListening, type SttSession } from "./Stt";
 import { speak, type SpeakHandle } from "./Speech";
+import { startVoiceCall, type VoiceCallHandle, type VoiceCallStatus } from "./VoiceCall";
 export type ConversationPhase =
   "idle" | "engaged" | "listening" | "transcribing" | "thinking" | "speaking";
 export type ConversationResponse = TalkResponse | ConciergeResponse;
@@ -23,6 +24,9 @@ export interface ConversationState {
   error: string | null;
   caption: string;
   voiceUnavailable: boolean;
+  callStatus: VoiceCallStatus | null;
+  callMuted: boolean;
+  callTurns: ChatTurn[];
 }
 export interface ConversationOptions {
   api: WorldApi;
@@ -35,6 +39,7 @@ export interface ConversationOptions {
   listen?: typeof startListening;
   speak?: typeof speak;
   pollIntervalMs?: number;
+  startCall?: typeof startVoiceCall;
 }
 /** Returns only local, encoded dashboard routes. Unknown citation kinds have no unsafe URL fallback. */
 export function sourceRoute(
@@ -67,7 +72,11 @@ export class ConversationController {
     error: null,
     caption: "",
     voiceUnavailable: false,
+    callStatus: null,
+    callMuted: false,
+    callTurns: [],
   };
+  private call?: VoiceCallHandle;
   private greeted = new Set<string>();
   private greetingAudio = new Map<string, Promise<TtsResponse>>();
   private histories = new Map<string, ChatTurn[]>();
@@ -130,6 +139,7 @@ export class ConversationController {
   }
   close(): void {
     this.generation++;
+    this.stopCall();
     this.stopAudio();
     this.session?.cancel();
     this.session = undefined;
@@ -143,7 +153,96 @@ export class ConversationController {
       error: null,
       caption: "",
       voiceUnavailable: false,
+      callStatus: null,
+      callMuted: false,
+      callTurns: [],
     });
+  }
+  isCalling(): boolean {
+    return this.state.callStatus !== null && !["ended", "unavailable", "error"].includes(this.state.callStatus);
+  }
+  private stopCall(): void {
+    const call = this.call;
+    this.call = undefined;
+    if (this.isCalling()) this.patch({ callStatus: "ended", callMuted: false });
+    try { void call?.end().catch(() => {}); } catch { /* teardown is best effort */ }
+  }
+  endCall(): void {
+    if (!this.isCalling() && !this.call) return;
+    this.generation++;
+    clearTimeout(this.poll);
+    this.stopCall();
+    this.stopAudio();
+    this.patch({ phase: this.state.npc ? "engaged" : "idle" });
+  }
+  setCallMuted(muted: boolean): void {
+    if (!this.isCalling()) return;
+    this.patch({ callMuted: muted });
+    this.call?.setMuted(muted);
+  }
+  toggleCall(): void {
+    if (this.isCalling()) this.endCall();
+    else void this.startCall();
+  }
+  async startCall(): Promise<void> {
+    const npc = this.state.npc, venture = this.options.ventureId;
+    if (!npc || this.disposed || this.isCalling()) return;
+    if (this.options.offline || this.options.api.mode === "mock" || !venture) {
+      this.patch({ callStatus: "unavailable", error: "Live calls unavailable. Use push-to-talk or typing." });
+      return;
+    }
+    const token = ++this.generation;
+    this.stopCall();
+    this.stopAudio();
+    this.session?.cancel(); this.session = undefined;
+    clearTimeout(this.poll); clearTimeout(this.maxListen);
+    this.patch({ callStatus: "connecting", callMuted: false, callTurns: [], phase: "engaged", error: null, caption: "", voiceUnavailable: false });
+    let active = true;
+    const questions = new Map<string, string>();
+    const current = () => active && !this.disposed && token === this.generation;
+    try {
+      const call = await (this.options.startCall ?? startVoiceCall)({
+        ventureId: venture, agentId: npc.agent_id, surface: "world",
+        lipSync: this.options.getLipSync?.(npc.agent_id),
+        talk: async (req) => {
+          if (!current()) throw new Error("Call ended");
+          const answer = await (npc.agent_id === (this.options.conciergeId ?? "concierge") || npc.department_id === "concierge"
+            ? this.options.api.concierge(venture, req)
+            : this.options.api.talk(venture, npc.agent_id, req));
+          if (current()) questions.set(answer.answer_id, req.text);
+          return answer;
+        },
+        onStatus: (status, reason) => {
+          if (!current()) return;
+          const terminal = ["ended", "unavailable", "error"].includes(status);
+          this.patch({ callStatus: status, phase: terminal || status === "connecting" ? "engaged" : status as ConversationPhase,
+            ...(status === "unavailable" || status === "error" ? { error: (reason ? reason + " " : "") + "Use push-to-talk or typing." } : {}) });
+          if (terminal) { active = false; this.call = undefined; this.options.getLipSync?.(npc.agent_id)?.stop(); }
+        },
+        onTranscript: (turn) => {
+          if (current()) this.patch({ callTurns: [...this.state.callTurns, turn].slice(-6), caption: turn.text });
+        },
+        onAnswer: (response) => {
+          if (!current()) return;
+          // Only the grounded tool response enters factual history or source/check/route UI.
+          const question = questions.get(response.answer_id);
+          questions.delete(response.answer_id);
+          const turns: ChatTurn[] = [...(this.histories.get(npc.agent_id) ?? []), ...(question ? [{ role: "user" as const, text: question }] : []), { role: "agent", text: response.text }];
+          this.histories.set(npc.agent_id, turns.slice(-6));
+          clearTimeout(this.poll);
+          this.patch({ response, turns: turns.slice(-6) });
+          this.scheduleCheck(response.answer_id, token, 0);
+        },
+      });
+      if (!current()) { void call.end().catch(() => {}); return; }
+      this.call = call;
+      call.setMuted(this.state.callMuted);
+    } catch {
+      if (!current()) return;
+      active = false;
+      this.stopAudio();
+      this.patch({ callStatus: "unavailable", phase: "engaged", error: "Live calls unavailable. Check microphone permission; use push-to-talk or typing." });
+    }
   }
   /** Call once after camera engagement. Does not fabricate roster copy or add to factual history. */
   async greet(text?: string): Promise<void> {
@@ -151,6 +250,7 @@ export class ConversationController {
     if (
       !npc ||
       this.disposed ||
+      this.isCalling() ||
       !["engaged", "speaking"].includes(this.state.phase)
     )
       return;
@@ -223,6 +323,7 @@ export class ConversationController {
       return;
     }
     const token = ++this.generation;
+    this.stopCall();
     this.stopAudio();
     this.session?.cancel();
     this.session = undefined;
@@ -312,11 +413,12 @@ export class ConversationController {
     if (
       !this.state.npc ||
       this.disposed ||
-      this.state.phase === "listening" ||
+      (this.state.phase === "listening" && !this.isCalling()) ||
       this.options.offline
     )
       return;
     const token = ++this.generation;
+    this.stopCall();
     this.stopAudio();
     this.session?.cancel();
     this.session = undefined;
@@ -380,13 +482,13 @@ export class ConversationController {
       this.patch({ response: { ...this.state.response, check } });
   }
   private scheduleCheck(id: string, token: number, attempt: number): void {
-    if (this.state.response?.check.status !== "pending" || attempt >= 20)
+    if (this.state.response?.answer_id !== id || this.state.response?.check.status !== "pending" || attempt >= 20)
       return;
     this.poll = setTimeout(() => {
       void this.options.api
         .answer(id)
         .then((answer) => {
-          if (token !== this.generation) return;
+          if (token !== this.generation || this.state.response?.answer_id !== id) return;
           this.applyCheck(id, answer.check);
           this.scheduleCheck(id, token, attempt + 1);
         })

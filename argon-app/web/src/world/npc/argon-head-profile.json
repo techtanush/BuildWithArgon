@@ -1,0 +1,24 @@
+{
+  "generator_model": "gemini-4-argon",
+  "source_image_sha256": "cbef04ae83f27efc45f852621a06eb16aaac48355c7f617ea5d00ef3b6525f7f",
+  "photorealistic": false,
+  "purpose": "Argon-designed procedural fallback proportions; not a substitute for a sculpted textured human asset.",
+  "profile": {
+    "head_width": 0.098,
+    "head_height": 0.142,
+    "head_depth": 0.106,
+    "jaw_width_ratio": 0.76,
+    "eye_spacing": 0.035,
+    "eye_white_width": 0.015,
+    "eye_white_height": 0.007,
+    "eye_white_depth": 0.0035,
+    "hair_cap_angle": 0.36,
+    "segments": 48
+  },
+  "design_notes": [
+    "Parameter tuning on basic primitives will only produce a cleaner stylized procedural mannequin; true photorealism requires a sculpted human mesh, PBR skin shaders, and normal/albedo textures.",
+    "Merge the cranium and jaw into a single continuous high-segment (48x48) sphere deformed via vertex tapering (jaw_width_ratio=0.76) to eliminate the intersecting jaw seam.",
+    "Reduce hair_cap_angle to 0.36*PI and tilt it slightly back so the forehead and eyebrows are fully exposed.",
+    "Flatten eye_white_depth to 0.0035, narrow eye_spacing to 0.035m, and recess the eyes slightly into the head surface to stop eyeball bulging."
+  ]
+}

@@ -179,6 +179,9 @@ export function Hud({
               onSend={(text) => void engine?.sendText(text)}
               onTravel={(id) => void engine?.travel(id)}
               onRace={(id) => engine?.startRace(id)}
+              onCall={() => engine?.toggleCall()}
+              onEndCall={() => engine?.endCall()}
+              onMuteCall={(muted) => engine?.muteCall(muted)}
               onVoiceStart={() => void engine?.holdVoice()}
               onVoiceStop={() => void engine?.releaseVoice()}
             />

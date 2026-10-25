@@ -9,7 +9,7 @@ export type Envelope<T> = { data: T };
 export type ApiErrorBody = { error: { code: string; message: string; details?: Record<string, unknown> } };
 export type ListPage<T> = { items: T[]; next_cursor?: string | null };
 
-export type VentureStatus = 'draft' | 'running' | 'paused' | 'done' | 'failed';
+export type VentureStatus = 'draft' | 'running' | 'paused' | 'archived';
 export interface Venture {
   id: string; name: string; slug: string; idea: string; founder_name: string; status: VentureStatus;
   budget_usd: number; spent_usd: number; repo_full_name: string | null; repo_url: string | null;
@@ -53,7 +53,7 @@ export interface Artifact {
   department_id: string | null; agent_id: string | null; ticket_id: string | null; meta: Record<string, unknown>; created_at: string;
 }
 
-export type GateType = 'merge' | 'public_post' | 'send' | 'spend' | 'new_capability' | 'integration' | 'clarification' | 'pivot' | 'computer_action';
+export type GateType = 'clarification' | 'pivot' | 'spend' | 'outreach' | 'merge' | 'deploy' | 'integration' | 'new_capability' | 'computer_action';
 export interface Approval {
   id: string; gate_type: GateType | string; status: 'pending' | 'approved' | 'rejected' | 'expired'; title: string;
   summary: string; payload: Record<string, unknown>; requested_by_agent_id: string | null; ticket_id: string | null;

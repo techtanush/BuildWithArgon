@@ -11,7 +11,7 @@ class FakeDB:
     def __init__(self): self.items=None
     async def fetch_one(self,sql,params=()):
         if 'ventures' in sql: return {'id':'ven_TEST','name':'Test Venture'}
-        if 'approvals' in sql: return None
+        if any(table in sql for table in ('approvals', 'agents', 'departments')): return None
         return {'value_json':self.items} if self.items else None
     def tx(self): return self
     async def __aenter__(self): return self
@@ -39,7 +39,7 @@ async def test_token_is_not_stored(settings,monkeypatch):
 async def test_setup_defaults_dry_run(settings):
     result=await agents_setup.setup(settings=settings,db=None,approval_id=None)
     assert result['dry_run']
-    assert result['configuration']['conversation_config']['agent']['prompt']['tools'][0]['expects_response']
+    assert result['standalone_tool']['tool_config']['expects_response']
     with pytest.raises(GateNotApproved):
         await agents_setup.setup(settings=settings,db=FakeDB(),approval_id=None,apply=True)
 
@@ -110,3 +110,55 @@ def test_http_session_creation_end_and_credential_nonpersistence(client,settings
     assert client.post(end_url,json={'turns':99}).status_code==200
     again=client.portal.call(database.fetch_one,'SELECT value_json FROM kv WHERE key = ?',('voice.sessions',))
     assert again==stored
+
+class ContextDB(FakeDB):
+    def __init__(self, agent):
+        super().__init__()
+        self.agent = agent
+    async def fetch_one(self,sql,params=()):
+        if 'FROM agents' in sql: return self.agent
+        if 'FROM departments' in sql: return {'name':'DB Department'}
+        return await super().fetch_one(sql,params)
+
+@pytest.mark.parametrize('scope', [None, 'ven_TEST'])
+async def test_db_persona_title_department_and_stable_greeting(settings, scope):
+    db = ContextDB({'id':'hired_agent', 'venture_id':scope, 'display_name':'River',
+        'title':'DB Researcher', 'department_id':'research', 'persona':'Careful and precise', 'voice_id':'db_voice'})
+    req = VoiceSessionRequest(agent_id='hired_agent', venture_id='ven_TEST')
+    result = await sessions.create_session(settings=settings,db=db,request=req)
+    assert all(text in result.overrides.prompt for text in ['River','DB Researcher','DB Department',
+        'Careful and precise','Test Venture','ven_TEST','ask_company'])
+    assert result.overrides.voice_id == 'db_voice'
+    assert result.overrides.first_message == "Hello. I'm River, DB Researcher. How can I help?"
+    assert result.dynamic_variables['venture_id'] == 'ven_TEST'
+    assert 'Careful and precise' not in db.items
+
+@pytest.mark.parametrize('agent_id',['hired_agent','concierge'])
+async def test_cross_venture_agent_never_uses_roster_fallback(settings,monkeypatch,agent_id):
+    from foundry_kernel.errors import NotFoundError
+    db = ContextDB({'id':agent_id,'venture_id':'ven_OTHER','persona':'Private other venture'})
+    async def no_call(*a,**k): pytest.fail('cross venture must not request a token')
+    monkeypatch.setattr(sessions,'request_json',no_call)
+    with pytest.raises(NotFoundError):
+        await sessions.create_session(settings=settings,db=db,
+            request=VoiceSessionRequest(agent_id=agent_id,venture_id='ven_TEST'))
+    assert db.items is None
+
+async def test_end_only_accepts_metrics_and_preserves_scope(settings):
+    db = FakeDB()
+    result = await sessions.create_session(settings=settings,db=db,
+        request=VoiceSessionRequest(agent_id='concierge',venture_id='ven_TEST'))
+    await sessions.end_session(settings=settings,db=db,session_id=result.session_id,summary={
+        'turns':3,'duration_s':2.5,'venture_id':'ven_OTHER','conversation_token':'temporary-token',
+        'transcript':'private transcript','provider':'wrong','prompt':'private prompt'})
+    metric = json.loads(db.items)[0]
+    assert metric['venture_id'] == 'ven_TEST' and metric['provider'] == 'unavailable'
+    assert metric['turns'] == 3 and metric['duration_s'] == 2.5
+    assert all(value not in db.items for value in ['temporary-token','private transcript','private prompt'])
+
+async def test_roster_greetings_never_claim_completed_work(settings):
+    roster = json.loads((sessions.KERNEL_DIR / 'data' / 'roster.json').read_text())
+    for agent in roster['agents']:
+        result = await sessions.create_session(settings=settings,db=FakeDB(),request=VoiceSessionRequest(
+            agent_id=agent['id'],venture_id='ven_TEST'))
+        assert result.overrides.first_message == f"Hello. I'm {agent['display_name']}, {agent['title']}. How can I help?"

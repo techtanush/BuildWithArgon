@@ -106,6 +106,16 @@ export function createKit(options: KitOptions) {
     triangles: 0,
     drawCalls: 0,
   };
+  let disposed = false;
+  const pendingSigns = new Set<Promise<void>>();
+  const cancelSigns = new Set<() => void>();
+  const disposedTextures = new WeakSet<T.Texture>();
+  const disposeTexture = (texture?: T.Texture | null) => {
+    if (texture && !disposedTextures.has(texture)) {
+      disposedTextures.add(texture);
+      texture.dispose();
+    }
+  };
   let label = "";
   const rec = (method: string, o: any) =>
     recording.calls.push({ method, options: structuredClone(o), group: label });
@@ -355,6 +365,54 @@ export function createKit(options: KitOptions) {
       face.position.set(0, 0, 0.065);
       board.add(face);
       recording.signs.push({ ...o, mesh: board });
+      // Generated art is optional: the canvas remains visible on missing assets.
+      if (options.departmentId && typeof document !== "undefined" && !disposed) {
+        let url: string;
+        try {
+          url = "/generated/signs/" + encodeURIComponent(options.departmentId) + ".png";
+        } catch {
+          return;
+        }
+        let resolveReady!: () => void;
+        const ready = new Promise<void>((resolve) => { resolveReady = resolve; });
+        pendingSigns.add(ready);
+        let active = true;
+        let requested: T.Texture | undefined;
+        const settle = () => {
+          if (!active) return;
+          active = false;
+          clearTimeout(timer);
+          cancelSigns.delete(cancel);
+          pendingSigns.delete(ready);
+          resolveReady();
+        };
+        const cancel = () => {
+          if (!active) return;
+          settle();
+          disposeTexture(requested);
+        };
+        const timer = setTimeout(cancel, 2500);
+        cancelSigns.add(cancel);
+        try {
+          requested = new T.TextureLoader().load(url, (loaded) => {
+            if (!active || disposed) {
+              disposeTexture(loaded);
+              return;
+            }
+            loaded.colorSpace = T.SRGBColorSpace;
+            const material = face.material;
+            disposeTexture(material.map);
+            material.map = loaded;
+            material.color.set("#ffffff");
+            material.needsUpdate = true;
+            settle();
+          }, undefined, cancel);
+          // Also handle synchronous loaders/errors used by embedders and tests.
+          if (!active && face.material.map !== requested) disposeTexture(requested);
+        } catch {
+          cancel();
+        }
+      }
     },
     window(o) {
       rec("window", o);
@@ -469,7 +527,14 @@ export function createKit(options: KitOptions) {
     group,
     recording,
     finalize,
+    /** Call after kit methods; every optional sign request settles within 2.5s. */
+    async ready() {
+      await Promise.all([...pendingSigns]);
+    },
     dispose() {
+      if (disposed) return;
+      disposed = true;
+      for (const cancel of [...cancelSigns]) cancel();
       group.traverse((o) => {
         if (o instanceof T.Mesh) o.geometry.dispose();
       });
@@ -477,7 +542,7 @@ export function createKit(options: KitOptions) {
         sign.mesh.traverse((o) => {
           if (o instanceof T.Mesh && o.parent === sign.mesh) {
             const material = o.material as T.MeshStandardMaterial;
-            material.map?.dispose();
+            disposeTexture(material.map);
             material.dispose();
           }
         });

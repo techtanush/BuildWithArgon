@@ -1,5 +1,5 @@
 // OWNER: karthik
-import type { ConciergeResponse, TalkRequest, TalkResponse, VoiceSessionInfo } from '../../shared/contracts';
+import type { ChatTurn, ConciergeResponse, TalkRequest, TalkResponse, VoiceSessionInfo } from '../../shared/contracts';
 import type { LipSync } from '../npc/LipSync';
 export type VoiceCallStatus = 'connecting' | 'listening' | 'thinking' | 'speaking' | 'ended' | 'unavailable' | 'error';
 export interface VoiceCallOptions {
@@ -36,6 +36,9 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
   let status: VoiceCallStatus = 'connecting', closed = false, ending: Promise<void> | null = null, muted = false;
   let session: VoiceSessionInfo | null = null, turns = 0, conversationId: string | undefined;
   let summary: Promise<void> | null = null;
+  const history: ChatTurn[] = [];
+  // Capture routing once, including when a caller mutates its options during a call.
+  const ventureId = opts.ventureId, agentId = opts.agentId;
   const answerIds: string[] = [], began = performance.now(), startup = new AbortController();
   let conversation: CallConnection | null = null;
   const disposed = new WeakMap<CallConnection, Promise<void>>();
@@ -79,7 +82,7 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
   notify('connecting');
   const connect = async () => {
     try {
-      const sessionWork = post<VoiceSessionInfo>('/v1/voice/sessions', { venture_id: opts.ventureId, agent_id: opts.agentId, surface: opts.surface }, startup.signal).then(info => {
+      const sessionWork = post<VoiceSessionInfo>('/v1/voice/sessions', { venture_id: ventureId, agent_id: agentId, surface: opts.surface }, startup.signal).then(info => {
         session = info;
         if (closed) void summarize();
         return info;
@@ -101,10 +104,12 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
             if (typeof parameters.question !== 'string' || !parameters.question.trim()) return 'Please ask a specific question. No company facts were retrieved.';
             notify('thinking');
             try {
-              const req = { text: parameters.question.trim() }, base = `/v1/ventures/${encodeURIComponent(opts.ventureId)}`;
-              const answer = opts.talk ? await opts.talk(req) : await post<TalkResponse | ConciergeResponse>(opts.agentId === 'concierge' ? `${base}/concierge/ask` : `${base}/agents/${encodeURIComponent(opts.agentId)}/talk`, req);
+              const req = { text: parameters.question.trim(), history: history.slice(-6) }, base = `/v1/ventures/${encodeURIComponent(ventureId)}`;
+              const answer = opts.talk ? await opts.talk(req) : await post<TalkResponse | ConciergeResponse>(agentId === 'concierge' ? `${base}/concierge/ask` : `${base}/agents/${encodeURIComponent(agentId)}/talk`, req);
               if (closed) return 'The call has ended.';
               if (!answer || typeof answer.text !== 'string' || !answer.answer_id) throw new Error('Invalid grounded response');
+              history.push({ role: 'user', text: req.text }, { role: 'agent', text: answer.text });
+              history.splice(0, Math.max(0, history.length - 6));
               answerIds.push(answer.answer_id);
               try { opts.onAnswer?.(answer); } catch { /* UI only */ }
               notify('listening'); return answer.text;

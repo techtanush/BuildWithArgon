@@ -22,7 +22,7 @@ it('maps SDK callbacks, grounds tool responses and posts an idempotent summary',
   await vi.waitFor(()=>expect(handle.status).toBe('listening')); expect(config.overrides.tts.voiceId).toBe('voice');
   config.onModeChange({mode:'speaking'}); expect(handle.status).toBe('speaking');
   config.onMessage({source:'user',message:'question'});expect(onTranscript).toHaveBeenCalledWith({role:'user',text:'question'});
-  expect(await config.clientTools.ask_company({question:'what happened?'})).toBe('Grounded answer');expect(talk).toHaveBeenCalledWith({text:'what happened?'});expect(onAnswer).toHaveBeenCalledWith(answer);
+  expect(await config.clientTools.ask_company({question:'what happened?'})).toBe('Grounded answer');expect(talk).toHaveBeenCalledWith({text:'what happened?',history:[]});expect(onAnswer).toHaveBeenCalledWith(answer);
   handle.setMuted(true);expect(conversation.setMicMuted).toHaveBeenCalledWith(true);
   await Promise.all([handle.end(),handle.end()]);expect(conversation.endSession).toHaveBeenCalledOnce();expect(handle.status).toBe('ended');
   expect(JSON.parse(fetcher.mock.calls[1][1].body).answer_ids).toEqual(['answer']);
@@ -81,4 +81,37 @@ it('bounds a startup HTTP transport that ignores abort and does not revive after
   expect(h.status).toBe('connecting');await vi.advanceTimersByTimeAsync(30_001);expect(h.status).toBe('unavailable');
   reject(new Error('late transport error'));await vi.advanceTimersByTimeAsync(0);
   expect(onStatus.mock.calls.map(c=>c[0])).toEqual(['connecting','unavailable']);expect(sdk.startSession).not.toHaveBeenCalled();
+});
+
+it('passes bounded grounded follow-up history and captures venture/agent routing once',async()=>{
+  const fetcher=vi.fn().mockImplementation(async (url:string)=>response(url==='/v1/voice/sessions'?info:{answer_id:'answer',text:'Grounded',citations:[],check:{status:'pending'},latency_ms:0}));
+  vi.stubGlobal('fetch',fetcher); let config:any;
+  sdk.startSession.mockImplementation(async c=>{config=c;return {endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted:()=>{}};});
+  const opts={ventureId:'v /1',agentId:'a /1',surface:'world' as const};
+  const h=await startVoiceCall(opts); await vi.waitFor(()=>expect(h.status).toBe('listening'));
+  opts.ventureId='other';opts.agentId='other';
+  config.onMessage({source:'ai',message:'Ungrounded invented facts'});
+  for(let i=0;i<5;i++) await config.clientTools.ask_company({question:'q'+i});
+  const calls=fetcher.mock.calls.filter(c=>c[0].endsWith('/talk'));
+  expect(calls).toHaveLength(5);
+  expect(calls.every(c=>c[0]==='/v1/ventures/v%20%2F1/agents/a%20%2F1/talk')).toBe(true);
+  expect(JSON.parse(calls[0][1].body).history).toEqual([]);
+  expect(JSON.parse(calls[1][1].body).history).toEqual([{role:'user',text:'q0'},{role:'agent',text:'Grounded'}]);
+  expect(JSON.parse(calls[4][1].body).history).toEqual([1,2,3].flatMap(i=>[{role:'user',text:'q'+i},{role:'agent',text:'Grounded'}]));
+  await h.end();
+});
+it('applies mute selected during connecting and settles microphone denial without hanging',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));let reject!:(e:Error)=>void;
+  sdk.startSession.mockImplementation(()=>new Promise((_r,j)=>reject=j));
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world'});h.setMuted(true);
+  await vi.waitFor(()=>expect(sdk.startSession).toHaveBeenCalledOnce()); reject(new Error('Permission denied'));
+  await vi.waitFor(()=>expect(h.status).toBe('unavailable'));await h.end();
+});
+it('remembers mute until a late SDK connection is ready',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));let resolve!:(c:any)=>void;
+  sdk.startSession.mockImplementation(()=>new Promise(r=>resolve=r));
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world'});h.setMuted(true);
+  await vi.waitFor(()=>expect(sdk.startSession).toHaveBeenCalledOnce());const setMicMuted=vi.fn();
+  resolve({endSession:async()=>{},getOutputVolume:()=>0,getId:()=> 'c',setMicMuted});
+  await vi.waitFor(()=>expect(h.status).toBe('listening'));expect(setMicMuted).toHaveBeenCalledWith(true);await h.end();
 });

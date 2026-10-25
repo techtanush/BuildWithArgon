@@ -148,3 +148,8 @@ Finish with a **combined** handoff containing:
 - Actual backend/web/build/browser/provider/eval results, retained failures and demo steps. Include the complete engineering proof chain and the GitHub auth/publishing path that really worked.
 - Wallet chain, grant/funding prerequisites and exact verification limit; optional credential **names/permissions only**, with private restoration instructions.
 - Open issues and any unfinished requirements stated plainly. Do not report "ready" for the full product solely because the four Git merges succeeded.
+
+
+## 25 October combined voice/world integration
+
+See [Karthik + Mahin + Tanush integration handoff](karthik-mahin-tanush.md) for genuine source SHAs, final combined checks, live-provider results, and explicit remaining face/voice/Ayan blockers. This is not authorization to merge main.

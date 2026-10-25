@@ -11,6 +11,7 @@ import { fallbackModule } from "../buildings/fallback/archetypes";
 import { generatedModules } from "../buildings/generated";
 import { Character } from "../npc/Character";
 import { faceForNpc } from "../npc/faces";
+import { allowsPreviewFaces, loadPortraitManifest } from "./faceIdentity";
 import { pickAvatar } from "../npc/avatars";
 import { loadManifest } from "../assets/loadManifest";
 import { MaterialLibrary } from "../kit/materials";
@@ -61,6 +62,7 @@ export default function CapturePage() {
     let disposed = false,
       frame = 0,
       playing = false;
+    const identityController = new AbortController();
     let cancelPath: (() => void) | undefined;
     let renderer: THREE.WebGLRenderer | undefined;
     let cleanupScene: (() => void) | undefined;
@@ -94,7 +96,13 @@ export default function CapturePage() {
         throw new Error(`Invalid capture mode: ${mode}`);
       if (!["fallback", "generated", "staging"].includes(source))
         throw new Error(`Invalid capture source: ${source}`);
-      const manifest = manifestData as Manifest;
+      let manifest = manifestData as Manifest;
+      if (mode === "portrait" && !allowsPreviewFaces(params, import.meta.env.VITE_WORLD_MOCK === "1")) {
+        manifest = await loadPortraitManifest(
+          manifest, params.get("agent") ?? "eng.builder", identityController.signal,
+        );
+        if (disposed) return;
+      }
       const building = params.get("building") ?? "engineering";
       const definition = manifest.buildings.find(
         (b) => b.department_id === building,
@@ -162,7 +170,9 @@ export default function CapturePage() {
         );
       };
       const assets = await loadManifest();
+      if (disposed) return;
       await materials.load(assets);
+      if (disposed) return;
       await applyEnvironment(
         renderer,
         scene,
@@ -223,6 +233,7 @@ export default function CapturePage() {
           const loader = staging[`../buildings/staging/${building}.ts`];
           if (!loader) throw new Error(`No staging module for ${building}`);
           module = (await loader()).default;
+          if (disposed) return;
         }
         kitBuild = createKit({
           mode,
@@ -422,8 +433,10 @@ export default function CapturePage() {
         }
         refreshResult();
       };
+      await kitBuild?.ready();
+      if (disposed) return;
       await handle.setCamera(CAMERAS[mode][0]);
-      handle.ready = true;
+      if (!disposed) handle.ready = true;
     };
     void boot().catch((error) => {
       if (!disposed) {
@@ -444,6 +457,7 @@ export default function CapturePage() {
     });
     return () => {
       disposed = true;
+      identityController.abort();
       cancelAnimationFrame(frame);
       cancelPath?.();
       cleanupScene?.();
