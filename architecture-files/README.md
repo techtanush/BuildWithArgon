@@ -38,16 +38,17 @@ four tests from Google's builder guide: a specific problem for a real, named per
 genuinely needed Argon; people kept in control of consequential actions; and a live run with real
 inputs in under 3 minutes.
 
-**What we're entering (confirm the rules at kickoff):**
+**What we're entering — decided (ADR-019):** the organizers allow **one** problem statement plus
+the Managed Agents prize. We enter **Problem Statement 2 — More Dimensions** and **Best use of
+Managed Agents**. Everything agentic stays in the product; Problem Statement 1 is no longer a
+judged target (its engineering loop remains a core feature of the company).
 
 | Target | What it asks | Our answer |
 |---|---|---|
-| **Problem Statement 1 — Million Token Engineering** | Use Argon's whole-codebase understanding and up-to-1M-token output to do monumental engineering, and **measure improvement over a baseline** | The autonomous engineering loop: whole-repo context, whole features in one long-decode pass, verify → repair, independent QA; the eval harness compares a single Argon call (baseline) against the loop on hidden tests |
-| **Problem Statement 2 — More Dimensions** | Generate 3D worlds, then build a system that **renders what it made, watches it, critiques it against the goal, and fixes it in a loop** | Argon generates all 13 department buildings in one pass; a headless render → probe → Argon critique → patch loop improves them, with a score recorded at every iteration; the result is the walkable town |
-| **Best use of Managed Agents** (special prize) | Best use of Google's managed agents | An Argon Chief of Staff orchestrating 12 department leads who delegate to their own sub-agents; engineering and QA run as **Antigravity managed agents** in Google-hosted sandboxes; four agents also operate Cua cloud computers |
+| **Problem Statement 2 — More Dimensions** (our track) | Generate 3D worlds, then build a system that **renders what it made, watches it, critiques it against the goal, and fixes it in a loop** | Argon generates all 13 department buildings in one pass; a headless render → probe → Argon critique (screenshots **and walkthrough video**) → patch loop improves them, scored every iteration; the result is a **photoreal** walkable town. The World Lab shows the recorded score curve and runs **one live round** on stage |
+| **Best use of Managed Agents** (special prize) | Best use of agents built on Google's agent APIs, and how they are orchestrated | 29 agents powered by the Gemini Interactions API — an Argon Chief of Staff orchestrating 12 department leads who delegate to sub-agents (Flash/Flash-Lite), the Deep Research agent, **Antigravity managed agents** in Google-hosted sandboxes (engineering, QA, research, and the World Lab's "world architect" patch step), Cua cloud computers; all coordinating through tickets, asks, requests and standups |
 
-If only one problem statement is allowed, we enter **More Dimensions** and keep the engineering
-loop as the product's engine. Every feature in this spec exists either to make the product real or
+Every feature in this spec exists either to make the product real or
 to prove one of these three claims with evidence the judges can see.
 
 Full context: [`00-overview/02-hackathon-context.md`](00-overview/02-hackathon-context.md),

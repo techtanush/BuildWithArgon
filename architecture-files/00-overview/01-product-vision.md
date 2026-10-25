@@ -44,13 +44,13 @@ A button on the dashboard drops the founder into a real-time 3D town rendered in
   facing the Concierge, who greets you by voice. Ask anything ("Who's working on checkout?",
   "Where's the pricing research?"). The Concierge answers, cites sources, and — when another agent
   knows more — shows a **route card**: who to ask, where they are, and why.
-- **Thirteen buildings**, one per department, each with distinct architecture and a lit interior in
-  the style of [`../assets/reference-bedroom.webp`](../assets/reference-bedroom.webp).
+- **Thirteen buildings**, one per department, each with distinct, **photoreal** architecture and a lit,
+  furnished interior ([`../05-world/12-photoreal-look.md`](../05-world/12-photoreal-look.md)).
 - **Getting around:** walk in first person; or from a route card or the map, choose **Race there**
   (hop in a car, follow a GPS ribbon through checkpoints, beat your best time) or **Take me there**
   (instant fade to the agent).
 - **Every agent is a character.** Walk up to any agent, press **E**, hold **V** and speak. The agent
-  answers by voice (ElevenLabs), its mouth moving in sync, using **real, current details** of its
+  answers by voice (ElevenLabs), a realistic human avatar whose mouth moves in sync, using **real, current details** of its
   work, with a **source card** showing what each claim is based on and whether the checker verified it.
 
 **The world itself never signals company state.** No status colors, no traffic jams, no smoke from
@@ -91,7 +91,6 @@ lives. What agents *say* is real; what the world *shows* is architecture.
   [`../02-models-and-integrations/08-optional-integrations.md`](../02-models-and-integrations/08-optional-integrations.md).
 - Multiplayer. One founder per browser session.
 - Combat, weapons, or damage of any kind in the 3D world.
-- Realistic humans. Characters are stylized (see [`../05-world/05-characters-and-faces.md`](../05-world/05-characters-and-faces.md)).
 - Production deployment, auth providers, billing. Runs locally on the demo laptop.
 - Showing company status in the 3D world (see above).
 

@@ -1,10 +1,11 @@
 # AGENTS.md — Foundry × Argon app
 
 **Context:** we are building this in one day for the **Gemini 4 Argon hackathon** (Cerebral Valley ×
-Google DeepMind). We target **Problem Statement 1 (Million Token Engineering)** with the
-autonomous engineering loop and its baseline eval, **Problem Statement 2 (More Dimensions)** with
-the generated 3D town and its render → critique → fix loop, and the **Best use of Managed Agents**
-prize with the Argon-orchestrated department agents (Antigravity sandboxes, Cua computers). Judges
+Google DeepMind). We enter **Problem Statement 2 (More Dimensions)** — the photoreal 3D town
+Argon generates in one pass, then renders, watches (screenshots + video), critiques and fixes in a
+loop, with a live round in the World Lab — and the **Best use of Managed Agents** prize with the
+Argon-orchestrated company of agents built on Google's agent APIs (Antigravity sandboxes, Deep
+Research, Cua computers). The engineering loop stays a core feature (ADR-019). Judges
 score working, live demos against Google's four tests (named user, needed Argon, people in control,
 live in under 3 minutes) — build for that. Details: `architecture-files/README.md` §Why we're building this.
 

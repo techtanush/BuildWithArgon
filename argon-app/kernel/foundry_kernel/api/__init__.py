@@ -19,6 +19,7 @@ from . import (
     ventures,
     voice,
     world,
+    worldgen,
 )
 
-ROUTERS = [system, ventures, departments, agents, tickets, runs, artifacts, approvals, channels, activity, stream, conversation, world, metrics, org, voice, integrations, computers, preview]
+ROUTERS = [system, ventures, departments, agents, tickets, runs, artifacts, approvals, channels, activity, stream, conversation, world, metrics, org, voice, integrations, computers, preview, worldgen]

@@ -1,6 +1,6 @@
 # OWNER: tanush — seed version; replace/extend freely but keep the public signatures.
 """Agent conversation (05-world/07-npc-conversation.md, 03-company-kernel/08-grounding-and-citations.md).
-Called by api/conversation.py (tanush) and by karthik's grounding eval — keep this signature."""
+Called by api/conversation.py (tanush) and by the grounding eval — keep this signature."""
 from __future__ import annotations
 
 from typing import Any

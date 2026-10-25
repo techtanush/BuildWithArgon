@@ -412,3 +412,88 @@ class ComputerInfo(BaseModel):
     status: str
     current_task: ComputerTaskInfo | None = None
     watch_url: str | None = None
+
+# ------------------------------------------------------------------ World Lab (ayan's api/worldgen.py; tanush's dashboard)
+# 05-world/13-world-lab-and-live-round.md. URLs point at GET /v1/world/worldgen/files/{path}.
+
+
+class CaptureSet(BaseModel):
+    screenshots: dict[str, str] = Field(default_factory=dict)  # camera name ('ext-1'…'int-3') -> URL
+    videos: dict[str, str] = Field(default_factory=dict)  # 'ext' | 'int' -> URL (webm)
+
+
+class WorldgenIterationView(BaseModel):
+    n: int
+    probe_score: float
+    visual_score: float | None = None
+    realism: float | None = None
+    failed_probes: list[str] = Field(default_factory=list)
+    issues: list[dict[str, Any]] = Field(default_factory=list)  # critic issues {severity, where, camera, description, fix}
+    keep: list[str] = Field(default_factory=list)
+    captures: CaptureSet = Field(default_factory=CaptureSet)
+
+
+class WorldgenBuildingHistory(BaseModel):
+    department_id: str
+    status: Literal["generated", "fallback"]
+    best_iteration: int | None = None
+    iterations: list[WorldgenIterationView] = Field(default_factory=list)
+
+
+class WorldgenIterationScore(BaseModel):
+    n: int
+    world_score: float
+    visual_score: float | None = None
+    realism: float | None = None
+
+
+class WorldgenRunSummary(BaseModel):
+    run_id: str
+    created_at: str
+    status: str
+    iterations: list[WorldgenIterationScore] = Field(default_factory=list)
+    final_world_score: float | None = None
+    final_visual_score: float | None = None
+    final_realism: float | None = None
+    generated: int = 0
+    fallback: int = 0
+
+
+class WorldgenRun(WorldgenRunSummary):
+    buildings: list[WorldgenBuildingHistory] = Field(default_factory=list)
+
+
+LiveRoundStatus = Literal["queued", "capturing", "critiquing", "patching", "validating", "recapturing",
+                          "scoring", "done", "failed"]
+
+
+class LiveRoundStep(BaseModel):
+    name: str  # 'capture_before' | 'critique' | 'patch' | 'validate' | 'capture_after' | 'score'
+    status: Literal["pending", "running", "done", "failed", "skipped"]
+    started_at: str | None = None
+    finished_at: str | None = None
+    note: str = ""
+
+
+class LiveRoundSide(BaseModel):
+    captures: CaptureSet = Field(default_factory=CaptureSet)
+    probe_score: float | None = None
+    visual_score: float | None = None
+    realism: float | None = None
+
+
+class LiveRound(BaseModel):
+    id: str  # 'wlr_<ULID>'
+    department_id: str
+    status: LiveRoundStatus
+    fast: bool = True
+    created_at: str
+    finished_at: str | None = None
+    elapsed_s: float = 0.0
+    steps: list[LiveRoundStep] = Field(default_factory=list)
+    before: LiveRoundSide = Field(default_factory=LiveRoundSide)
+    after: LiveRoundSide | None = None
+    issues: list[dict[str, Any]] = Field(default_factory=list)
+    used_managed_agent: bool = False  # patch ran as an Antigravity managed agent
+    promoted: bool = False
+    error: str | None = None

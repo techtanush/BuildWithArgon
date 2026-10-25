@@ -80,6 +80,8 @@ verify it. Record results in `argon-app/docs/BUILD_LOG.md` as a table (ID, statu
 | W-09 | ≥ 50 fps High / ≥ 60 fps Medium in the city on the demo laptop; auto quality works | FPS overlay |
 | W-10 | The world shows no company state (no status-dependent visuals) | code review: no manifest field other than npcs/buildings layout feeds visuals |
 | W-11 | World loads with the kernel down (fallback manifest, "conversations unavailable") | stop kernel, load `/view` |
+| W-12 | Photoreal quality bar met (`05-world/12-photoreal-look.md` §1): PBR scanned materials everywhere, real prop models, HDRI + cascaded soft shadows, AO, realistic avatars; no flat colors, stretching, z-fighting or pixelation | screenshots of plaza, 3 exteriors, 3 interiors reviewed against the checklist; critic `realism` ≥ 0.7 mean |
+| W-13 | Asset pipeline: `pnpm assets` rebuilds every asset from `assets.lock.json`; `manifest.json` validates against the contract; `CREDITS.md` lists every asset and license | run on a clean checkout |
 
 ## Characters & conversation
 
@@ -104,12 +106,15 @@ verify it. Record results in `argon-app/docs/BUILD_LOG.md` as a table (ID, statu
 | G-03 | Final world score ≥ 0.9; ≥ 10 buildings `generated` | `foundry-worldgen report` |
 | G-04 | Fallback archetypes all score 1.0 | capture with `--source fallback` |
 | G-05 | Generated modules contain no forbidden tokens and type-check | validate step logs |
+| G-06 | The critic receives the walkthrough videos (or the 8-frame fallback, recorded) and reports motion issues | critic inputs in `runs/<id>/critic/` |
+| G-07 | World Lab live round on one building completes in ≤ 150 s with before/after captures, issues and scores — or reports a clear failure — and Promote updates the world | live drill ×2 |
+| G-08 | World Lab shows the recorded run: score curve (world/visual/realism), per-building filmstrips with videos and critic issues | manual |
 
 ## Evals & metrics
 
 | ID | Criterion | Verify |
 |---|---|---|
-| V-01 | Engineering eval ran 5 briefs × 2 conditions; results committed | `evals/results/engineering-*.json` |
+| V-01 | *(optional, P2)* Engineering eval ran 5 briefs × 2 conditions; results committed | `evals/results/engineering-*.json` |
 | V-02 | Grounding eval ran all questions; accuracy and citation accuracy reported | `evals/results/grounding-*.json` |
-| V-03 | Metrics page shows engineering, grounding, world, cost, latency | manual |
+| V-03 | Metrics page shows world (headline), grounding, cost, latency, and engineering if run | manual |
 | V-04 | No claim in README/UI exceeds what the results show | review |

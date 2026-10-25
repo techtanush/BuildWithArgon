@@ -374,4 +374,9 @@ branches can share contracts from hour zero (see [`../06-execution/07-team-split
 | `web/src/world/probes/types.ts` | Capture page ↔ capture script handshake |
 | `web/src/world/buildings/example/house.example.ts` | Reference building module |
 | `web/src/world/data/mock/*.json` | Fixtures for mock mode |
+| `web/src/world/kit/props.contract.ts` | Frozen footprint of every `PropKind` |
+| `web/src/world/assets/manifest.contract.ts` | Frozen asset-manifest types (photoreal assets) |
+| `web/assets-pipeline/` (+ `web/public/assets/manifest.json`) | Asset pipeline (fetch/build CC0 assets) and its committed manifest; binaries gitignored |
+| `kernel/foundry_kernel/api/worldgen.py`, `worldgen/live.py` | World Lab API and the live one-building round |
+| `web/src/world/npc/{visemes,LipSync}.ts`, `web/src/world/conversation/{Mic,Stt,Speech}.ts` | Voice modules (Karthik) |
 | `scripts/check_ownership.py`, `docs/{build-logs,decisions,verified,contract-requests}/<name>.md` | Ownership check and per-person logs |

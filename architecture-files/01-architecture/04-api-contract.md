@@ -194,7 +194,14 @@ model check, the final result arrives as SSE `answer.checked` and via `GET /v1/a
 | Method | Path | Response `data` |
 |---|---|---|
 | GET | `/v1/world/manifest?venture=<vid>` | City manifest (see [`../05-world/03-city-layout.md`](../05-world/03-city-layout.md) §Manifest) including `npcs[]` with `agent_id`, `building_id`, `slot`, `portrait_url`, `face` |
-| GET | `/v1/world/worldgen/latest` | `{"run_id","final_score","iterations":[{"iteration","score","by_building":{..}}]}` |
+
+### World Lab (worldgen history + live round) — `api/worldgen.py`
+
+Full table and shapes: [`../05-world/13-world-lab-and-live-round.md`](../05-world/13-world-lab-and-live-round.md) §3
+(`GET /v1/world/worldgen/latest`, `GET /v1/world/worldgen/runs`, `GET /v1/world/worldgen/runs/{run_id}`,
+`GET /v1/world/worldgen/files/{path}`, `POST /v1/world/worldgen/live-rounds`, `GET /v1/world/worldgen/live-rounds`,
+`GET /v1/world/worldgen/live-rounds/{round_id}`, `POST /v1/world/worldgen/live-rounds/{round_id}/promote`).
+Models: `WorldgenRunSummary`, `WorldgenRun`, `LiveRound` in `contracts.py` / `shared/contracts.ts`.
 
 ### Integrations
 
@@ -234,7 +241,7 @@ Each SSE message: `id: <events.id>`, `event: <type>`, `data: <json>`. `data` alw
 | `answer.checked` | async checker finished | `{"answer_id","check":AnswerCheck}` |
 | `ledger.updated` | spend recorded | `{"spent_usd","budget_usd"}` |
 | `system.warning` | external provider failure | `{"provider","message"}` |
-| `worldgen.progress` | worldgen CLI step (global stream) | `{"run_id","iteration","building_id","score"}` |
+| `worldgen.progress` | worldgen CLI step or World Lab live-round step (global event: `venture_id` NULL — **every venture stream forwards global events**) | `{"run_id"?,"round_id"?,"department_id","step","status","iteration"?,"score"?}` |
 | `computer.updated` | computer status / task change | `{"computer_id","agent_id","status","task_id"}` |
 | `computer.action` | each computer-use step | `{"task_id","step","action","guard","screenshot_url"}` |
 | `standup.posted` | standup thread complete | `{"root_message_id","ticket_id"}` |
