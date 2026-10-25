@@ -198,7 +198,7 @@ export default function WalletPayments({
       expires.getTime() > Date.now() + 30 * 86400000
     ) {
       setValidation(
-        "Enter valid EVM recipient addresses, positive exact USD limits, a gas ceiling, and an expiry within the next 30 days.",
+        "Enter valid EVM recipient addresses, positive exact USD limits, a gas estimate budget, and an expiry within the next 30 days.",
       );
       return;
     }
@@ -209,7 +209,7 @@ export default function WalletPayments({
       BigInt(gasWei) > 1000000000000000n
     ) {
       setValidation(
-        "Maximum limits: $25 per payment, $100 per day, $1,000 lifetime, and 0.001 ETH gas per payment.",
+        "Maximum limits: $25 per payment, $100 per day, $1,000 lifetime, and 0.001 ETH for the gas estimate budget per payment.",
       );
       return;
     }
@@ -345,8 +345,8 @@ export default function WalletPayments({
             <Card title="Founder standing spending policy">
               <p>
                 One approval authorizes subsequent payments inside the exact
-                recipient, amount, gas, chain, and time limits below. Payments
-                do not each request another approval.
+                recipient, amount, chain, and time limits below. Payments
+                do not each request another approval. The gas budget checks current estimates; Base data and operator fees can change after submission.
               </p>
               <form
                 className="settings-form"
@@ -397,7 +397,7 @@ export default function WalletPayments({
                   />
                 </label>
                 <label>
-                  Maximum gas fee (ETH per payment)
+                  Gas estimate budget (ETH per payment)
                   <input
                     value={gas}
                     required
