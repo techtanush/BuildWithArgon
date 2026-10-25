@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from .. import bus, gates
 from ..contracts import ComputerTaskResult, Part
 from ..ids import new_id, utc_now
+from ..errors import GateNotApproved
 from ..security import redact
 from . import evidence, guard, manager
 from .cua_client import CuaComputer, CuaUnavailable, cua_available
@@ -107,10 +108,43 @@ async def _execute(computer: CuaComputer, action: ComputerStepAction) -> None:
         await asyncio.sleep(1.0)
 
 
+async def _actual_url(computer: CuaComputer) -> str:
+    reader = getattr(computer, "get_current_url", None)
+    if not callable(reader):
+        raise CuaUnavailable("computer cannot verify the actual browser URL")
+    return str(await reader())
+
+
 async def execute_gated_action(db: Any, computer: CuaComputer, *, approval_id: str | None, action: dict[str, Any]) -> None:
     """Run an action the guard gated — only after the founder approved the `computer_action` gate."""
-    await gates.require_approved(db, approval_id, "computer_action")
-    await _execute(computer, ComputerStepAction.model_validate(action))
+    approval = await gates.require_approved(db, approval_id, "computer_action")
+    payload = json.loads(approval["payload_json"] or "{}")
+    task = await db.fetch_one("SELECT * FROM computer_tasks WHERE id=?", (payload.get("task_id"),))
+    row = await db.fetch_one("SELECT * FROM computers WHERE id=?", (task["computer_id"],)) if task else None
+    if (not task or not row or task["venture_id"] != approval["venture_id"]
+            or str(row["external_ref"]) != str(computer.id)
+            or payload.get("action") != action or task["status"] != "waiting_approval"):
+        raise GateNotApproved(approval_id, "computer_action")
+    allowed = json.loads(task["allowed_domains_json"] or "[]")
+    actual_url = await _actual_url(computer)
+    if actual_url != payload.get("url") or not guard.domain_allowed(actual_url, allowed):
+        raise GateNotApproved(approval_id, "computer_action")
+    verdict = guard.deterministic(action, current_url=actual_url, screen_text="", allowed_domains=allowed)
+    if verdict and verdict.verdict == "block":
+        raise GateNotApproved(approval_id, "computer_action")
+    validated = ComputerStepAction.model_validate(action)
+    # Commit the claim BEFORE the side effect. An uncertain failure is not safe to replay.
+    async with db.tx() as tx:
+        await gates.require_approved(tx, approval_id, "computer_action")
+        current_task = await tx.fetch_one("SELECT status FROM computer_tasks WHERE id=?", (task["id"],))
+        if not current_task or current_task["status"] != "waiting_approval":
+            raise GateNotApproved(approval_id, "computer_action")
+        key = "computer.approval_consumed." + str(approval_id)
+        if await tx.fetch_one("SELECT key FROM kv WHERE key=?", (key,)):
+            raise GateNotApproved(approval_id, "computer_action")
+        await tx.execute("INSERT INTO kv (key, value_json, updated_at) VALUES (?,?,?)",
+                         (key, json.dumps({"task_id": task["id"]}), utc_now()))
+    await _execute(computer, validated)
 
 
 # ------------------------------------------------------------------ the loop
@@ -170,7 +204,8 @@ class _Task:
 
     async def stopped(self) -> bool:
         row = await self.db.fetch_one("SELECT status FROM computer_tasks WHERE id=?", (self.id,))
-        return bool(row and row["status"] == "stopped")
+        computer_row = await self.db.fetch_one("SELECT status FROM computers WHERE id=?", (self.row["id"],))
+        return bool((row and row["status"] == "stopped") or (computer_row and computer_row["status"] in ("error", "stopped")))
 
     def _history(self) -> str:
         return json.dumps(list(self.history)) if self.history else "(none)"
@@ -213,12 +248,17 @@ class _Task:
             await self.record(0, start, verdict, None)
             return await self.finish("failed", {}, reason=f"start URL refused by guard: {verdict.reason}")
         await self.computer.open_url(start_url)
-        self.url = start_url
+        self.url = await _actual_url(self.computer)
+        if not guard.domain_allowed(self.url, self.allowed):
+            return await self.finish("failed", {}, reason="start page redirected outside the allowed domains")
         await self.record(0, start, verdict, None)
         replan_due = False
         for step in range(1, cap + 1):
             if await self.stopped():
                 return await self.finish("stopped", {}, reason="stopped by the founder")
+            self.url = await _actual_url(self.computer)
+            if not guard.domain_allowed(self.url, self.allowed):
+                return await self.finish("failed", {}, reason="actual browser URL is outside the allowed domains")
             png = await self.computer.screenshot()
             shot = evidence.save_screenshot(self.settings, self.id, step, png)
             self.screenshots.append(shot)
@@ -262,7 +302,7 @@ class _Task:
                 return await self.finish("succeeded", action.result or {})
             await _execute(self.computer, action)
             if action.type == "open_url" and action.url:
-                self.url = action.url
+                self.url = await _actual_url(self.computer)
             await self.record(step, action, verdict, shot)
         return await self.finish("failed", {}, reason=f"max steps ({cap}) reached")
 
@@ -295,8 +335,11 @@ async def run_task(*, settings: Any, db: Any, llm: Any, venture_id: str, agent_i
     except Exception as exc:  # noqa: BLE001 - a failing computer/model fails the task, never the caller
         log.warning("computer task %s failed: %s", task.id, exc)
         if isinstance(exc, CuaUnavailable):
-            await _set_failures(db, await _failures(db) + 1)
+            try:
+                await _set_failures(db, await _failures(db) + 1)
+            except Exception:
+                log.warning("could not update Cua failure counter")
         try:
             return await task.finish("failed", {}, reason=redact(f"{type(exc).__name__}: {exc}"))
         except Exception:  # noqa: BLE001
-            return ComputerTaskResult(task_id=task.id, status="failed", steps=task.steps, reason=str(exc))
+            return ComputerTaskResult(task_id=task.id, status="failed", steps=task.steps, reason=redact(str(exc), settings))

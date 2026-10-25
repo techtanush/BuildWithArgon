@@ -7,6 +7,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 from foundry_kernel.api.preview import resolve_preview
 from foundry_kernel.departments.engineering import EngineeringHandler
 from foundry_kernel.executors import antigravity as ag
@@ -287,6 +289,11 @@ class FakeComposioClient:
         self.calls.append(("open_pr", a))
         return {"number": 7, "html_url": "https://github.com/alex/adder/pull/7"}
 
+    async def get_pull_request(self, *a: Any) -> dict:
+        self.calls.append(("get_pull_request", a))
+        branches = [args[2] for name, args in self.calls if name == "create_branch"]
+        return {"head": {"sha": "a" * 40, "ref": branches[-1] if branches else "foundry/test"}}
+
     async def create_repo(self, *a: Any) -> dict:
         self.calls.append(("create_repo", a))
         return {"full_name": "alex/foundry-adder", "html_url": "https://github.com/alex/foundry-adder"}
@@ -336,6 +343,9 @@ async def test_github_mode_repo_pr_and_merge(settings, db, monkeypatch) -> None:
     res = await h.handle(ticket, qctx)
     assert res.approval and res.approval.payload["local"] is False and res.approval.payload["pr_number"] == 7
     assert res.approval.title.startswith("Merge PR #7")
+    assert res.approval.payload["repo_full_name"] == "alex/foundry-adder"
+    assert res.approval.payload["merge_method"] == "squash"
+    assert res.approval.payload["head_sha"] == "a" * 40
     apr = new_id("apr")
     async with db.tx() as tx:
         await tx.execute("INSERT INTO approvals (id, venture_id, gate_type, title, summary, payload_json, status, created_at) "
@@ -355,3 +365,100 @@ def test_preview_route(client, settings) -> None:
     r = client.get("/preview/ven_A/tkt_B/%2e%2e/%2e%2e/%2e%2e/%2e%2e/secret.txt")
     assert r.status_code == 404 and r.json()["error"]["code"] == "not_found"
     assert client.get("/preview/ven_A/nope/").status_code == 404
+
+
+async def test_merge_rejects_approval_from_another_venture(settings, db) -> None:
+    vid = await make_venture(db)
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET slug=? WHERE id=?", ("first-adder", vid))
+    other = await make_venture(db)
+    ticket = await qa_ticket(db, vid)
+    from foundry_kernel import gates
+
+    async with db.tx() as tx:
+        apr = await gates.request_approval(tx, venture_id=other, gate_type="merge", title="Other merge", summary="s",
+                                            payload={"local": True})
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    result = await EngineeringHandler().handle(ticket, ctx_for(settings, db, vid, "eng.qa", approval={"approval_id": apr, "status": "approved"}))
+    assert result.outcome == "failed" and "another venture" in result.note
+    assert not (Path(settings.data_dir) / "products" / vid / "main").exists()
+
+
+async def test_managed_agent_green_status_with_failed_build_is_rejected(settings, db) -> None:
+    from foundry_kernel.contracts import ExecutorInput
+
+    llm = FakeLLM()
+    llm.script("antigravity", ['FOUNDRY_RESULT {"status":"passed","iterations":1,"tests":{"passed":3,"failed":0},"build_ok":false}'])
+    async def log(level, msg):
+        pass
+    result = await ag.AntigravityExecutor(live(settings), llm, db).run(
+        ExecutorInput(venture_id="ven_X", ticket_id="tkt_X", run_id="run_X", title="x", body="x", repo_full_name="alex/adder"), log)
+    assert result.status == "failed" and not result.first_pass_passed
+
+
+async def test_local_merge_rejects_workspace_changed_after_qa(settings, db) -> None:
+    from foundry_kernel import gates
+    from foundry_kernel.executors import workspace
+
+    vid = await make_venture(db)
+    build_id, bres = await build_t1(settings, db, vid, FakeRunner([{"tests": {"adds": ("tests/add.test.ts", "passed")}}]))
+    ticket = await qa_ticket(db, vid)
+    ws = Path(bres["workspace_path"])
+    payload = {"local": True, "build_ticket_id": build_id, "task_key": "T1", "workspace_sha256": workspace.source_digest(ws)}
+    async with db.tx() as tx:
+        apr = await gates.request_approval(tx, venture_id=vid, ticket_id=ticket["id"], gate_type="merge", title="Merge", summary="s", payload=payload)
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    (ws / "src/lib/add.ts").write_text("export const add = () => 999;")
+    result = await EngineeringHandler().handle(ticket, ctx_for(settings, db, vid, "eng.qa", approval={"approval_id": apr, "status": "approved"}))
+    assert result.outcome == "failed" and "changed after QA" in result.note
+    assert not workspace.product_main(settings, vid).exists()
+
+
+async def test_dependent_build_inherits_completed_prerequisite_workspace(settings, db) -> None:
+    vid = await make_venture(db)
+    parent_id, parent_result = await build_t1(settings, db, vid, FakeRunner([{"tests": {"adds": ("tests/add.test.ts", "passed")}}]))
+    payload = {"task_key": "T2", "acceptance_criteria": ACS[1:]}
+    ticket_id = await insert_ticket(db, vid, "eng.build", status="in_progress", payload=payload)
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO ticket_deps (ticket_id,depends_on_id) VALUES (?,?)", (ticket_id, parent_id))
+    h = EngineeringHandler()
+    h.runner = FakeRunner([{"tests": {"adds": ("tests/add.test.ts", "passed")}}])
+    ctx = ctx_for(settings, db, vid, "eng.builder")
+    ctx.llm.script("engineering_build", [block("src/lib/ui.ts", "export const label = 'total';") + "\n" + notes("UI")])
+    result = await h.handle({"id": ticket_id, "venture_id": vid, "type": "eng.build", "title": "T2 UI", "payload": payload}, ctx)
+    assert result.outcome == "done", result.note
+    workspace = Path(result.result["workspace_path"])
+    assert (workspace / "src/lib/add.ts").read_bytes() == Path(parent_result["workspace_path"], "src/lib/add.ts").read_bytes()
+    assert (workspace / "src/lib/ui.ts").exists() and (workspace / "tests/add.test.ts").exists()
+    assert '<<<FILE path="src/lib/add.ts">>>' in ctx.llm.calls[0][1]
+
+
+@pytest.mark.parametrize("problem", ["missing_sha", "wrong_branch", "acceptance_push_failed"])
+async def test_remote_merge_does_not_gate_without_verified_pr_head(settings, db, monkeypatch, problem) -> None:
+    vid = await make_venture(db)
+    client, module = FakeComposioClient(), FakeComposioModule()
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET repo_full_name=? WHERE id=?", ("alex/foundry-adder", vid))
+    async def github(self, ctx, vid_):
+        return module, client, f"foundry:{vid_}"
+    monkeypatch.setattr(EngineeringHandler, "github", github)
+    await build_t1(settings, db, vid, FakeRunner([{"tests": {"adds": ("tests/add.test.ts", "passed")}}]))
+    ticket = await qa_ticket(db, vid)
+    acc_file = f"tests/acceptance/{ticket['id'][-8:].lower()}.test.ts"
+    h = EngineeringHandler()
+    h.runner = FakeRunner([{"tests": {"AC-1 sum": (acc_file, "passed")}}])
+    ctx = ctx_for(settings, db, vid, "eng.qa")
+    ctx.llm.script("qa_analyze", [block(acc_file, "it('AC-1 sum', () => {});")])
+    async def invalid_head(*args):
+        branches = [args[2] for name, args in client.calls if name == "create_branch"]
+        return {"head": {"sha": "not-a-sha" if problem == "missing_sha" else "a" * 40,
+                         "ref": "other-branch" if problem == "wrong_branch" else branches[-1]}}
+    monkeypatch.setattr(client, "get_pull_request", invalid_head)
+    if problem == "acceptance_push_failed":
+        async def failed_push(*args, **kwargs):
+            raise RuntimeError("unavailable")
+        monkeypatch.setattr(client, "put_file", failed_push)
+    result = await h.handle(ticket, ctx)
+    assert result.outcome == "failed" and result.approval is None
+    assert "merge approval not requested" in result.note
+    assert module.merged == []

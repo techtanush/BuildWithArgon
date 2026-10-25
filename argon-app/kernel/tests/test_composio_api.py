@@ -84,3 +84,20 @@ def test_rejected_approval_opens_a_new_one(settings) -> None:
         client.portal.call(reject)
         second = client.post(f"/v1/ventures/{vid}/integrations/github/connect", json={}).json()["data"]
         assert second["approval_id"] != first["approval_id"] and second["status"] == "waiting_approval"
+
+
+def test_connect_callback_change_needs_new_approval(settings, monkeypatch) -> None:
+    calls = []
+    async def link(self, user_id, callback_url):
+        calls.append(callback_url)
+        return {"redirect_url": "https://connect.composio.dev/abc"}
+    monkeypatch.setattr(ComposioClient, "create_connect_link", link)
+    s = settings.model_copy(update={"composio_api_key": SecretStr("k_test_123456")})
+    with TestClient(create_app(s)) as client:
+        vid = _venture(client)
+        path = f"/v1/ventures/{vid}/integrations/github/connect"
+        first = client.post(path, json={}).json()["data"]
+        _approve(client, first["approval_id"])
+        changed = client.post(path, json={"callback_url": "https://different.invalid/callback"}).json()["data"]
+        assert changed["status"] == "waiting_approval" and changed["approval_id"] != first["approval_id"]
+        assert calls == []

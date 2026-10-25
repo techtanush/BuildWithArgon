@@ -68,10 +68,29 @@ def test_not_found(client: Any, settings: Any) -> None:
 
 
 def test_stop(client: Any, settings: Any) -> None:
+    from foundry_kernel.computers import manager
+    from foundry_kernel.computers.cua_client import FakeComputer
     ids = seed(settings)
+    manager._live[ids["cid"]] = FakeComputer(ids["cid"])
     r = client.post(f"/v1/computers/{ids['cid']}/stop", json={})
     assert r.status_code == 200
     data = r.json()["data"]
     assert data["status"] == "stopped" and data["current_task"] is None
     task = client.get(f"/v1/computer-tasks/{ids['tid']}").json()["data"]
     assert task["status"] == "stopped" and task["completed_at"]
+
+
+def test_stop_failure_is_not_reported_as_stopped(client: Any, settings: Any) -> None:
+    from foundry_kernel.computers import manager
+    from foundry_kernel.computers.cua_client import FakeComputer
+    class Broken(FakeComputer):
+        async def stop(self): raise RuntimeError("secret-provider-message")
+    ids = seed(settings)
+    desktop = Broken(ids["cid"])
+    manager._live[ids["cid"]] = desktop
+    r = client.post(f"/v1/computers/{ids['cid']}/stop", json={})
+    assert r.status_code == 503 and "secret-provider-message" not in r.text
+    assert manager.live(ids["cid"]) is desktop
+    rows = client.get(f"/v1/ventures/{ids['vid']}/computers").json()["data"]["items"]
+    assert rows[0]["status"] == "error"
+    manager.reset()

@@ -18,15 +18,22 @@ from tests.ayan.conftest import FakeCapture, critic_json, file_block, module
 
 @pytest.fixture
 def fake_env(wg_paths: Path, monkeypatch: pytest.MonkeyPatch) -> FakeCapture:
+    monkeypatch.setattr(paths, "STAGING_DIR", wg_paths / "live-staging")
     def fake_validate(mods: dict[str, str], **kw: Any) -> Any:
-        res = validate(mods, typecheck=False, suffix=".pytest")
+        res = validate(mods, typecheck=False)
         for v in res.values():
             v.tsc_ok = v.static_ok
         return res
 
     cap = FakeCapture(fail={"engineering": [["P6"], []]})
     monkeypatch.setattr(live, "run_capture", cap)
+    async def fake_validate_async(mods: dict[str, str], **kw: Any) -> Any:
+        return fake_validate(mods)
+    async def reachable(url: str) -> bool:
+        return url != "http://127.0.0.1:9"
     monkeypatch.setattr(live, "validate", fake_validate)
+    monkeypatch.setattr(live, "validate_async", fake_validate_async)
+    monkeypatch.setattr(live, "web_reachable", reachable)
     score.write_outputs("wgr_SEED", {d: None for d in paths.department_ids()})
     (paths.GENERATED_DIR / "engineering.ts").write_text(module("engineering"))
     return cap
@@ -37,7 +44,7 @@ async def test_round_completes_with_managed_agent_patch_then_promotes(fake_env: 
     llm.script("worldgen_critic", [critic_json(realism=5, high=True), critic_json(realism=8)])
     llm.script("antigravity", [file_block("engineering", module("engineering", "/* architect */ ")) +
                                '\nWORLD_ARCHITECT_RESULT {"tsc_ok": true, "validator_ok": true, "iterations": 2, "summary": "ok"}'])
-    lr = await live.start_round(settings=settings, db=db, llm=llm, department_id="engineering", fake_capture=True, wait=True)
+    lr = await live.start_round(settings=settings.model_copy(update={"llm_mode": "live"}), db=db, llm=llm, department_id="engineering", fake_capture=False, wait=True)
     assert lr.status == "done", lr.error
     assert [s.status for s in lr.steps] == ["done"] * 6 and lr.used_managed_agent is True
     assert lr.before.probe_score == 0.9 and lr.after and lr.after.probe_score == 1.0
@@ -155,3 +162,72 @@ async def test_orphaned_round_is_reported_failed(fake_env: FakeCapture) -> None:
                                               "steps": [{"name": "capture_before", "status": "running"}, {"name": "critique", "status": "pending"}]}))
     lr = live.load_round(rid)
     assert lr.status == "failed" and "restarted" in (lr.error or "") and [s.status for s in lr.steps] == ["failed", "skipped"]
+
+
+async def test_round_deadline_persists_failure(fake_env: FakeCapture, settings: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def stuck_capture(**kw: Any) -> Any:
+        await asyncio.Event().wait()
+    monkeypatch.setattr(live, "run_capture", stuck_capture)
+    monkeypatch.setattr(live, "TARGET_S", 0.02)
+    lr = await live.start_round(settings=settings, db=None, llm=FakeLLM(), department_id="engineering", fake_capture=True, wait=True)
+    assert lr.status == "failed" and "time budget" in lr.error
+    assert lr.steps[0].status == "failed"
+    assert not live.is_running()
+
+
+async def test_round_cancellation_persists_failure(fake_env: FakeCapture, settings: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    started = asyncio.Event()
+    async def stuck_capture(**kw: Any) -> Any:
+        started.set()
+        await asyncio.Event().wait()
+    monkeypatch.setattr(live, "run_capture", stuck_capture)
+    lr = await live.start_round(settings=settings, db=None, llm=FakeLLM(), department_id="engineering", fake_capture=True)
+    await started.wait()
+    live._ACTIVE.cancel()
+    with pytest.raises(asyncio.CancelledError):
+        await live._ACTIVE
+    saved = live.load_round(lr.id)
+    assert saved.status == "failed" and "cancelled" in saved.error
+
+
+async def test_critical_probe_failure_cannot_be_promoted(fake_env: FakeCapture, settings: Any) -> None:
+    fake_env.fail = {"engineering": [[], ["P2"]]}
+    llm = FakeLLM()
+    llm.script("worldgen_critic", [critic_json(high=True)])
+    llm.script("antigravity", [file_block("engineering", module("engineering"))])
+    lr = await live.start_round(settings=settings, db=None, llm=llm, department_id="engineering", fake_capture=True, wait=True)
+    assert lr.status == "failed" and "critical probes: P2" in lr.error
+    with pytest.raises(ConflictError):
+        await live.promote(db=None, round_id=lr.id)
+
+
+async def test_promote_revalidates_module(fake_env: FakeCapture, settings: Any) -> None:
+    llm = FakeLLM()
+    llm.script("worldgen_critic", [critic_json(high=True), critic_json()])
+    llm.script("antigravity", [file_block("engineering", module("engineering"))])
+    lr = await live.start_round(settings=settings.model_copy(update={"llm_mode": "live"}), db=None, llm=llm, department_id="engineering", fake_capture=False, wait=True)
+    assert lr.status == "done", lr.error
+    (live.round_dir(lr.id) / "module.after.ts").write_text("export default {}; window.fetch('bad');")
+    with pytest.raises(ConflictError, match="changed since capture"):
+        await live.promote(db=None, round_id=lr.id)
+
+
+async def test_drill_round_cannot_publish(fake_env: FakeCapture, settings: Any) -> None:
+    llm = FakeLLM()
+    llm.script("worldgen_critic", [critic_json(high=True), critic_json()])
+    llm.script("antigravity", [file_block("engineering", module("engineering"))])
+    lr = await live.start_round(settings=settings, db=None, llm=llm, department_id="engineering", fake_capture=True, wait=True)
+    assert lr.status == "done", lr.error
+    with pytest.raises(ConflictError, match="drill captures"):
+        await live.promote(db=None, round_id=lr.id)
+
+
+async def test_valid_edit_cannot_inherit_old_capture_scores(fake_env: FakeCapture, settings: Any) -> None:
+    llm = FakeLLM()
+    llm.script("worldgen_critic", [critic_json(high=True), critic_json()])
+    llm.script("antigravity", [file_block("engineering", module("engineering"))])
+    lr = await live.start_round(settings=settings.model_copy(update={"llm_mode": "live"}), db=None, llm=llm, department_id="engineering", fake_capture=False, wait=True)
+    assert lr.status == "done", lr.error
+    (live.round_dir(lr.id) / "module.after.ts").write_text(module("engineering", "/* valid but unprobed */ "))
+    with pytest.raises(ConflictError, match="changed since capture"):
+        await live.promote(db=None, round_id=lr.id)

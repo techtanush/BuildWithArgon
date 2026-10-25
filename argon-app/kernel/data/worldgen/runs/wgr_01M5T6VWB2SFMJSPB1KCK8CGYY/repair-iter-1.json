@@ -1,0 +1,84 @@
+{
+  "basis": "actual iter-0 capture/probe evidence; no LLM calls or new scores",
+  "changes": {
+    "engineering": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.78% of image; center visible"
+      }
+    ],
+    "finance-people": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.93% of image; center visible"
+      }
+    ],
+    "growth": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.65% of image; center visible"
+      },
+      {
+        "change": "s1 z -3.2 to -4.0",
+        "evidence": "P5 Unreachable approaches: s1; forward approach was 0.25m from chart-table collider"
+      }
+    ],
+    "lead-intel": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.69% of image; center visible"
+      }
+    ],
+    "market-research": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.78% of image; center visible"
+      }
+    ],
+    "office-hours": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.67% of image; center visible"
+      }
+    ],
+    "outreach": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.73% of image; center visible"
+      }
+    ],
+    "pivot": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.68% of image; center visible"
+      },
+      {
+        "change": "s1 z -3.6 to -4.2",
+        "evidence": "P5 Unreachable approaches: s1; forward approach was 0.25m from round-table collider"
+      }
+    ],
+    "sales": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.96% of image; center visible"
+      }
+    ],
+    "support": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.68% of image; center visible"
+      }
+    ],
+    "synthetic-population": [
+      {
+        "change": "sign width 6.4m",
+        "evidence": "Sign 0.87% of image; center visible"
+      }
+    ]
+  },
+  "unchanged": [
+    "chief-of-staff",
+    "intake"
+  ],
+  "recapture_required": true
+}

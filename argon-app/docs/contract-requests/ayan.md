@@ -69,3 +69,13 @@ are relative to `DATA_DIR` (e.g. `computers/ctk_…/3.png`).
   managed-agent runs. Either list it under system agents or rename it in the merge.
 Everything else in ayan's lane now uses exactly the matrix jobs (signs → `texture`, live round → `worldgen_critic` /
 `worldgen_patch` with a `thinking_level="medium"` override, Ana → `dept_artifact`).
+
+## CR-A8 — User-requested computer viewer UI ownership exception
+
+The user explicitly requested an agent-computer/Cua Spaces viewer while finishing Ayan. New `web/src/components/AgentComputerViewer.{tsx,css}` and its test implement the real API consumer. The standalone Ayan seed adds only the import, `/computers` route and navigation link in `dashboard/routes.tsx`; frozen `App.tsx` and shared contracts are untouched. This is an intentional, documented UI ownership exception, not a clean ownership-check claim. At integration, preserve Tanush's existing routes and mount the named `AgentComputerViewer` inside their current Computers page using the company venture ID.
+
+## CR-A9 — Capture generated face identities and generated signs
+
+Mahin's original CapturePage reads a static fallback manifest whose 29 NPCs lack `face`. This does not reflect Ayan's generated identities even though seed_roster loads all 29 FaceSpecs into the DB. Production portrait capture should hydrate `/v1/world/manifest` before choosing a character/peers and fail clearly when an expected identity is missing. The offline `web/scripts/face-manifest.ts` validates and joins exact IDs for isolated render verification only; it is not a replacement for live hydration.
+
+Generated sign images exist at `/generated/signs/<department_id>.png` (13 PNGs). `kit.sign` should load the corresponding optional image, await readiness for captures, and retain its canvas text fallback on missing/failed images. No frozen KitApi shape change is required. The integration owner is implementing these renderer-owned changes separately; they are not merged into Ayan here.

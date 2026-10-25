@@ -143,17 +143,19 @@ async def test_gated_actions(settings, db) -> None:
 
     c = _client(settings, handler)
     async with db.tx() as tx:
-        apr = await gates.request_approval(tx, venture_id=vid, gate_type="merge", title="Merge", summary="s")
+        await tx.execute("UPDATE ventures SET repo_full_name='alex/app' WHERE id=?", (vid,))
+        apr = await gates.request_approval(tx, venture_id=vid, gate_type="merge", title="Merge", summary="s",
+                                           payload={"repo_full_name": "alex/app", "pr_number": 7, "head_sha": "a" * 40})
     with pytest.raises(GateNotApproved):
-        await composio.merge_pull_request(db, c, approval_id=apr, user_id="u", repo_full_name="alex/app", number=7)
+        await composio.merge_pull_request(db, c, approval_id=apr, user_id=f"foundry:{vid}", repo_full_name="alex/app", number=7)
     with pytest.raises(GateNotApproved):
-        await composio.create_issue_comment(db, c, approval_id=None, user_id="u", repo_full_name="alex/app", number=7, body="x")
+        await composio.create_issue_comment(db, c, approval_id=None, user_id=f"foundry:{vid}", repo_full_name="alex/app", number=7, body="x")
     assert executed == []
     async with db.tx() as tx:
         await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
     with pytest.raises(GateNotApproved):  # wrong gate type
-        await composio.create_issue_comment(db, c, approval_id=apr, user_id="u", repo_full_name="alex/app", number=7, body="x")
-    assert (await composio.merge_pull_request(db, c, approval_id=apr, user_id="u", repo_full_name="alex/app", number=7))["merged"]
+        await composio.create_issue_comment(db, c, approval_id=apr, user_id=f"foundry:{vid}", repo_full_name="alex/app", number=7, body="x")
+    assert (await composio.merge_pull_request(db, c, approval_id=apr, user_id=f"foundry:{vid}", repo_full_name="alex/app", number=7))["merged"]
     assert executed == ["GITHUB_MERGE_A_PULL_REQUEST"]
 
 
@@ -170,3 +172,73 @@ async def test_github_integration_row(db) -> None:
 async def test_probe_without_key(settings, capsys) -> None:
     assert await composio.probe(settings) == 0
     assert "COMPOSIO_API_KEY not set" in capsys.readouterr().out
+
+async def test_approved_targets_are_venture_and_content_bound(settings, db) -> None:
+    vid, other = await _venture(db), await _venture(db)
+    calls = []
+    c = _client(settings, lambda req: calls.append(json.loads(req.content)) or httpx.Response(200, json={"data": {"ok": True}}))
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET repo_full_name='alex/app' WHERE id=?", (vid,))
+        apr = await gates.request_approval(tx, venture_id=vid, gate_type="outreach", title="Reply", summary="s",
+                                           payload={"repo_full_name": "alex/app", "channel": "github_comment", "issue_number": 7, "body": "approved"})
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    for changes in ({"user_id": f"foundry:{other}"}, {"number": 8}, {"repo_full_name": "alex/other"}, {"body": "substitute"}):
+        args = {"approval_id": apr, "user_id": f"foundry:{vid}", "repo_full_name": "alex/app", "number": 7, "body": "approved", **changes}
+        with pytest.raises(GateNotApproved):
+            await composio.create_issue_comment(db, c, **args)
+    with pytest.raises(GateNotApproved):
+        await c.execute(composio.TOOL_SLUGS["create_issue_comment"], f"foundry:{vid}", {})
+    assert calls == []
+    await composio.create_issue_comment(db, c, approval_id=apr, user_id=f"foundry:{vid}", repo_full_name="alex/app", number=7, body="approved")
+    assert len(calls) == 1
+
+async def test_merge_rejects_changed_target_or_method_and_pins_head(settings, db) -> None:
+    vid = await _venture(db)
+    calls = []
+    c = _client(settings, lambda req: calls.append(json.loads(req.content)) or httpx.Response(200, json={"data": {"merged": True}}))
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET repo_full_name='alex/app' WHERE id=?", (vid,))
+        apr = await gates.request_approval(tx, venture_id=vid, gate_type="merge", title="Merge", summary="s",
+                 payload={"repo_full_name": "alex/app", "pr_number": 7, "merge_method": "squash", "head_sha": "a" * 40})
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    for change in ({"number": 8}, {"method": "merge"}, {"repo_full_name": "alex/other"}, {"user_id": "different"}):
+        with pytest.raises(GateNotApproved):
+            await composio.merge_pull_request(db, c, **{"approval_id": apr, "user_id": f"foundry:{vid}", "repo_full_name": "alex/app", "number": 7, **change})
+    assert not calls
+    await composio.merge_pull_request(db, c, approval_id=apr, user_id=f"foundry:{vid}", repo_full_name="alex/app", number=7)
+    assert calls[0]["arguments"]["sha"] == "a" * 40
+
+@pytest.mark.parametrize("gate_type", ["merge", "outreach"])
+async def test_composio_approval_is_atomic_single_use(settings, db, gate_type) -> None:
+    import asyncio
+    vid = await _venture(db)
+    calls = []
+    c = _client(settings, lambda req: calls.append(req) or httpx.Response(200, json={"data": {"ok": True}}))
+    payload = {"repo_full_name": "alex/app", "pr_number": 7, "head_sha": "a" * 40} if gate_type == "merge" else {
+        "repo_full_name": "alex/app", "issue_number": 7, "channel": "github_comment", "body": "approved"}
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET repo_full_name='alex/app' WHERE id=?", (vid,))
+        apr = await gates.request_approval(tx, venture_id=vid, gate_type=gate_type, title="T", summary="s", payload=payload)
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    async def invoke():
+        kw = {"approval_id":apr,"user_id":f"foundry:{vid}","repo_full_name":"alex/app","number":7}
+        if gate_type == "merge": return await composio.merge_pull_request(db,c,**kw)
+        return await composio.create_issue_comment(db,c,body="approved",**kw)
+    results = await asyncio.gather(invoke(), invoke(), return_exceptions=True)
+    assert sum(isinstance(x,GateNotApproved) for x in results) == 1
+    assert len(calls) == 1
+
+@pytest.mark.parametrize("head", [None, "", "fake", "g" * 40, "a" * 39])
+async def test_remote_merge_without_real_head_sha_is_blocked(settings, db, head) -> None:
+    vid = await _venture(db)
+    calls = []
+    c = _client(settings, lambda req: calls.append(req) or httpx.Response(200,json={}))
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET repo_full_name='alex/app' WHERE id=?", (vid,))
+        apr = await gates.request_approval(tx,venture_id=vid,gate_type="merge",title="T",summary="s",
+                                          payload={"repo_full_name":"alex/app","pr_number":7,"head_sha":head})
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?",(apr,))
+    with pytest.raises(GateNotApproved):
+        await composio.merge_pull_request(db,c,approval_id=apr,user_id=f"foundry:{vid}",repo_full_name="alex/app",number=7)
+    assert calls == []
+    assert await db.fetch_one("SELECT * FROM kv WHERE key=?",("composio.approval_consumed."+apr,)) is None

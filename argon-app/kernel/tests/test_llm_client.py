@@ -235,3 +235,40 @@ def test_worldgen_and_system_jobs_match_the_agent_matrix() -> None:
     for name in ("world.architect", "world.critic", "world.face-designer", "world.sign-painter", "computer.driver"):
         assert set(caps["system_agents"][name]["jobs"]) <= set(JOBS)
     assert not {"worldgen_critic_fast", "worldgen_patch_fast", "sign"} & set(JOBS)
+
+async def test_native_json_schema_preserves_repair_accounting(settings: Any, db: Any) -> None:
+    aio = FakeAio([interaction("invalid", iid="first"), interaction('{"ok": true}', iid="second")])
+    out, _ = await make_client(settings, aio, db).generate_json("triage", "x", Flag)
+    assert out.ok
+    for call in aio.create_kwargs:
+        assert call["response_format"] == Flag.model_json_schema()
+        assert call["response_mime_type"] == "application/json"
+    assert len(await db.fetch_all("SELECT * FROM ledger")) == 2
+
+async def test_missing_usage_estimates_input_and_marks_cost_estimated(settings: Any) -> None:
+    aio = FakeAio([interaction("answer", usage={})])
+    res = await make_client(settings, aio).generate("cos_report", "x" * 400)
+    assert res.tokens_in == 100 and res.estimated_cost and res.cost_usd > 0
+
+@pytest.mark.parametrize("status", ["failed", "cancelled", "budget_exceeded"])
+async def test_failed_interaction_accounts_billable_usage_without_healthy_status(settings: Any, db: Any, status: str) -> None:
+    vid, rid = new_id("ven"), new_id("run")
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO ventures (id,name,slug,idea,founder_name,composio_user_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                         (vid,"T",vid,"idea","Alex",f"foundry:{vid}",utc_now(),utc_now()))
+        await tx.execute("INSERT INTO runs (id,venture_id,kind,job,model,status,created_at) VALUES (?,?,?,?,?,?,?)",
+                         (rid,vid,"ticket","cos_report","gemini-4-argon","running",utc_now()))
+    it = interaction("partial",status=status)
+    it.errors = [SimpleNamespace(message="failed with ghp_" + "a" * 30)]
+    with pytest.raises(LLMCallError) as exc:
+        await make_client(settings, FakeAio([it]), db).generate("cos_report","x",run_id=rid,venture_id=vid)
+    assert "ghp_" not in str(exc.value)
+    rows = await db.fetch_all("SELECT * FROM ledger WHERE run_id=?", (rid,))
+    assert len(rows) == 1 and rows[0]["units_in"] == 100 and rows[0]["units_out"] == 50
+    run = await db.fetch_one("SELECT tokens_in,tokens_out,cost_usd FROM runs WHERE id=?", (rid,))
+    venture = await db.fetch_one("SELECT spent_usd FROM ventures WHERE id=?", (vid,))
+    assert run["tokens_in"] == 100 and run["tokens_out"] == 50 and run["cost_usd"] > 0
+    assert venture["spent_usd"] == pytest.approx(run["cost_usd"])
+    assert await db.fetch_one("SELECT * FROM kv WHERE key='provider.gemini.last_ok_at'") is None
+    error = await db.fetch_one("SELECT value_json FROM kv WHERE key='provider.gemini.last_error'")
+    assert error and "ghp_" not in error["value_json"]

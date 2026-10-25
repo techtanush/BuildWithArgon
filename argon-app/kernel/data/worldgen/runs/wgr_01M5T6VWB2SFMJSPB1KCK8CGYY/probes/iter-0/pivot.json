@@ -1,0 +1,134 @@
+{
+  "building": "pivot",
+  "source": "staging",
+  "probes": [
+    {
+      "id": "P1",
+      "pass": true,
+      "details": "exterior: Module built without recorded errors; interior: Module built without recorded errors"
+    },
+    {
+      "id": "P2",
+      "pass": true,
+      "details": "exterior: 0 out-of-bounds meshes of 14; interior: 0 out-of-bounds meshes of 22"
+    },
+    {
+      "id": "P3",
+      "pass": true,
+      "details": "exterior: 1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+    },
+    {
+      "id": "P4",
+      "pass": true,
+      "details": "interior: Six distinct, spaced, unobstructed slots"
+    },
+    {
+      "id": "P5",
+      "pass": false,
+      "details": "interior: Unreachable approaches: s1"
+    },
+    {
+      "id": "P6",
+      "pass": true,
+      "details": "exterior: 0 collider pairs overlap by >0.01m³; interior: 0 collider pairs overlap by >0.01m³"
+    },
+    {
+      "id": "P7",
+      "pass": true,
+      "details": "exterior: 7206 triangles; 14 draw calls; interior: 9512 triangles; 22 draw calls"
+    },
+    {
+      "id": "P8",
+      "pass": true,
+      "details": "exterior: 1 module lights; interior: 3 module lights"
+    },
+    {
+      "id": "P9",
+      "pass": true,
+      "details": "ext-1.png: luminance std 25.5, top color 0%; ext-2.png: luminance std 36.6, top color 0%; ext-3.png: luminance std 26.0, top color 0%; int-1.png: luminance std 27.6, top color 1%; int-2.png: luminance std 26.2, top color 1%; int-3.png: luminance std 19.1, top color 1%"
+    },
+    {
+      "id": "P10",
+      "pass": false,
+      "details": "exterior: Sign 0.68% of image; center visible"
+    }
+  ],
+  "probe_score": 0.8,
+  "critical_pass": false,
+  "screenshots": {
+    "ext-1": "captures/iter-0/pivot/ext-1.png",
+    "ext-2": "captures/iter-0/pivot/ext-2.png",
+    "ext-3": "captures/iter-0/pivot/ext-3.png",
+    "int-1": "captures/iter-0/pivot/int-1.png",
+    "int-2": "captures/iter-0/pivot/int-2.png",
+    "int-3": "captures/iter-0/pivot/int-3.png"
+  },
+  "videos": {},
+  "stats": {
+    "exterior": {
+      "triangles": 7206,
+      "drawCalls": 14,
+      "lights": 1,
+      "kitCalls": 73
+    },
+    "interior": {
+      "triangles": 9512,
+      "drawCalls": 22,
+      "lights": 3,
+      "kitCalls": 67
+    }
+  },
+  "consoleErrors": [],
+  "frames": [],
+  "root": "/Users/mahinbharathwaj/.aside/u/0/projects/BuildWithArgon-ayan/argon-app/kernel/data/worldgen/runs/wgr_01M5T6VWB2SFMJSPB1KCK8CGYY",
+  "provenance": {
+    "drill": false,
+    "capture": "real",
+    "browser": "Aside Browser REPL",
+    "renderer": "http://127.0.0.1:15174/view/capture",
+    "assetBase": "http://127.0.0.1:15175/assets",
+    "assetManifestStatus": 200,
+    "assetManifestTextures": 13,
+    "assetManifestHDRIs": 2,
+    "video": "not recorded; no native recordVideo context exposed",
+    "screenshotNormalization": "DPR2 canvas screenshot margin0, lossless PNG resized to1280x720; P9 recomputed after resize"
+  },
+  "pngChecks": {
+    "captures/iter-0/pivot/ext-1.png": {
+      "pass": true,
+      "details": "luminance std 25.5, top color 0%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/iter-0/pivot/ext-2.png": {
+      "pass": true,
+      "details": "luminance std 36.6, top color 0%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/iter-0/pivot/ext-3.png": {
+      "pass": true,
+      "details": "luminance std 26.0, top color 0%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/iter-0/pivot/int-1.png": {
+      "pass": true,
+      "details": "luminance std 27.6, top color 1%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/iter-0/pivot/int-2.png": {
+      "pass": true,
+      "details": "luminance std 26.2, top color 1%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/iter-0/pivot/int-3.png": {
+      "pass": true,
+      "details": "luminance std 19.1, top color 1%",
+      "width": 1280,
+      "height": 720
+    }
+  }
+}

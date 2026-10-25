@@ -59,7 +59,10 @@ async def test_bug_creates_fix_and_outreach_gate(settings, db) -> None:
     ctx.llm.script("triage", [BUG])
     res = await load_handler("support.issue").handle(_ticket(), ctx)
     assert res.outcome == "waiting_approval"
-    assert [t.type for t in res.new_tickets] == ["eng.fix"]
+    assert [t.type for t in res.new_tickets] == ["eng.fix", "eng.review", "qa.verify"]
+    assert res.new_tickets[1].depends_on == [f"ref:{res.new_tickets[0].ref}"]
+    assert res.new_tickets[2].depends_on == [f"ref:{res.new_tickets[1].ref}"]
+    assert all(t.payload["task_key"] == "issue-12" for t in res.new_tickets)
     fix = res.new_tickets[0]
     assert fix.priority == 0 and fix.assigned_agent_id == "eng.builder" and fix.payload["issue_number"] == 12
     assert fix.payload["repro_steps"] == BUG["repro_steps"] and "Milk shows no badge" in fix.body
@@ -102,7 +105,7 @@ async def test_reply_posted_after_approval(settings, db, monkeypatch) -> None:
     v = await _venture(db, github=True)
     async with db.tx() as tx:
         apr = await gates.request_approval(tx, venture_id=v["id"], gate_type="outreach", title="Reply to issue #12", summary="s",
-                                           payload={"channel": "github_comment", "issue_number": 12, "url": ISSUE["url"], "body": "Thanks!"})
+                                           payload={"channel": "github_comment", "repo_full_name": v["repo_full_name"], "issue_number": 12, "url": ISSUE["url"], "body": "Thanks!"})
         await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
     posted = []
 
@@ -153,3 +156,62 @@ async def test_ana_drafts_the_reply_with_dept_artifact(settings, db) -> None:  #
     assert res.approval.payload["body"].startswith("Thanks for asking") and res.approval.payload["drafted_by"] == "su.liaison"
     call = next(k for k in ctx.llm.call_kwargs if k["job"] == "dept_artifact")
     assert call["agent_id"] == "su.liaison"
+
+
+async def test_reply_rejects_cross_venture_approval(settings, db, monkeypatch) -> None:
+    v = await _venture(db, github=True)
+    async with db.tx() as tx:
+        other = "ven_other"
+        # Use a valid second venture so the approval FK is enforced too.
+        await tx.execute("INSERT INTO ventures (id,name,slug,idea,founder_name,composio_user_id,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?)",
+                         (other, "Other", "other", "Other", "Alex", "foundry:ven_other", utc_now(), utc_now()))
+        apr = await gates.request_approval(tx, venture_id=other, gate_type="outreach", title="Reply", summary="s",
+                                           payload={"issue_number":12,"body":"Not authorized"})
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    async def execute(self, *a, **kw):
+        raise AssertionError("cross-venture approval must not post")
+    monkeypatch.setattr(ComposioClient, "execute", execute)
+    ctx = FakeHandlerContext(_live(settings), db=db, venture=v, approval_result={"approval_id":apr,"status":"approved"})
+    result = await load_handler("support.issue").handle(_ticket(), ctx)
+    assert result.outcome == "failed" and "another venture" in result.note
+
+
+async def test_outreach_gate_records_repository_scope(settings, db) -> None:
+    v = await _venture(db, github=True)
+    ctx = FakeHandlerContext(_live(settings), db=db, venture=v)
+    ctx.llm.script("triage", [QUESTION])
+    result = await load_handler("support.issue").handle(_ticket(), ctx)
+    assert result.approval and result.approval.payload["repo_full_name"] == v["repo_full_name"]
+    assert result.approval.payload["issue_number"] == 12
+
+
+async def test_support_bug_chain_carries_spec_acceptance_and_plan(settings, db) -> None:
+    v = await _venture(db)
+    acs = [{"id": "AC-1", "text": "Expiry badge is visible"}]
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO artifacts (id,venture_id,department_id,kind,title,content_md,meta_json,created_at) VALUES (?,?,?,?,?,?,?,?)",
+                         (new_id("art"), v["id"], "intake", "spec", "Spec", "AC-1 Expiry badge", json.dumps({"acceptance_criteria": acs}), utc_now()))
+        await tx.execute("INSERT INTO artifacts (id,venture_id,department_id,kind,title,content_md,created_at) VALUES (?,?,?,?,?,?,?)",
+                         (new_id("art"), v["id"], "engineering", "plan", "Plan", "Badge architecture", utc_now()))
+    ctx = FakeHandlerContext(_live(settings), db=db, venture=v)
+    ctx.llm.script("triage", [{**BUG, "reply_draft": ""}])
+    result = await load_handler("support.issue").handle(_ticket(), ctx)
+    assert result.outcome == "done"
+    assert [t.type for t in result.new_tickets] == ["eng.fix", "eng.review", "qa.verify"]
+    assert all(t.payload["acceptance_criteria"] == acs for t in result.new_tickets)
+    assert all(t.payload["architecture_md"] == "Badge architecture" for t in result.new_tickets)
+    assert result.new_tickets[1].assigned_agent_id == "eng.reviewer"
+    assert result.new_tickets[2].assigned_agent_id == "eng.qa"
+
+
+async def test_support_bug_dedupes_while_qa_is_waiting_for_merge(settings, db) -> None:
+    v = await _venture(db)
+    await _add_fix(db, v["id"], "done")
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO tickets (id,venture_id,type,department_id,title,status,payload_json,created_by,created_at,updated_at) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                         (new_id("tkt"), v["id"], "qa.verify", "engineering", "Verify issue", "waiting_approval",
+                          json.dumps({"task_key":"issue-12"}), "system", utc_now(), utc_now()))
+    ctx = FakeHandlerContext(_live(settings), db=db, venture=v)
+    ctx.llm.script("triage", [{**BUG, "reply_draft":""}])
+    result = await load_handler("support.issue").handle(_ticket(), ctx)
+    assert result.new_tickets == [] and "already open" in result.note

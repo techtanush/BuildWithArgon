@@ -1,0 +1,61 @@
+{
+  "mode": "interior",
+  "url": "http://127.0.0.1:15174/view/capture?building=growth&mode=interior&source=staging&assetBase=http%3A%2F%2F127.0.0.1%3A15175%2Fassets",
+  "ready": true,
+  "result": {
+    "building": "growth",
+    "mode": "interior",
+    "source": "staging",
+    "probes": [
+      {
+        "id": "P1",
+        "pass": true,
+        "details": "Module built without recorded errors"
+      },
+      {
+        "id": "P2",
+        "pass": true,
+        "details": "0 out-of-bounds meshes of 26"
+      },
+      {
+        "id": "P4",
+        "pass": true,
+        "details": "Six distinct, spaced, unobstructed slots"
+      },
+      {
+        "id": "P5",
+        "pass": false,
+        "details": "Unreachable approaches: s1"
+      },
+      {
+        "id": "P6",
+        "pass": true,
+        "details": "0 collider pairs overlap by >0.01m³"
+      },
+      {
+        "id": "P7",
+        "pass": true,
+        "details": "11066 triangles; 26 draw calls"
+      },
+      {
+        "id": "P8",
+        "pass": true,
+        "details": "3 module lights"
+      }
+    ],
+    "stats": {
+      "triangles": 11066,
+      "drawCalls": 26,
+      "lights": 3,
+      "kitCalls": 54
+    },
+    "consoleErrors": []
+  },
+  "consoleErrors": [],
+  "screenshots": {
+    "int-1": "captures/iter-0/growth/int-1.png",
+    "int-2": "captures/iter-0/growth/int-2.png",
+    "int-3": "captures/iter-0/growth/int-3.png"
+  },
+  "frames": []
+}

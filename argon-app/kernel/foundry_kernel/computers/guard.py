@@ -28,6 +28,8 @@ class GuardOut(BaseModel):
 
 
 KNOWN_TYPES = {"click", "double_click", "type", "key", "scroll", "open_url", "wait", "done", "stuck"}
+SAFE_KEYS = {"return", "enter", "tab", "shift+tab", "escape", "esc", "backspace", "delete",
+             "left", "right", "up", "down", "home", "end", "pageup", "pagedown", "space", "ctrl+a"}
 INERT_TYPES = {"wait", "done", "stuck", "scroll"}
 AUTH_URL = re.compile(r"(log-?in|sign-?in|sign-?up|signup|register|auth|oauth|sso|checkout|cart|payment|billing|account/new)",
                       re.IGNORECASE)
@@ -46,13 +48,23 @@ def _host(value: str) -> str:
     value = (value or "").strip().lower()
     if "://" not in value:
         value = "http://" + value
-    return (urlparse(value).hostname or "").rstrip(".")
+    try:
+        return (urlparse(value).hostname or "").rstrip(".")
+    except ValueError:
+        return ""
 
 
 def domain_allowed(url: str, allowed_domains: list[str]) -> bool:
     """http(s) only; host equals an allowed domain or is a subdomain of one. localhost only when listed."""
-    parsed = urlparse((url or "").strip())
-    if parsed.scheme not in ("http", "https"):
+    if any(c in (url or "") for c in ("\\", "\r", "\n", "\t")):
+        return False
+    try:
+        parsed = urlparse((url or "").strip())
+        host = (parsed.hostname or "").lower().rstrip(".")
+        parsed.port  # reject malformed ports
+    except ValueError:
+        return False
+    if parsed.username is not None or parsed.password is not None or parsed.scheme not in ("http", "https"):
         return False
     host = (parsed.hostname or "").lower().rstrip(".")
     if not host:
@@ -75,9 +87,20 @@ def deterministic(action: dict[str, Any], *, current_url: str, screen_text: str,
     if kind not in KNOWN_TYPES:  # e.g. "shell" — agents never run commands
         return GuardVerdict(verdict="block", reason=f"action type {kind!r} is not allowed")
     words = _words(action)
+    # Prohibited downloads cannot become executable through a login/contact approval.
+    if kind == "open_url" and EXECUTABLE.search(str(action.get("url") or "")):
+        return GuardVerdict(verdict="block", reason="downloading files or executables is not allowed")
+    if kind in ("click", "double_click") and DOWNLOAD_TEXT.search(words):
+        return GuardVerdict(verdict="block", reason="downloading files or executables is not allowed")
     # 1. domain allowlist
     if kind == "open_url" and not domain_allowed(str(action.get("url") or ""), allowed_domains):
         return GuardVerdict(verdict="block", reason=f"{action.get('url')!r} is outside the allowed domains")
+    if kind not in INERT_TYPES and kind != "open_url" and not domain_allowed(current_url, allowed_domains):
+        return GuardVerdict(verdict="block", reason="current page is outside the allowed domains")
+    if kind == "key" and str(action.get("keys") or "").lower() not in SAFE_KEYS:
+        return GuardVerdict(verdict="block", reason="only safe navigation/edit keys are allowed; use open_url for navigation")
+    if kind == "type" and re.search(r"(?:https?|file|javascript|data):", str(action.get("text") or ""), re.IGNORECASE):
+        return GuardVerdict(verdict="gate", reason="typed URLs require review; use open_url for navigation")
     if kind in INERT_TYPES:
         return GuardVerdict(verdict="allow", reason="no side effects")
     target_url = str(action.get("url") or current_url or "")

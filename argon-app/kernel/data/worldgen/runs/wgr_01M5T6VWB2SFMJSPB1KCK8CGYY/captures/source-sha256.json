@@ -1,0 +1,32 @@
+{
+  "iter-0": {
+    "modules/iter-0/chief-of-staff.ts": "856819b0f5412afd113faae644a4214f5836d6150bf32c18fd2325dfef9b7ff5",
+    "modules/iter-0/engineering.ts": "f8e9c11384b9ac0f62e3b502e48c9dc74ff2f7b9cfe77b6fe656e49c6ed1bb73",
+    "modules/iter-0/finance-people.ts": "d23baeddab17a3b628a752a79ed873cf0d83e37ec5ff00b602abeaf7c4525053",
+    "modules/iter-0/growth.ts": "df57ad874b1d7a6155275414dfacba4efaaf79cd7c0fabc4f486ce5b572e6b65",
+    "modules/iter-0/intake.ts": "834a43834c9ad0a6c62ff63530d43b5f16849d8097ad6e003f83f54d99551119",
+    "modules/iter-0/lead-intel.ts": "af7708fa0220cf4dec9876ac92c1d4a955eb329542fbee025a5d70f08e5a7daf",
+    "modules/iter-0/market-research.ts": "63aec333fc7018471729662ee13e65f8841f9dac31a285fc5c1633ecca07a569",
+    "modules/iter-0/office-hours.ts": "c3ff5740e16c8489ceddaa36528003c555f2bbc46766c2c81bbfc3da043ee8b4",
+    "modules/iter-0/outreach.ts": "41f88b1277cd69a26cd560e22e6618c7a312a60ffc67548f16ba81dc5b378e69",
+    "modules/iter-0/pivot.ts": "0f3688e2b0b002f79b02b120c1ae74c6794115e3cab7f8b3f9c60b4448dc868d",
+    "modules/iter-0/sales.ts": "794715e829a72a36043063c228565607101912598e6d9e918ac1131b374b05ff",
+    "modules/iter-0/support.ts": "bca8660897a9768607317c7613b888a88cf4629d204fcf6bc09b76b5e68bbfb6",
+    "modules/iter-0/synthetic-population.ts": "3603506414e7d0ceb7b53f328ac4a61450448dfdbaaac5ad648e778e1af5797d"
+  },
+  "iter-1": {
+    "modules/iter-1/chief-of-staff.ts": "856819b0f5412afd113faae644a4214f5836d6150bf32c18fd2325dfef9b7ff5",
+    "modules/iter-1/engineering.ts": "4a6853a0b04a2496877d444dcdb0084ecdf9611dbc0fdcfa065f38cd74d5f3dd",
+    "modules/iter-1/finance-people.ts": "2814738b8da4e06d36a389e138ff9673005798e1ddda016b2e6bb66603f7b6a4",
+    "modules/iter-1/growth.ts": "450bb9876aeac09f617fcee7d4b29dd65e627df386032c88be9142f856dbd78a",
+    "modules/iter-1/intake.ts": "834a43834c9ad0a6c62ff63530d43b5f16849d8097ad6e003f83f54d99551119",
+    "modules/iter-1/lead-intel.ts": "48a69995ffb23088cdd40f90b311a2a24dfb1a94ac9304b76085460a87d26422",
+    "modules/iter-1/market-research.ts": "833c289fa180310c75863778ea4bedeefea122813e0db00544c8955c02bbc963",
+    "modules/iter-1/office-hours.ts": "f73b9012299c1cb4af18be8f83a03244e73f96c89b9edec84faa5931386ffdf3",
+    "modules/iter-1/outreach.ts": "385395f718132d2a824d8abda49cfad483827489cbb2878441da361449db825d",
+    "modules/iter-1/pivot.ts": "79500b4fc9cceed7b4d74078fa326b570161aa5af685ed503a352cb2fb50b22e",
+    "modules/iter-1/sales.ts": "15ae0eec30ec76ca8e9fda5b61edfd796a50ab8d5afcb24eed18d09265cc2ea8",
+    "modules/iter-1/support.ts": "dcfeb4f387fe50a4720a606681a4c96a3261b0d79606390990a066469c24bd0b",
+    "modules/iter-1/synthetic-population.ts": "2a9b11c313b6547beb92e0e97084ec7bb1f3162e844170a7d3fff8520ab2c780"
+  }
+}

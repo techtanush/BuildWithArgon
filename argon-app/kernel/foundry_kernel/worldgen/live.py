@@ -9,6 +9,7 @@ patch.json, module.before.ts, module.after.ts), a worldgen_live_rounds row, and 
 from __future__ import annotations
 
 import asyncio
+import hashlib
 import json
 import re
 import time
@@ -21,12 +22,13 @@ from ..contracts import LiveRound, LiveRoundSide, LiveRoundStep
 from ..errors import ConflictError, DependencyError, NotFoundError
 from ..ids import new_id, utc_now
 from ..models import ARGON
+from ..security import redact
 from . import paths, prompts
 from .capture import CaptureError, run_capture
 from .critique import critique, extract_module, needs_patch, patch
 from .runs import Recorder, capture_set, read_json, write_json
 from .score import promote_module
-from .validate import FORBIDDEN, static_check, validate
+from .validate import FORBIDDEN, static_check, validate, validate_async
 
 STEPS = ["capture_before", "critique", "patch", "validate", "capture_after", "score"]
 STATUS_FOR_STEP = {"capture_before": "capturing", "critique": "critiquing", "patch": "patching", "validate": "validating",
@@ -145,6 +147,7 @@ class _Round:
                                 score=score, note=note[:200])
 
     async def fail(self, error: str) -> None:
+        error = redact(error)
         for s in self.lr.steps:
             if s.status == "running":
                 s.status, s.finished_at, s.note = "failed", utc_now(), error[:500]
@@ -303,7 +306,7 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
         await state.end("patch", note=f"{how}{'; ' + note_extra if note_extra else ''}")
         # 4. validate (static + tsc), one repair
         await state.begin("validate")
-        v = validate({dept: new_src})[dept]
+        v = (await validate_async({dept: new_src}, timeout_s=max(0.1, min(30, TARGET_S - state.elapsed))))[dept]
         repaired = False
         if not v.ok:
             fix = {**c_before, "issues": [*c_before["issues"], {"severity": "high", "where": "", "camera": "",
@@ -321,11 +324,20 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
         await state.end("validate", note="static rules + tsc pass" + (" after one repair" if repaired else ""))
         # 5. capture "after" (staging/<dept>.ts = the candidate)
         await state.begin("capture_after")
+        staged_file = paths.STAGING_DIR / f"{dept}.ts"
+        if not staged_file.is_file() or staged_file.read_text() != new_src:
+            raise CaptureError("staged module changed before capture")
         after = (await run_capture(root=root, iteration="after", depts=[dept], source="staging", url=url,
                                    fake=fake_capture, fast=fake_capture)).get(dept)
         if not after:
             raise CaptureError("no probe report for the 'after' capture")
+        if staged_file.read_text() != new_src:
+            raise CaptureError("staged module changed during capture")
+        if not after.get("critical_pass"):
+            failed = [p.get("id", "?") for p in after.get("probes", []) if not p.get("pass") and p.get("id") in paths.CRITICAL_PROBES]
+            raise CaptureError("patched module failed critical probes: " + ", ".join(failed))
         await state.end("capture_after", note=f"probe score {after['probe_score']}", score=after["probe_score"])
+        state.extra["captured_source_sha256"] = hashlib.sha256(new_src.encode()).hexdigest()
         # 6. score (critique "after" for scores only)
         await state.begin("score")
         c_after = await critique(llm, d, report=after, root=root, source=new_src, thinking_level=think,
@@ -340,6 +352,18 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
                                  note=f"{lr.elapsed_s}s")
     except Exception as exc:  # noqa: BLE001 — every failure is reported on the round, never hidden
         await state.fail(f"{type(exc).__name__}: {exc}")
+
+
+async def _run_bounded(state: _Round, settings: Any, llm: Any, **kwargs: Any) -> None:
+    """The live demo either finishes inside its budget or persists a clear failure."""
+    try:
+        async with asyncio.timeout(TARGET_S):
+            await _run(state, settings, llm, **kwargs)
+    except TimeoutError:
+        await state.fail(f"live round exceeded {TARGET_S:g}s time budget")
+    except asyncio.CancelledError:
+        await asyncio.shield(state.fail("live round cancelled before completion"))
+        raise
 
 
 async def start_round(*, settings: Any, db: Any, llm: Any, department_id: str, fast: bool = True,
@@ -362,13 +386,13 @@ async def start_round(*, settings: Any, db: Any, llm: Any, department_id: str, f
         rid = new_id("wlr")
         lr = LiveRound(id=rid, department_id=department_id, status="queued", fast=fast, created_at=utc_now(),
                        steps=[LiveRoundStep(name=s, status="pending") for s in STEPS])
-        state = _Round(lr, db, {"fake_capture": fake_capture, "web_url": url})
+        state = _Round(lr, db, {"fake_capture": fake_capture, "fake_llm": getattr(settings, "llm_mode", "fake") != "live", "web_url": url})
         state.dir.mkdir(parents=True, exist_ok=True)
         source = src_file.read_text()
         (state.dir / "module.before.ts").write_text(source)
         await state.save()
         await state.rec.progress(step="round", status="queued", department_id=department_id, round_id=rid)
-        task = asyncio.create_task(_run(state, settings, llm, source=source, url=url, fake_capture=fake_capture))
+        task = asyncio.create_task(_run_bounded(state, settings, llm, source=source, url=url, fake_capture=fake_capture))
         task.round_id = rid  # type: ignore[attr-defined]
         _ACTIVE = task
     if wait:
@@ -387,8 +411,20 @@ async def promote(*, db: Any, round_id: str) -> LiveRound:
     src_file = round_dir(round_id) / "module.after.ts"
     if not src_file.exists():
         raise ConflictError(f"live round {round_id} has no patched module")
+    if data.get("fake_capture") or data.get("fake_llm"):
+        raise ConflictError("drill captures cannot be promoted to the served world")
+    source = src_file.read_text()
+    if data.get("captured_source_sha256") != hashlib.sha256(source.encode()).hexdigest():
+        raise ConflictError("patched module changed since capture; run a new live round")
+    evidence = read_json(round_dir(round_id) / "probes" / "after" / f"{data["department_id"]}.json")
+    passed = {p.get("id") for p in evidence.get("probes", []) if p.get("pass") is True}
+    if not evidence.get("critical_pass") or not set(paths.CRITICAL_PROBES).issubset(passed):
+        raise ConflictError("critical probe evidence is missing or failing; run a new live round")
+    checks = (await validate_async({data["department_id"]: source}, timeout_s=30))[data["department_id"]]
+    if not checks.ok:
+        raise ConflictError("patched module no longer passes validation; run a new live round")
     after = data.get("after") or {}
-    promote_module(data["department_id"], src_file.read_text(),
+    promote_module(data["department_id"], source,
                    {"iteration": f"live:{round_id}", "probe_score": after.get("probe_score"),
                     "visual_score": after.get("visual_score"), "realism": after.get("realism"), "promoted_at": utc_now()})
     data["promoted"] = True

@@ -1,0 +1,380 @@
+{
+  "run_id": "wgr_01M5T6VWB2SFMJSPB1KCK8CGYY",
+  "iterations": [
+    {
+      "n": 0,
+      "world_score": 0.9,
+      "visual_score": null,
+      "realism": null,
+      "by_building": {
+        "intake": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "office-hours": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "market-research": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "outreach": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "synthetic-population": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "pivot": {
+          "probe": 0.8,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P5",
+            "P10"
+          ],
+          "critical_pass": false
+        },
+        "engineering": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "growth": {
+          "probe": 0.8,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P5",
+            "P10"
+          ],
+          "critical_pass": false
+        },
+        "lead-intel": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "sales": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "finance-people": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "support": {
+          "probe": 0.9,
+          "visual": null,
+          "realism": null,
+          "failed": [
+            "P10"
+          ],
+          "critical_pass": true
+        },
+        "chief-of-staff": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        }
+      }
+    },
+    {
+      "n": 1,
+      "world_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "by_building": {
+        "intake": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "office-hours": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "market-research": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "outreach": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "synthetic-population": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "pivot": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "engineering": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "growth": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "lead-intel": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "sales": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "finance-people": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "support": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "chief-of-staff": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        }
+      }
+    }
+  ],
+  "final": {
+    "world_score": 1.0,
+    "visual_score": null,
+    "realism": null,
+    "generated": 13,
+    "fallback": 0
+  },
+  "registry": {
+    "intake": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "834a43834c9ad0a6c62ff63530d43b5f16849d8097ad6e003f83f54d99551119",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "office-hours": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "f73b9012299c1cb4af18be8f83a03244e73f96c89b9edec84faa5931386ffdf3",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "market-research": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "833c289fa180310c75863778ea4bedeefea122813e0db00544c8955c02bbc963",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "outreach": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "385395f718132d2a824d8abda49cfad483827489cbb2878441da361449db825d",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "synthetic-population": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "2a9b11c313b6547beb92e0e97084ec7bb1f3162e844170a7d3fff8520ab2c780",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "pivot": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "79500b4fc9cceed7b4d74078fa326b570161aa5af685ed503a352cb2fb50b22e",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "engineering": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "4a6853a0b04a2496877d444dcdb0084ecdf9611dbc0fdcfa065f38cd74d5f3dd",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "growth": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "450bb9876aeac09f617fcee7d4b29dd65e627df386032c88be9142f856dbd78a",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "lead-intel": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "48a69995ffb23088cdd40f90b311a2a24dfb1a94ac9304b76085460a87d26422",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "sales": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "15ae0eec30ec76ca8e9fda5b61edfd796a50ab8d5afcb24eed18d09265cc2ea8",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "finance-people": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "2814738b8da4e06d36a389e138ff9673005798e1ddda016b2e6bb66603f7b6a4",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "support": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "dcfeb4f387fe50a4720a606681a4c96a3261b0d79606390990a066469c24bd0b",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    },
+    "chief-of-staff": {
+      "status": "generated",
+      "iteration": 1,
+      "probe_score": 1.0,
+      "visual_score": null,
+      "realism": null,
+      "source_sha256": "856819b0f5412afd113faae644a4214f5836d6150bf32c18fd2325dfef9b7ff5",
+      "capture_provenance": "real",
+      "photoreal_verified": false
+    }
+  },
+  "stop_reason": "Real probe repairs complete. Live Argon visual review separately bounded; no visual scores invented.",
+  "tokens": {
+    "in": 84058,
+    "out": 75050
+  },
+  "cost_usd": 0.9186,
+  "wall_minutes": 11.72,
+  "provenance": {
+    "capture": "real",
+    "renderer": "isolated Mahin PR3 verification copy",
+    "assets": "verified Karthik scanned assets",
+    "patches": "targeted deterministic repairs, not falsely labeled new Argon generations"
+  },
+  "published": true
+}

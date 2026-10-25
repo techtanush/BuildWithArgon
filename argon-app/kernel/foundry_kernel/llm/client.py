@@ -265,22 +265,27 @@ class LLMClient:
 
     async def _finish(self, interaction: Any, *, job: str, model: str, started: float, run_id: str | None,
                       venture_id: str | None, agent_id: str | None, department_id: str | None,
-                      previous_interaction_id: str | None) -> LLMResult:
+                      previous_interaction_id: str | None, input_chars: int = 0) -> LLMResult:
         status = str(getattr(interaction, "status", "completed"))
-        if status in FAILED:
-            errs = getattr(interaction, "errors", None) or []
-            detail = "; ".join(redact(str(getattr(e, "message", e)))[:300] for e in errs) or status
-            await self._kv("provider.gemini.last_error", {"at": utc_now(), "job": job, "error": detail[:500]})
-            raise LLMCallError(f"{job}: interaction {status}: {detail}")
         text = redact(getattr(interaction, "output_text", "") or "", self.settings)
-        images, audio = extract_media(interaction)
+        images, audio = ([], []) if status in FAILED else extract_media(interaction)
         t_in, t_out, cached = _usage(interaction, text)
+        usage = getattr(interaction, "usage", None)
+        usage_estimated = usage is None or getattr(usage, "total_input_tokens", None) is None or getattr(usage, "total_output_tokens", None) is None
+        if usage is None or getattr(usage, "total_input_tokens", None) is None:
+            t_in = input_chars // 4
         cost, est = estimate(model, t_in, t_out, cached)
+        est = est or usage_estimated
         res = LLMResult(text=text, interaction_id=getattr(interaction, "id", None) or None, model=model, tokens_in=t_in,
                         tokens_out=t_out, cached_in=cached, cost_usd=cost, estimated_cost=est,
                         latency_ms=int((time.monotonic() - started) * 1000), raw_status=status, images=images, audio=audio)
         await self._account(res, job=job, run_id=run_id, venture_id=venture_id, agent_id=agent_id,
                             department_id=department_id, previous_interaction_id=previous_interaction_id)
+        if status in FAILED:
+            errs = getattr(interaction, "errors", None) or []
+            detail = "; ".join(redact(str(getattr(e, "message", e)), self.settings)[:300] for e in errs) or status
+            await self._kv("provider.gemini.last_error", {"at": utc_now(), "job": job, "error": detail[:500]})
+            raise LLMCallError(f"{job}: interaction {status}: {detail}")
         await self._log(run_id, "info", f"← {job} tokens_in={t_in} tokens_out={t_out} {res.latency_ms}ms")
         await self._kv("provider.gemini.last_ok_at", utc_now())
         return res
@@ -294,13 +299,16 @@ class LLMClient:
                        previous_interaction_id: str | None = None, run_id: str | None = None,
                        venture_id: str | None = None, agent_id: str | None = None,
                        department_id: str | None = None, on_progress: ProgressFn | None = None,
-                       thinking_level: str | None = None) -> LLMResult:
+                       thinking_level: str | None = None, response_schema: dict[str, Any] | None = None) -> LLMResult:
         """Routes to a normal call or a background long decode (Job.background). `thinking_level` overrides the
         job's level for this call only (03-company-kernel/10 §3: worldgen jobs run "medium in a fast live round")."""
         if self.fake is not None:
             return await self.fake.generate(job, prompt, system=system)
         j = get_job(job)
         kwargs: dict[str, Any] = {"model": j.model, "input": compose_input(prompt)}
+        if response_schema is not None:
+            kwargs["response_format"] = response_schema
+            kwargs["response_mime_type"] = "application/json"
         if system:
             kwargs["system_instruction"] = system  # VERIFIED V1
         cfg = generation_config(j, thinking_level)
@@ -326,12 +334,13 @@ class LLMClient:
             raise
         return await self._finish(interaction, job=job, model=j.model, started=started, run_id=run_id,
                                   venture_id=venture_id, agent_id=agent_id, department_id=department_id,
-                                  previous_interaction_id=previous_interaction_id)
+                                  previous_interaction_id=previous_interaction_id, input_chars=_chars(prompt))
 
     async def generate_json(self, job: str, prompt: str | list[Part], schema: type[BaseModel],
                             **kw: Any) -> tuple[BaseModel, LLMResult]:
         """generate(); parse with jsonout.parse_model. On failure one repair call (server-side context via
         previous_interaction_id); second failure -> LLMOutputError."""
+        kw = {**kw, "response_schema": schema.model_json_schema()}
         res = await self.generate(job, prompt, **kw)
         try:
             return parse_model(res.text, schema), res
@@ -378,7 +387,7 @@ class LLMClient:
             raise
         model = str(agent_config.get("model") or agent)
         return await self._finish(interaction, job="antigravity", model=model, started=started, run_id=run_id,
-                                  venture_id=venture_id, agent_id=None, department_id=None, previous_interaction_id=None)
+                                  venture_id=venture_id, agent_id=None, department_id=None, previous_interaction_id=None, input_chars=len(prompt))
 
     async def generate_images(self, job: str, prompt: str, n: int = 1,
                               reference_images: list[Part] | None = None) -> LLMResult:
@@ -404,3 +413,13 @@ class LLMClient:
 
 def build_llm_client(settings: Settings, db: Any = None) -> LLMClient | FakeLLM:
     return FakeLLM() if settings.llm_mode == "fake" else LLMClient(settings, db)
+
+
+async def register_github_credential(settings: Settings, token: str, credential_id: str) -> str:
+    """Register a scoped proxy credential without putting its value in model context or logs."""
+    client = LLMClient(settings)._genai()
+    credential = await asyncio.to_thread(client.credentials.create, request={
+        "type": "bearer_token", "id": credential_id, "token": token,
+        "header_name": "Authorization", "prefix": "Bearer",
+    })
+    return str(getattr(credential, "id", None) or credential_id)

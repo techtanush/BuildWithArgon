@@ -21,7 +21,7 @@ from .capture import CaptureError, run_capture
 from .critique import critique, needs_patch, patch
 from .generate import generate_all
 from .runs import Recorder, read_json, run_dirs, write_json
-from .score import Version, better, invalid_report, iteration_entry, mean, write_outputs
+from .score import Version, better, invalid_report, iteration_entry, mean, registry_entry, write_outputs
 from .validate import Validation, validate
 
 
@@ -109,7 +109,10 @@ async def run_loop(settings: Settings, llm: Any, db: Any, opts: LoopOptions, *, 
         run_dir = paths.RUNS_DIR / run_id
     run_id = run_dir.name
     await rec.start_run(run_id, run_dir)
-    meta = _meta(run_dir, status="running", stage="loop", loop_started_at=utc_now(), max_iter=opts.max_iter)
+    drill = opts.fake_capture or settings.llm_mode == "fake"
+    provenance = {"drill": drill, "capture": "fake" if opts.fake_capture else "real", "llm_mode": settings.llm_mode}
+    meta = _meta(run_dir, status="running", stage="loop", loop_started_at=utc_now(), max_iter=opts.max_iter,
+                 provenance=provenance, published=False)
     started = time.monotonic()
     totals = Totals()
     totals.tokens_in = int((meta.get("tokens") or {}).get("in", 0))
@@ -194,7 +197,8 @@ async def run_loop(settings: Settings, llm: Any, db: Any, opts: LoopOptions, *, 
             last = versions
             entry = iteration_entry(n, versions)
             iterations.append(entry)
-            write_json(run_dir / "scores.json", {"run_id": run_id, "iterations": iterations, "final": {}, "in_progress": True})
+            write_json(run_dir / "scores.json", {"run_id": run_id, "iterations": iterations, "final": {}, "in_progress": True,
+                                                        "provenance": provenance, "published": False})
             await rec.progress(step="iteration", status="done", run_id=run_id, iteration=n, score=entry["world_score"],
                                note=f"visual={entry['visual_score']} realism={entry['realism']}")
             if all(b is not None and b.good() for b in best.values()):
@@ -240,7 +244,11 @@ async def run_loop(settings: Settings, llm: Any, db: Any, opts: LoopOptions, *, 
         await rec.finish_run(run_id, status="failed", iterations=len(iterations), final_score=None)
         raise
 
-    registry = write_outputs(run_id, best, reason_suffix=f" after {len(iterations)} iteration(s)")
+    if drill:
+        # Drill scores are useful evidence of plumbing, never authority to alter the served town.
+        registry = {"run_id": run_id, "modules": {d: registry_entry(b) for d, b in best.items()}}
+    else:
+        registry = write_outputs(run_id, best, reason_suffix=f" after {len(iterations)} iteration(s)")
     final_versions = [b for b in best.values() if b is not None]
     final = {"world_score": mean([b.probe for b in final_versions]) or 0.0,
              "visual_score": mean([b.visual for b in final_versions if b.visual is not None]),
@@ -250,10 +258,11 @@ async def run_loop(settings: Settings, llm: Any, db: Any, opts: LoopOptions, *, 
     wall = round((time.monotonic() - started) / 60 + float(meta.get("wall_minutes", 0.0) or 0.0), 2)
     scores = {"run_id": run_id, "iterations": iterations, "final": final, "registry": registry["modules"],
               "stop_reason": stop_reason, "tokens": {"in": totals.tokens_in, "out": totals.tokens_out},
-              "cost_usd": round(totals.cost, 4), "wall_minutes": wall}
+              "cost_usd": round(totals.cost, 4), "wall_minutes": wall,
+              "provenance": provenance, "published": not drill}
     write_json(run_dir / "scores.json", scores)
     _meta(run_dir, status="succeeded", stage="done", finished_at=utc_now(), stop_reason=stop_reason,
-          tokens=scores["tokens"], cost_usd=scores["cost_usd"], wall_minutes=wall)
+          tokens=scores["tokens"], cost_usd=scores["cost_usd"], wall_minutes=wall, published=not drill)
     await rec.finish_run(run_id, status="succeeded", iterations=len(iterations), final_score=final["world_score"])
     await rec.progress(step="loop", status="done", run_id=run_id, iteration=n, score=final["world_score"], note=stop_reason)
     return scores

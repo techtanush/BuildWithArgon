@@ -19,14 +19,19 @@ ID_RE = re.compile(r"^[A-Za-z0-9_\-]+$")
 def resolve_preview(data_dir: Path, vid: str, ticket_id: str, path: str) -> Path | None:
     if not ID_RE.match(vid) or not ID_RE.match(ticket_id) or "\\" in path or "\x00" in path:
         return None
-    root = (Path(data_dir) / "workspaces" / vid / ticket_id / "dist").resolve()
+    workspaces = (Path(data_dir) / "workspaces").resolve()
+    root = (workspaces / vid / ticket_id / "dist").resolve()
+    if workspaces not in root.parents:
+        return None
     if not root.is_dir():
         return None
     target = (root / (path or "index.html")).resolve()
     if target != root and root not in target.parents:
         return None
     if target.is_dir():
-        target = target / "index.html"
+        target = (target / "index.html").resolve()
+    if root not in target.parents:
+        return None
     return target if target.is_file() else None
 
 
@@ -35,4 +40,5 @@ async def preview(vid: str, ticket_id: str, path: str, request: Request) -> File
     target = resolve_preview(request.app.state.settings.data_dir, vid, ticket_id, path)
     if target is None:
         raise NotFoundError("preview file", f"{vid}/{ticket_id}/{path}")
-    return FileResponse(target)
+    return FileResponse(target, headers={"Content-Security-Policy": "sandbox allow-scripts allow-forms; connect-src 'none'; form-action 'none'",
+                                         "X-Content-Type-Options": "nosniff"})

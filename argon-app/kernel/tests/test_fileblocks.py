@@ -50,3 +50,20 @@ def test_package_json_strips_unlisted_dependencies() -> None:
     data = json.loads(text)
     assert sorted(stripped) == ["jest", "lodash"]
     assert set(data["dependencies"]) == {"react", "zod"} and set(data["devDependencies"]) == {"vitest"}
+
+
+def test_reserved_components_and_control_paths_are_rejected() -> None:
+    for bad in [".", "./", "src/.git/config", "src/node_modules/pkg/a.ts", ".foundry/vitest.json", "a\x00b.ts", "a\nb.ts"]:
+        assert not fileblocks.safe_path(bad), repr(bad)
+
+
+def test_contained_path_rejects_symlink_write_and_delete(tmp_path) -> None:
+    import pytest
+
+    root = tmp_path / "workspace"
+    root.mkdir()
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (root / "src").symlink_to(outside, target_is_directory=True)
+    with pytest.raises(ValueError, match="symlink"):
+        fileblocks.contained_path(root, "src/escape.ts")

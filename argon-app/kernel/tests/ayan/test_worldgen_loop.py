@@ -37,6 +37,8 @@ def seed_run(depts: list[str]) -> Path:
 
 
 async def test_loop_patches_failing_building_and_stops_when_good(wg_paths: Path, monkeypatch: pytest.MonkeyPatch, settings: Any, db: Any) -> None:
+    # Exercise the real publication branch with controlled test doubles.
+    settings = settings.model_copy(update={"llm_mode": "live"})
     no_tsc(monkeypatch)
     cap = FakeCapture(fail={"pivot": [["P5"], []]})
     monkeypatch.setattr(loop, "run_capture", cap)
@@ -63,6 +65,7 @@ async def test_loop_patches_failing_building_and_stops_when_good(wg_paths: Path,
 
 
 async def test_loop_keeps_best_and_falls_back_when_critical_never_passes(wg_paths: Path, monkeypatch: pytest.MonkeyPatch, settings: Any) -> None:
+    settings = settings.model_copy(update={"llm_mode": "live"})
     no_tsc(monkeypatch)
     monkeypatch.setattr(loop, "run_capture", FakeCapture(fail={"support": [["P4"]]}))
     run_dir = seed_run(["support"])
@@ -116,6 +119,9 @@ async def test_buildings_one_pass_with_fake_fixture(wg_paths: Path, monkeypatch:
 
 async def test_buildings_regenerates_missing_one(wg_paths: Path, monkeypatch: pytest.MonkeyPatch, settings: Any) -> None:
     no_tsc(monkeypatch)
+    # Reference assets are optional local files; isolate this regeneration test from briefing calls.
+    from foundry_kernel.worldgen import generate
+    monkeypatch.setattr(generate, "_refs", lambda: [])
     depts = paths.department_ids()
     one_pass = "\n".join(file_block(d, module(d)) for d in depts[:-1]) + f'\n<<<FILE path="{paths.module_path(depts[-1])}">>>\nimport type'
     llm = FakeLLM()
@@ -124,3 +130,24 @@ async def test_buildings_regenerates_missing_one(wg_paths: Path, monkeypatch: py
     run_id = await loop.buildings(settings, llm, None)
     gen = json.loads((paths.RUNS_DIR / run_id / "generation.json").read_text())
     assert gen["truncated"] == [depts[-1]] and gen["regenerated"][depts[-1]]["ok"] and gen["missing"] == []
+
+
+@pytest.mark.parametrize("fake_capture,llm_mode", [(True, "live"), (False, "fake")])
+async def test_drill_never_changes_production_outputs(wg_paths: Path, monkeypatch: pytest.MonkeyPatch,
+                                                      settings: Any, fake_capture: bool, llm_mode: str) -> None:
+    no_tsc(monkeypatch)
+    monkeypatch.setattr(loop, "run_capture", FakeCapture())
+    settings = settings.model_copy(update={"llm_mode": llm_mode})
+    paths.GENERATED_DIR.mkdir(exist_ok=True)
+    original = {"engineering.ts": "// production module", "index.ts": "// production registry", "registry.json": "{}"}
+    for filename, text in original.items():
+        (paths.GENERATED_DIR / filename).write_text(text)
+    run_dir = seed_run(["engineering"])
+    llm = FakeLLM()
+    llm.script("worldgen_critic", [critic_json()])
+    scores = await loop.run_loop(settings, llm, None,
+                                 loop.LoopOptions(max_iter=0, only=["engineering"], fake_capture=fake_capture), run_dir=run_dir)
+    assert scores["provenance"]["drill"] is True and scores["published"] is False
+    assert json.loads((run_dir / "run.json").read_text())["published"] is False
+    assert {p.name: p.read_text() for p in paths.GENERATED_DIR.iterdir()} == original
+    assert (run_dir / "scores.json").exists()  # drill evidence is still retained

@@ -92,8 +92,9 @@ async def verify(h: EngineeringHandler, ticket: dict[str, Any], ctx: HandlerCont
     repo = venture.get("repo_full_name") if gh else None
     branch = bres.get("branch")
     if ws is not None:
-        (ws / test_rel).parent.mkdir(parents=True, exist_ok=True)
-        (ws / test_rel).write_text(test_src, "utf-8")
+        target = fileblocks.contained_path(ws, test_rel)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(test_src, "utf-8")
         v = await LocalLoopExecutor(ctx.settings, ctx.llm, runner=h.runner).verify(ws)
         acceptance = acceptance_status(acs, v, test_rel)
         passed, failed, build_ok, failures = v.passed, v.failed, v.build_ok, v.failures
@@ -103,6 +104,7 @@ async def verify(h: EngineeringHandler, ticket: dict[str, Any], ctx: HandlerCont
                 await gh[1].put_file(gh[2], repo, branch, test_rel, test_src.encode(), f"foundry({my8}): acceptance tests")
             except Exception as exc:  # noqa: BLE001
                 await ctx.log("warn", f"could not push the acceptance test to {branch} ({type(exc).__name__})")
+                return HandlerResult(outcome="failed", note="acceptance tests could not be published to the PR; merge approval not requested")
     elif repo and branch:
         sandbox = await sandbox_verify(ctx, ticket, repo, branch, test_rel, test_src)
         if sandbox is None:
@@ -117,6 +119,12 @@ async def verify(h: EngineeringHandler, ticket: dict[str, Any], ctx: HandlerCont
 
     visual = await visual_qa(ctx, vid, build, acs) if ok else {"status": "not_run", "reason": "tests failed"}
     review = await last_review(h, ctx, vid, task)
+    if visual.get("status") in ("failed", "error"):
+        ok = False
+        failures.append("visual QA failed")
+    if review.get("high", 0) or review.get("escalated"):
+        ok = False
+        failures.append("review has unresolved high-severity findings")
     summary = (f"{passed}/{passed + failed} tests, build {'ok' if build_ok else 'failed'}; acceptance "
                f"{sum(a['status'] == 'pass' for a in acceptance)}/{len(acceptance)}; visual QA {visual['status']}")
     report = NewArtifact(kind="test_report", title=f"QA {task}: {'pass' if ok else 'fail'}", summary=summary,
@@ -151,6 +159,28 @@ async def verify(h: EngineeringHandler, ticket: dict[str, Any], ctx: HandlerCont
                     "preview_url": bres.get("preview_url"), "iterations": bres.get("iterations"),
                     "first_pass_passed": bres.get("first_pass_passed"), "summary": summary,
                     "build_ticket_id": build["id"], "task_key": task, "visual_qa": visual}
+    if not local:
+        if gh is None or not repo:
+            return HandlerResult(outcome="failed", note="GitHub unavailable; cannot verify PR head", result=result, artifacts=[report])
+        try:
+            pr = await gh[1].get_pull_request(gh[2], repo, int(bres["pr_number"]))
+            head = pr.get("head") or {}
+            head_sha = head.get("sha")
+            if not re.fullmatch(r"[0-9a-fA-F]{40}", str(head_sha or "")):
+                raise ValueError("missing real pull request head SHA")
+            if branch and head.get("ref") != branch:
+                raise ValueError("pull request branch does not match verified build")
+            tested_sha = sandbox.commit if ws is None else None
+            if ws is None and not re.fullmatch(r"[0-9a-fA-F]{40}", str(tested_sha or "")):
+                raise ValueError("sandbox QA did not identify its tested commit")
+            if tested_sha and tested_sha != head_sha:
+                raise ValueError("pull request head changed after sandbox QA")
+        except Exception as exc:
+            await ctx.log("warn", f"could not verify pull request head: {type(exc).__name__}")
+            return HandlerResult(outcome="failed", note="cannot verify the tested PR head; merge approval not requested", result=result, artifacts=[report])
+        gate_payload.update(repo_full_name=repo, merge_method="squash", head_sha=head_sha)
+    if local and ws is not None:
+        gate_payload["workspace_sha256"] = workspace.source_digest(ws)
     title = (f"Merge PR #{bres['pr_number']}: {build.get('title', '')}" if not local
              else f"Accept build into the product: {build.get('title', '')}")
     return HandlerResult(outcome="waiting_approval", result=result, artifacts=[report],
@@ -221,7 +251,7 @@ async def merge(h: EngineeringHandler, ticket: dict[str, Any], ctx: HandlerConte
     import json
 
     from .. import gates
-    from .engineering import result_of, venture_id
+    from .engineering import payload_of, result_of, venture_id
 
     decision = ctx.approval_result or {}
     approval_id = decision.get("approval_id")
@@ -233,17 +263,30 @@ async def merge(h: EngineeringHandler, ticket: dict[str, Any], ctx: HandlerConte
     if ctx.db is None:
         return HandlerResult(outcome="failed", note="merge needs the database to check the approval")
     row = await gates.require_approved(ctx.db, approval_id, "merge")
-    gate = json.loads(row.get("payload_json") or "{}")
     vid = venture_id(ticket, ctx)
+    if row.get("venture_id") != vid or (row.get("ticket_id") and row["ticket_id"] != ticket.get("id")):
+        return HandlerResult(outcome="failed", note="merge approval belongs to another venture or ticket")
+    gate = json.loads(row.get("payload_json") or "{}")
+    task = payload_of(ticket).get("task_key")
+    if not gate.get("build_ticket_id") or (task and task != gate.get("task_key")):
+        return HandlerResult(outcome="failed", note="merge approval does not identify this task's build")
     venture = await h.venture_row(ctx, vid)
     build = await ctx.db.fetch_one("SELECT * FROM tickets WHERE id = ?", (gate.get("build_ticket_id"),)) \
         if gate.get("build_ticket_id") else await h.latest_build(ctx, ticket)
-    bres = result_of(build) if build else {}
+    if build is None or build.get("venture_id") != vid or build.get("status") != "done" or build.get("type") not in ("eng.build", "eng.fix"):
+        return HandlerResult(outcome="failed", note="approved build is unavailable or belongs to another venture")
+    bres = result_of(build)
     title = str((build or {}).get("title") or ticket.get("title") or "")
     if gate.get("local", True):
         ws = Path(bres.get("workspace_path") or "")
         if not bres.get("workspace_path") or not ws.exists():
             return HandlerResult(outcome="failed", note="local build workspace is gone; cannot accept it")
+        expected = workspace.workspace_path(ctx.settings, vid, str(build["id"]))
+        if ws.resolve() != expected.resolve():
+            return HandlerResult(outcome="failed", note="build workspace is outside its venture and ticket")
+        expected_digest = gate.get("workspace_sha256")
+        if not expected_digest or workspace.source_digest(ws) != expected_digest:
+            return HandlerResult(outcome="failed", note="workspace changed after QA; a new verification and approval are required")
         dest = workspace.product_main(ctx.settings, vid)
         workspace.copy_product(ws, dest)
         uri = gate.get("preview_url") or bres.get("preview_url")

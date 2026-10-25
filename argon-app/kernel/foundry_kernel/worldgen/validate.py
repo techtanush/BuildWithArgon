@@ -4,7 +4,10 @@ FILE-block parsing, static rules (imports, forbidden tokens, id/export, size) an
 tsconfig.worldgen.json` over web/src/world/buildings/staging/. Staging is flat (modules import '../../kit/types')."""
 from __future__ import annotations
 
+import asyncio
+import json
 import re
+import tempfile
 import subprocess
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -120,15 +123,74 @@ def validate(modules: dict[str, str], *, suffix: str = "", typecheck: bool = Tru
     if not typecheck:
         return results
     ok, by_file, raw = run_tsc()
+    # Errors in the shared kit or compiler configuration invalidate every candidate.
+    # Errors in another staged building must not invalidate an otherwise good module.
+    shared = [msg for name, msgs in by_file.items()
+              if not any(p.name == name for p in paths.STAGING_DIR.glob("*.ts"))
+              for msg in msgs]
     for dept, path in staged.items():
         v = results[dept]
         if ok is None:
             v.tsc_ok, v.tsc_errors = False, raw
             continue
-        errs = by_file.get(path.name, [])
+        errs = [*by_file.get(path.name, []), *shared]
         v.tsc_ok = not errs and (ok or bool(by_file))
         if ok is False and not by_file:  # tsc failed without per-file errors (config problem) -> blame everyone
             v.tsc_ok = False
             errs = [raw[-2000:]]
         v.tsc_errors = "\n".join(errs)
     return results
+
+
+async def validate_async(modules: dict[str, str], timeout_s: float = 30, *, suffix: str = "",
+                         typecheck: bool = True) -> dict[str, Validation]:
+    """Cancellable, bounded typecheck of only these candidates, staged for later capture.
+
+    A private tsconfig prevents unrelated stale staging files from consuming the live budget.
+    Timeout/cancellation kills and reaps the compiler process group. Cancellation propagates.
+    """
+    from .capture import _terminate_process
+
+    results = validate(modules, suffix=suffix, typecheck=False)
+    staged = {d: paths.STAGING_DIR / f"{d}{suffix}.ts" for d, v in results.items() if v.static_ok}
+    if not staged or not typecheck:
+        return results
+    cmd = tsc_bin()
+    if cmd is None:
+        for d in staged:
+            results[d].tsc_ok = False
+            results[d].tsc_errors = "tsc not installed — run `pnpm install` in argon-app/web"
+        return results
+    with tempfile.TemporaryDirectory(prefix="foundry-worldgen-tsc-") as scratch:
+        config = Path(scratch) / "tsconfig.json"
+        config.write_text(json.dumps({"extends": str((paths.WEB_DIR / "tsconfig.worldgen.json").resolve()),
+                                      "include": [], "files": [str(p.resolve()) for p in staged.values()]}))
+        proc = await asyncio.create_subprocess_exec(*cmd, "--noEmit", "-p", str(config), cwd=paths.WEB_DIR,
+                                                    stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT,
+                                                    start_new_session=True)
+        try:
+            out, _ = await asyncio.wait_for(proc.communicate(), timeout=timeout_s)
+        except TimeoutError:
+            await _terminate_process(proc)
+            for d in staged:
+                results[d].tsc_ok = False
+                results[d].tsc_errors = f"typecheck timed out after {timeout_s}s"
+            return results
+        except asyncio.CancelledError:
+            await asyncio.shield(_terminate_process(proc))
+            raise
+        raw = out.decode(errors="replace").strip()
+        by_file: dict[str, list[str]] = {}
+        for line in raw.splitlines():
+            match = TSC_LINE.match(line.strip())
+            if match:
+                by_file.setdefault(Path(match.group("file")).name, []).append(line.strip())
+        candidate_names = {p.name for p in staged.values()}
+        shared = [msg for name, msgs in by_file.items() if name not in candidate_names for msg in msgs]
+        for d, p in staged.items():
+            errors = [*by_file.get(p.name, []), *shared]
+            if proc.returncode != 0 and not by_file:
+                errors.append(raw[-8000:] or f"tsc exited {proc.returncode}")
+            results[d].tsc_ok = not errors and (proc.returncode == 0 or bool(by_file))
+            results[d].tsc_errors = "\n".join(errors)
+        return results

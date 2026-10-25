@@ -14,7 +14,7 @@ from typing import Any
 from fastapi import FastAPI
 
 from .. import bus
-from ..errors import NotFoundError
+from ..errors import DependencyError, NotFoundError
 from ..ids import new_id, utc_now
 from .cua_client import CuaComputer, CuaUnavailable, create_computer, cua_available
 
@@ -85,6 +85,8 @@ async def get_computer(settings: Any, db: Any, venture_id: str, agent_id: str) -
         raise CuaUnavailable("CUA_MODE=off")
     async with _lock():
         row = await db.fetch_one("SELECT * FROM computers WHERE venture_id=? AND agent_id=?", (venture_id, agent_id))
+        if row and row["id"] in _live and row["status"] == "error":
+            raise CuaUnavailable("previous desktop cleanup is unconfirmed; retry Stop before reusing it")
         if row and row["id"] in _live and row["status"] not in ("stopped", "error"):
             touch(row["id"])
             return row, _live[row["id"]]
@@ -103,6 +105,9 @@ async def get_computer(settings: Any, db: Any, venture_id: str, agent_id: str) -
         name = "foundry-" + re.sub(r"[^a-z0-9-]", "-", agent_id.lower()) + "-" + cid[-6:].lower()
         try:
             computer = await (_factory or create_computer)(settings, name)
+            if any(str(getattr(other, "id", "")) == str(computer.id) for other in _live.values()):
+                await computer.stop()
+                raise CuaUnavailable("this desktop is already assigned to another agent")
         except Exception as exc:
             await set_status(db, cid, "error")
             if isinstance(exc, CuaUnavailable):
@@ -110,8 +115,8 @@ async def get_computer(settings: Any, db: Any, venture_id: str, agent_id: str) -
             raise CuaUnavailable(str(exc)) from exc
         _live[cid] = computer
         async with db.tx() as tx:
-            await tx.execute("UPDATE computers SET status='ready', external_ref=?, updated_at=? WHERE id=?",
-                             (getattr(computer, "id", name), utc_now(), cid))
+            await tx.execute("UPDATE computers SET status='ready', external_ref=?, watch_url=?, updated_at=? WHERE id=?",
+                             (getattr(computer, "id", name), getattr(computer, "watch_url", None), utc_now(), cid))
         row = await db.fetch_one("SELECT * FROM computers WHERE id=?", (cid,))
         assert row is not None
         await _emit(db, row)
@@ -124,13 +129,19 @@ async def stop_computer(db: Any, computer_id: str) -> dict[str, Any]:
     row = await db.fetch_one("SELECT * FROM computers WHERE id=?", (computer_id,))
     if row is None:
         raise NotFoundError("computer", computer_id)
-    computer = _live.pop(computer_id, None)
-    _last_used.pop(computer_id, None)
+    computer = _live.get(computer_id)
+    if computer is None and row["status"] != "stopped":
+        await set_status(db, computer_id, "error")
+        raise DependencyError("cua", "Desktop stop cannot be confirmed: no live connection", unavailable=True)
     if computer is not None:
         try:
             await computer.stop()
         except Exception as exc:  # noqa: BLE001
-            log.warning("stopping computer %s failed: %s", computer_id, exc)
+            log.warning("stopping computer %s failed (%s)", computer_id, type(exc).__name__)
+            await set_status(db, computer_id, "error")
+            raise DependencyError("cua", "Desktop stop failed; retry Stop", unavailable=True) from exc
+    _live.pop(computer_id, None)
+    _last_used.pop(computer_id, None)
     now = utc_now()
     async with db.tx() as tx:
         await tx.execute("UPDATE computer_tasks SET status='stopped', completed_at=? "

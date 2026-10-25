@@ -14,7 +14,7 @@ from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
 from .. import bus, gates
-from ..errors import DependencyError, NotFoundError
+from ..errors import DependencyError, GateNotApproved, NotFoundError
 from ..ids import new_id, utc_now
 from ..integrations.composio import ComposioClient, ComposioError
 
@@ -94,7 +94,11 @@ def _client(settings: Any) -> ComposioClient:
 async def connect_github(db: Any, client: ComposioClient, venture: dict[str, Any], *, approval_id: str,
                          callback_url: str) -> dict[str, Any]:
     """Gated (`integration`): returns the Composio connect link and records the pending connection."""
-    await gates.require_approved(db, approval_id, "integration")
+    approval = await gates.require_approved(db, approval_id, "integration")
+    payload = json.loads(approval["payload_json"] or "{}")
+    if (approval["venture_id"] != venture["id"] or payload.get("provider") != "github"
+            or (payload.get("callback_url") is not None and payload["callback_url"] != callback_url)):
+        raise GateNotApproved(approval_id, "integration")
     link = await client.create_connect_link(venture["composio_user_id"], callback_url)
     await _upsert(db, venture, "pending", link.get("connected_account_id"), {"approval_id": approval_id})
     return link
@@ -113,14 +117,16 @@ async def github_connect(vid: str, body: ConnectRequest, request: Request) -> di
     venture = await _venture(db, vid)
     client = _client(settings)
     latest = await db.fetch_one(
-        "SELECT id, status FROM approvals WHERE venture_id = ? AND gate_type = 'integration' "
+        "SELECT id, status, payload_json FROM approvals WHERE venture_id = ? AND gate_type = 'integration' "
         "ORDER BY created_at DESC, id DESC LIMIT 1", (vid,))
-    if latest is None or latest["status"] not in ("pending", "approved"):
+    if (latest is None or latest["status"] not in ("pending", "approved")
+            or json.loads(latest["payload_json"] or "{}").get("provider") != "github"
+            or json.loads(latest["payload_json"] or "{}").get("callback_url") != body.callback_url):
         async with db.tx() as tx:
             approval_id = await gates.request_approval(
                 tx, venture_id=vid, gate_type="integration", title="Connect GitHub",
                 summary="Allow Foundry to connect your GitHub account through Composio (repos, PRs, issues).",
-                payload={"provider": "github", "scopes": "Composio-managed"})
+                payload={"provider": "github", "callback_url": body.callback_url, "scopes": "Composio-managed"})
         return {"data": {"redirect_url": None, "approval_id": approval_id, "status": "waiting_approval"}}
     if latest["status"] == "pending":
         return {"data": {"redirect_url": None, "approval_id": latest["id"], "status": "waiting_approval"}}

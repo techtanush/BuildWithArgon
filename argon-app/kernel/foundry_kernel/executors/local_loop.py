@@ -133,7 +133,8 @@ class LocalLoopExecutor:
             self.runner, self.install_runner, self._runner_warning = runner, runner, None
         else:
             self.runner, self._runner_warning = workspace.default_runner(settings)
-            self.install_runner = workspace.subprocess_runner  # npm install needs the network
+            self.install_runner = (self.runner if settings.local_sandbox == "docker" or self.runner is workspace.unavailable_runner
+                                   else workspace.subprocess_runner)
         self.build_job, self.fix_job = build_job, fix_job
         self.agent_id, self.department_id = agent_id, department_id
         self.iterations_detail: list[dict[str, Any]] = []
@@ -180,7 +181,11 @@ class LocalLoopExecutor:
             if not fileblocks.safe_path(block.path):
                 await log("warn", f"rejected unsafe path from model: {block.path!r}")
                 continue
-            target = ws / block.path
+            try:
+                target = fileblocks.contained_path(ws, block.path)
+            except ValueError:
+                await log("warn", "rejected symlink or escaping generated path")
+                continue
             if block.content is None:
                 if target.is_file():
                     target.unlink()
@@ -207,6 +212,9 @@ class LocalLoopExecutor:
                                       ws, timeout)
         v = parse_vitest(report, ws)
         v.test_tail = out[-4000:]
+        if code != 0:
+            v.failed = max(v.failed, 1)
+            v.failures.append(f"npm test exited with status {code}")
         if not v.ran and code != 0:
             v.failures.append(f"npm test failed to run (exit {code}):\n{out[-1500:]}")
         bcode, bout = await self.runner(["npm", "run", "build"], ws, timeout)
@@ -222,12 +230,22 @@ class LocalLoopExecutor:
 
     # ------------------------------------------------------------------ run
 
-    async def run(self, inp: ExecutorInput, log: LogFn, *, base: Path | None = None) -> ExecutorResult:
+    async def run(self, inp: ExecutorInput, log: LogFn, *, base: Path | None = None,
+                  additional_bases: list[Path] | None = None) -> ExecutorResult:
         started = time.monotonic()
         if self._runner_warning:
             await log("warn", self._runner_warning)
+        if self.runner is workspace.unavailable_runner:
+            return ExecutorResult(status="failed", iterations=0, first_pass_passed=False,
+                                  failures=[self._runner_warning or "required sandbox is unavailable"])
+        self.iterations_detail = []
         ws = workspace.create_workspace(self.settings, inp.venture_id, inp.ticket_id, base=base)
         self.workspace = ws
+        for source in additional_bases or []:
+            try:
+                workspace.overlay_changes(ws, source)
+            except ValueError as exc:
+                return self._result("failed", 0, False, VerifyResult(), ws, "", [str(exc)], 0, 0, 0.0, started)
         await self._ensure_install(ws, log)
         tokens_in = tokens_out = 0
         cost = 0.0
@@ -282,7 +300,9 @@ class LocalLoopExecutor:
                     new_by_file[f] = new_by_file.get(f, 0) + 1
             removed = [n for n, f in known.items() if n not in v.tests and not new_by_file.get(f)] if v.ran else []
             rejected = bool(weakened or removed)
-            ok = v.ok and not rejected
+            if parsed.truncated:
+                v.failures.append("model output remains truncated after continuation limit")
+            ok = v.ok and not rejected and not parsed.truncated
             self.iterations_detail.append({"iteration": i, "tests_passed": v.passed, "tests_failed": v.failed,
                                            "build_ok": v.build_ok, "rejected": rejected, "removed_tests": removed,
                                            "weakened_files": weakened, "passed": ok})

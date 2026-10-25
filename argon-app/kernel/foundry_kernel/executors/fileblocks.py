@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass, field
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 FILE_RE = re.compile(r'<<<FILE path="([^"]+)">>>\n(.*?)\n<<<END FILE>>>', re.MULTILINE | re.DOTALL)
@@ -42,15 +42,30 @@ class ParseResult:
 
 def safe_path(path: str) -> bool:
     """Reject absolute paths, `..`, `.git/`, `node_modules/`, `.env*`, `*.pem`, `*.key` (security doc §Running generated code)."""
-    if not path or path.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", path) or "\\" in path:
+    if not path or any(ord(c) < 32 for c in path) or path in (".", "./") or path.startswith(("/", "\\")) or re.match(r"^[A-Za-z]:", path) or "\\" in path:
         return False
     p = PurePosixPath(path)
     if any(part in ("..", "") for part in p.parts) or path.startswith("./.."):
         return False
     norm = str(p)
-    if norm.startswith(BLOCKED_PREFIXES) or norm in (".git", "node_modules"):
+    if any(part.lower() in (".git", "node_modules", ".foundry") for part in p.parts):
         return False
     return not any(BLOCKED_NAMES.match(part) for part in p.parts)
+
+
+def contained_path(root: Path, relative: str) -> Path:
+    """Validate both the lexical path and existing components before reading/writing generated files."""
+    if not safe_path(relative):
+        raise ValueError("unsafe generated path")
+    target = root / relative
+    for component in (target, *target.parents):
+        if component == root.parent:
+            break
+        if component.is_symlink():
+            raise ValueError("symlink in generated path")
+    if not target.resolve().is_relative_to(root.resolve()):
+        raise ValueError("generated path escapes workspace")
+    return target
 
 
 def parse(text: str) -> ParseResult:

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import io
 import json
+import re
 from pathlib import Path
 from typing import Any, Literal
 
@@ -101,7 +102,7 @@ def ensure_probe_issues(out: CriticOut, report: dict[str, Any]) -> CriticOut:
     """Every failed probe must appear as a high-severity issue (10 §4) — add one when the critic omitted it."""
     text = " ".join(f"{i.description} {i.fix}" for i in out.issues if i.severity == "high")
     for p in report.get("probes", []):
-        if not p.get("pass") and p.get("id") not in text:
+        if not p.get("pass") and not re.search(r"\b" + re.escape(p["id"]) + r"\b", text):
             where = "interior" if p["id"] in ("P4", "P5") else "exterior" if p["id"] in ("P3", "P10") else ""
             out.issues.append(CriticIssue(severity="high", where=where, camera="",
                                           description=f"{p['id']} failed: {p.get('details', '')}",
@@ -144,7 +145,15 @@ async def critique(llm: Any, d: Department, *, report: dict[str, Any], root: Pat
 def needs_patch(report: dict[str, Any], critic: dict[str, Any] | None) -> bool:
     if any(not p.get("pass") for p in report.get("probes", [])):
         return True
-    return any(i.get("severity") == "high" for i in (critic or {}).get("issues", []))
+    if any(i.get("severity") == "high" for i in (critic or {}).get("issues", [])):
+        return True
+    # The quality bar is a stopping condition even when the critic forgot to attach a high issue.
+    from .score import STOP_REALISM, STOP_VISUAL
+
+    return bool(critic) and (
+        (critic.get("visual_score") is not None and critic["visual_score"] < STOP_VISUAL)
+        or (critic.get("realism") is not None and critic["realism"] < STOP_REALISM)
+    )
 
 
 async def patch(llm: Any, d: Department, *, source: str, critic: dict[str, Any], report: dict[str, Any],

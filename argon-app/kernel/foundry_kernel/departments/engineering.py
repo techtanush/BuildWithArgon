@@ -259,7 +259,7 @@ class EngineeringHandler:
         while frontier:
             tid = frontier.pop()
             for dep in await ctx.db.fetch_all("SELECT t.* FROM ticket_deps d JOIN tickets t ON t.id = d.depends_on_id "
-                                              "WHERE d.ticket_id = ?", (tid,)):
+                                              "WHERE d.ticket_id = ? AND t.venture_id = ?", (tid, vid)):
                 if dep["id"] in seen:
                     continue
                 seen.add(dep["id"])
@@ -430,11 +430,31 @@ class EngineeringHandler:
             name = "local"
             executor = LocalLoopExecutor(ctx.settings, ctx.llm, runner=self.runner)
             base = None
+            bases: list[Path] = []
             if mode == "fix":  # continue from the task's latest workspace (or the product's main)
                 prev = await self.latest_build(ctx, ticket)
                 prev_ws = result_of(prev).get("workspace_path") if prev else None
                 base = Path(prev_ws) if prev_ws and Path(prev_ws).exists() else None
-            result = await executor.run(inp, ctx.log, base=base)
+            if base is None and ctx.db is not None and ticket.get("id"):
+                prerequisites = await ctx.db.fetch_all(
+                    "SELECT t.* FROM ticket_deps d JOIN tickets t ON t.id = d.depends_on_id "
+                    "WHERE d.ticket_id = ? AND t.venture_id = ? AND t.type IN ('eng.build','eng.fix') "
+                    "AND t.status = 'done' ORDER BY t.completed_at, t.updated_at, t.id",
+                    (ticket["id"], vid))
+                for dependency in prerequisites:
+                    latest = await self.latest_build(ctx, dependency) or dependency
+                    source = result_of(latest).get("workspace_path")
+                    if not source:
+                        return HandlerResult(outcome="failed", note="local prerequisite workspace is unavailable")
+                    source_path = Path(source)
+                    expected = workspace.workspace_path(ctx.settings, vid, str(latest["id"]))
+                    if source_path.resolve() != expected.resolve() or not source_path.is_dir():
+                        return HandlerResult(outcome="failed", note="invalid local prerequisite workspace")
+                    if source_path not in bases:
+                        bases.append(source_path)
+                if bases:
+                    base = bases.pop(0)
+            result = await executor.run(inp, ctx.log, base=base, additional_bases=bases)
         tid = inp.ticket_id
         metrics = {"iterations": result.iterations, "first_pass_passed": result.first_pass_passed,
                    "final_passed": result.status == "passed", "tests_passed": result.tests_passed,

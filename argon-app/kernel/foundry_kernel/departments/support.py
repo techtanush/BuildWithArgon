@@ -102,11 +102,21 @@ class SupportHandler:
                         + "\n".join(f"{i + 1}. {s}" for i, s in enumerate(triage.repro_steps))
                         + f"\n\nSuspected area: {triage.suspected_area or 'unknown'}\n\nIssue text:\n"
                         + str(issue.get("body") or ticket.get("body", "")))
-                new_tickets.append(NewTicket(
-                    type="eng.fix", title=f"Fix {label}: {triage.summary}"[:200], body=body,
-                    payload={"issue_number": number, "summary": triage.summary, "repro_steps": triage.repro_steps,
-                             "suspected_area": triage.suspected_area, "issue_url": issue.get("url", "")},
-                    priority=0 if triage.severity in ("critical", "high") else 1, assigned_agent_id="eng.builder"))
+                from .engineering import EngineeringHandler, tid8
+
+                engineering = EngineeringHandler()
+                vid = str(ctx.venture["id"])
+                task_key = f"issue-{number}" if number is not None else f"support-{tid8(str(ticket.get('id') or ctx.run_id))}"
+                chain = engineering.fix_chain(
+                    task_key=task_key, title=triage.summary, body=redact(body),
+                    payload={"issue_number": number, "summary": redact(triage.summary),
+                             "repro_steps": [redact(s) for s in triage.repro_steps],
+                             "suspected_area": redact(triage.suspected_area), "issue_url": issue.get("url", "")},
+                    acs=await engineering.acceptance_criteria(ctx, vid),
+                    architecture_md=await engineering.plan_markdown(ctx, vid), n=1)
+                chain[0].title = f"Fix {label}: {redact(triage.summary)}"[:200]
+                chain[0].priority = 0 if triage.severity in ("critical", "high") else 1
+                new_tickets.extend(chain)
                 messages.append(NewMessage(channel_slug="dept-engineering", kind="delegation",
                                            body=f"@Kai bug from {label}: {triage.summary} — eng.fix for Zara."
                                                 + (" Repro screenshots attached." if repro and repro.get("screenshots") else "")))
@@ -140,7 +150,8 @@ class SupportHandler:
                 gate_type="outreach", title=f"Reply to issue {label}",
                 summary=f"Post this reply on GitHub issue {label}: {triage.summary}"[:300],
                 payload={"channel": "github_comment", "issue_number": number, "url": issue.get("url", ""),
-                         "body": redact(reply), "drafted_by": drafted_by})
+                         "body": redact(reply), "drafted_by": drafted_by,
+                         **({"repo_full_name": ctx.venture["repo_full_name"]} if ctx.venture.get("repo_full_name") else {})})
             return HandlerResult(outcome="waiting_approval", note="; ".join(notes + ["reply → outreach gate"]),
                                  result=result, artifacts=[artifact], new_tickets=new_tickets, messages=messages,
                                  approval=approval)
@@ -170,11 +181,12 @@ class SupportHandler:
         if ctx.db is None or number is None:
             return "create"
         rows = await ctx.db.fetch_all(
-            "SELECT status FROM tickets WHERE venture_id = ? AND type = 'eng.fix' "
-            "AND json_extract(payload_json, '$.issue_number') = ?", (ctx.venture.get("id"), number))
+            "SELECT type, status FROM tickets WHERE venture_id = ? AND type IN ('eng.fix','eng.review','qa.verify') "
+            "AND (json_extract(payload_json, '$.issue_number') = ? OR json_extract(payload_json, '$.task_key') = ?)",
+            (ctx.venture.get("id"), number, f"issue-{number}"))
         if any(r["status"] in OPEN_STATUSES for r in rows):
             return "open_exists"
-        if sum(1 for r in rows if r["status"] == "failed") >= MAX_FAILED_FIXES:
+        if sum(1 for r in rows if r["type"] == "eng.fix" and r["status"] == "failed") >= MAX_FAILED_FIXES:
             return "escalate"
         return "create"
 
@@ -205,11 +217,23 @@ class SupportHandler:
         if decision.get("status") != "approved":
             return HandlerResult(outcome="done", note="reply rejected — nothing posted",
                                  messages=[NewMessage(channel_slug="dept-support", body=f"Reply to {label} was not approved; nothing posted.")])
-        approval = await ctx.db.fetch_one("SELECT payload_json FROM approvals WHERE id = ?", (approval_id,)) if ctx.db else None
+        from .. import gates
+
+        if ctx.db is None:
+            return HandlerResult(outcome="failed", note="reply needs the database to check approval")
+        integration = await composio.github_integration(ctx.db, ctx.venture["id"])
+        if integration is None or not ctx.venture.get("repo_full_name"):
+            return HandlerResult(outcome="done", note="approved — no GitHub connection",
+                                 messages=[NewMessage(channel_slug="dept-support", body=f"Reply to {label} not posted: GitHub isn't connected.")])
+        approval = await gates.require_approved(ctx.db, approval_id, "outreach")
+        if approval.get("venture_id") != ctx.venture["id"] or (approval.get("ticket_id") and approval["ticket_id"] != ticket.get("id")):
+            return HandlerResult(outcome="failed", note="reply approval belongs to another venture or ticket")
         payload = json.loads(approval["payload_json"]) if approval else {}
         integration = await composio.github_integration(ctx.db, ctx.venture["id"]) if ctx.db else None
         repo = ctx.venture.get("repo_full_name")
         number = payload.get("issue_number", issue.get("number"))
+        if payload.get("channel") != "github_comment" or number != issue.get("number"):
+            return HandlerResult(outcome="failed", note="reply approval does not match this issue")
         if integration is None or not repo or number is None:
             return HandlerResult(outcome="done", note="approved — no GitHub connection",
                                  messages=[NewMessage(channel_slug="dept-support",

@@ -163,8 +163,19 @@ async function waitReady(page: Page): Promise<{ ready: boolean; error?: string }
   return { ready: true, error: error ?? undefined };
 }
 
-function captureUrl(base: string, q: Record<string, string>): string {
-  return `${base.replace(/\/$/, '')}/view/capture?${new URLSearchParams(q).toString()}`;
+export function captureUrl(base: string, q: Record<string, string>): string {
+  const input = new URL(base);
+  const target = new URL('/view/capture', input);
+  const assetBase = input.searchParams.get('assetBase');
+  if (assetBase) {
+    const asset = new URL(assetBase);
+    if (!['http:', 'https:'].includes(asset.protocol)
+      || !['localhost', '127.0.0.1', '[::1]'].includes(asset.hostname)
+      || asset.username || asset.password) throw new Error('assetBase must be a loopback HTTP(S) URL without credentials');
+    target.searchParams.set('assetBase', asset.toString());
+  }
+  for (const [key, value] of Object.entries(q)) target.searchParams.set(key, value);
+  return target.toString();
 }
 
 /** P9 from the PNGs: luminance std-dev > 12 and no single color > 90% of pixels (decoded in the browser). */
@@ -250,7 +261,8 @@ async function captureMode(browser: Browser, base: string, dept: string, mode: M
     const vpage = await vctx.newPage();
     const t0 = Date.now();
     let startS = 0;
-    let durS = WALK_PATH_SECONDS[path];
+    let durS = a.fake && a.fast ? 1 : WALK_PATH_SECONDS[path];
+    let walkthroughComplete = false;
     try {
       await vpage.goto(captureUrl(base, q), { waitUntil: 'load', timeout: READY_TIMEOUT_MS });
       const st = await waitReady(vpage);
@@ -266,7 +278,10 @@ async function captureMode(browser: Browser, base: string, dept: string, mode: M
           if (existsSync(f)) out.frames.push(relative(root, f));
         }
         await playing;
+        walkthroughComplete = true;
         durS = Math.max(durS, (Date.now() - t0) / 1000 - startS);
+      } else {
+        out.consoleErrors.push(`video: ${st.error ?? "page never became ready"}`);
       }
     } catch (e) {
       out.consoleErrors.push(`video: ${(e as Error).message}`.slice(0, 300));
@@ -274,7 +289,7 @@ async function captureMode(browser: Browser, base: string, dept: string, mode: M
       const video = vpage.video();
       await vctx.close();
       const raw = video ? await video.path().catch(() => null) : null;
-      if (raw && existsSync(raw)) {
+      if (walkthroughComplete && raw && existsSync(raw)) {
         const dest = join(dir, `${mode === 'exterior' ? 'ext' : 'int'}.webm`);
         out.videoTrimmed = trimVideo(raw, dest, startS, durS).trimmed;
         out.videoLeadInS = out.videoTrimmed ? 0 : Math.round(startS * 10) / 10;
@@ -371,6 +386,7 @@ async function captureBuildings(browser: Browser, base: string, a: CaptureArgs):
       frames: caps.flatMap((c) => c.frames), video_trimmed: caps.every((c) => c.videoTrimmed !== false),
       video_lead_in_s: Object.fromEntries(caps.filter((c) => c.video).map((c) => [c.mode === 'exterior' ? 'ext' : 'int', c.videoLeadInS ?? 0])),
       root,
+      provenance: { drill: a.fake, capture: a.fake ? 'fake' : 'real' },
     };
     const probeFile = join(root, 'probes', iterLabel(a.iter), `${dept}.json`);
     mkdirSync(dirname(probeFile), { recursive: true });
@@ -420,7 +436,10 @@ export async function main(argv: string[]): Promise<number> {
     let base = a.url;
     if (!base && a.fake) ({ url: base, server } = await startFakeServer());
     if (!base) ({ url: base, proc: vite } = await startVite());
-    browser = await chromium.launch({ args: a.gpu ? [] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+    browser = await chromium.launch({
+      ...(process.env.CAPTURE_BROWSER_CHANNEL ? { channel: process.env.CAPTURE_BROWSER_CHANNEL } : {}),
+      ...(process.env.CAPTURE_BROWSER_EXECUTABLE ? { executablePath: process.env.CAPTURE_BROWSER_EXECUTABLE } : {}),
+      args: a.gpu ? [] : ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
     const summary = a.portraits ? await capturePortraits(browser, base, a) : await captureBuildings(browser, base, a);
     if (a.summary) writeFileSync(a.summary, `${JSON.stringify(summary, null, 2)}\n`);
     return 0;

@@ -79,3 +79,24 @@ async def test_classifier_error_gates() -> None:
     assert await verdict(action, llm=Broken()) == "gate"
     assert (await guard.check(action, current_url="https://acme.com", screen_text="", allowed_domains=ALLOWED,
                               llm=None)).verdict == "gate"
+
+@pytest.mark.parametrize("url", ["https://acme.com\\@evil.com/", "https://acme.com:bad/", "https://[broken/", "https://user@acme.com/", "https://acme.com\n.evil.com/"])
+def test_malformed_domains_fail_closed(url: str) -> None:
+    assert not guard.domain_allowed(url, ALLOWED)
+
+async def test_navigation_shortcuts_and_off_domain_actions_blocked() -> None:
+    assert await verdict({"type": "key", "keys": "ctrl+l"}) == "block"
+    assert await verdict({"type": "click", "x": 5, "y": 5}, url="https://evil.com") == "block"
+    assert await verdict({"type": "type", "text": "https://evil.com"}) == "gate"
+
+async def test_download_cannot_be_approved_as_login_action() -> None:
+    assert await verdict({"type": "open_url", "url": "https://acme.com/login/setup.exe"}) == "block"
+    assert await verdict({"type": "click", "reason": "download installer"}, url="https://acme.com/login") == "block"
+
+@pytest.mark.parametrize("keys", ["ctrl+alt+t", "ctrl+shift+j", "ctrl+shift+i", "F12", "ctrl+v", "ctrl+s", "alt+f2", "", "Return; xterm"])
+async def test_key_allowlist_blocks_desktop_escape_and_clipboard_bypasses(keys: str) -> None:
+    assert await verdict({"type": "key", "keys": keys, "reason": "read page"}) == "block"
+
+@pytest.mark.parametrize("keys", ["Tab", "shift+Tab", "Escape", "Left", "Home", "PageDown"])
+async def test_safe_navigation_keys_remain_available(keys: str) -> None:
+    assert await verdict({"type": "key", "keys": keys, "reason": "read page"}) == "allow"

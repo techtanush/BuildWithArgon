@@ -74,11 +74,11 @@ async def hidden_tests(executor: Any, ws: Path, brief: dict[str, Any], timeout: 
     out.parent.mkdir(exist_ok=True)
     if out.exists():
         out.unlink()
-    await executor.runner(["npx", "vitest", "run", "tests/hidden", "--reporter=json", "--outputFile=.foundry/hidden.json"],
+    code, _ = await executor.runner(["npx", "vitest", "run", "tests/hidden", "--reporter=json", "--outputFile=.foundry/hidden.json"],
                           ws, timeout)
     v = parse_vitest(out, ws)
     total = v.passed + v.failed
-    return {"hidden_passed": v.passed, "hidden_total": total, "all_hidden_pass": v.ran and total > 0 and v.failed == 0}
+    return {"hidden_passed": v.passed, "hidden_total": total, "all_hidden_pass": code == 0 and v.ran and total > 0 and v.failed == 0}
 
 
 async def run_case(settings: Settings, llm: Any, db: Any, brief: dict[str, Any], condition: str, rep: int,

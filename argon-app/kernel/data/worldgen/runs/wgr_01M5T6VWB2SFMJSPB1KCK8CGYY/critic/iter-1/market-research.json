@@ -1,0 +1,89 @@
+{
+  "scores": {
+    "realism": 5.0,
+    "department_identity": 7.0,
+    "composition": 6.0,
+    "readability": 6.0,
+    "craft": 5.0
+  },
+  "issues": [
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "Two huge visible stucco collider boxes (`obs_west_col` and `obs_east_col` at pos [-4.8, 3.5, 5.6] and [4.8, 3.5, 5.6]) protrude awkwardly out of the front of the round observatory drum, ruining the cylindrical architecture and looking like accidental grey blocks.",
+      "fix": "Keep all collider boxes strictly inside the cylinder radius (r = 8.6 centered at [0, y, -0.8]) so they never poke through the round drum wall, or integrate the front collider into the entrance portico volume."
+    },
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The observatory dome (`metal_light`) renders pitch black because pure metallic surfaces without environment reflections or roughness modulation appear black in this lighting setup, making the dome look like a flat black void.",
+      "fix": "Add architectural ribs (`trim` or `plaster_warm` torus/arches) over the dome surface or layer a slightly smaller/segmented dome with `plaster_warm` / `metal_light` panels and visible horizontal/vertical seam ribs so the dome catches sun light and reads as a bright metallic/architectural observatory dome."
+    },
+    {
+      "severity": "high",
+      "where": "interior",
+      "camera": "int-2",
+      "description": "On the interior east and west walls, the large `screen` and `metal_dark` boxes at z = -1.2 (`pos: [-8.85, 2.2, -1.2]` and `[8.85, 2.2, -1.2]`) directly overlap and z-fight with the east and west windows (`center: -1.0, width: 2.6`).",
+      "fix": "Move the east and west wall chart screens along Z to `z = -3.8` (above the research desks) or `z = 2.0`, completely clear of the windows centered at `z = -1.0`."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The secondary rooftop `telescope` prop (`pos: [3.2, 8.65, 5.8]`) is buried inside the dome / cornice geometry with only a tiny stick poking out.",
+      "fix": "Remove the buried rooftop `telescope` prop at `[3.2, 8.65, 5.8]` or place it on an actual accessible balcony/terrace outside the dome radius (e.g., on top of the front portico roof at `[0, 5.5, 7.2]`)."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The exterior `MARKET RESEARCH` sign has very low contrast and a bright point-light hotspot right below it, washing out the text.",
+      "fix": "Move the exterior point light slightly lower or further forward (`pos: [0, 3.2, 9.2]`, intensity `0.9`) so it doesn't bleach the sign face."
+    },
+    {
+      "severity": "medium",
+      "where": "interior",
+      "camera": "int-1",
+      "description": "The interior feels somewhat sparse around the perimeter and the central `table_round` (r=0.6) looks tiny on the 6.8m diameter star-map rug.",
+      "fix": "Build a larger custom round map table in the center (e.g. cylinder tabletop r = 1.35, h = 0.08 at y = 0.74 in `wood_dark` with a central pedestal and brass `trim` rim) with several market map `paper` planes, `books`, and `mug` on top, and add meeting chairs or a lounge/archive corner to make the room feel like a busy research observatory."
+    }
+  ],
+  "keep": [
+    "Clear observatory silhouette with the cylindrical drum, upper window ring with vertical mullions, blue accent band, dome slit, and main telescope tube poking out.",
+    "Star-map circular rug with concentric border and constellation dots in the center of the interior.",
+    "Clean axial composition from the entrance looking across the central round map table to the telescope framed by the north window.",
+    "Celestial/market globe on a dark wood pedestal in the northeast corner."
+  ],
+  "visual_score": 0.58,
+  "realism": 0.5,
+  "interaction_id": "v1_ChZXM0RlYXEtQUVlbU1fUFVQbk9iMVNBEhZXM0RlYXEtQUVlbU1fUFVQbk9iMVNB",
+  "model": "gemini-4-argon",
+  "job": "worldgen_critic",
+  "thinking_level": "medium",
+  "tokens": {
+    "in": 15417,
+    "out": 1006
+  },
+  "cost_usd": 0.040894,
+  "inputs": {
+    "screenshots": [
+      "captures/iter-1/market-research/ext-1.png",
+      "captures/iter-1/market-research/ext-2.png",
+      "captures/iter-1/market-research/ext-3.png",
+      "captures/iter-1/market-research/int-1.png",
+      "captures/iter-1/market-research/int-2.png",
+      "captures/iter-1/market-research/int-3.png"
+    ],
+    "videos": [
+      "captures/iter-1/market-research/ext.webm",
+      "captures/iter-1/market-research/int.webm"
+    ],
+    "frames": [],
+    "video_input": true,
+    "probe_score": 1,
+    "tsc_errors": false
+  },
+  "budget_cumulative_spend_usd": 0.129654
+}

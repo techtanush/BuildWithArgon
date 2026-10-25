@@ -95,3 +95,19 @@ def test_needs_patch() -> None:
     assert not needs_patch(ok, critic_json(high=False))
     assert needs_patch(ok, critic_json(high=True))
     assert needs_patch({"probes": [{"id": "P5", "pass": False}]}, None)
+
+
+def test_low_realism_needs_patch_without_high_issue() -> None:
+    from foundry_kernel.worldgen.critique import needs_patch
+    report = {'probes': [{'id': 'P1', 'pass': True}]}
+    assert needs_patch(report, {'realism': 0.6, 'visual_score': 0.9, 'issues': []})
+    assert needs_patch(report, {'realism': 0.9, 'visual_score': 0.7, 'issues': []})
+    assert not needs_patch(report, {'realism': 0.8, 'visual_score': 0.8, 'issues': []})
+
+
+def test_p10_issue_does_not_cover_failed_p1() -> None:
+    from foundry_kernel.worldgen.critique import CriticOut, ensure_probe_issues
+    out = CriticOut.model_validate({'scores': {k: 8 for k in ('realism', 'department_identity', 'composition', 'readability', 'craft')},
+                                   'issues': [{'severity': 'high', 'description': 'P10 sign unreadable'}]})
+    ensure_probe_issues(out, {'probes': [{'id': 'P1', 'pass': False, 'details': 'load failure'}]})
+    assert any(i.description.startswith('P1 failed:') for i in out.issues)

@@ -64,15 +64,15 @@ FOUNDRY_RESULT {{"status":"passed"|"failed","branch":"...","commit":"<sha>",
 
 
 class _Tests(BaseModel):
-    passed: int = 0
-    failed: int = 0
+    passed: int = Field(default=0, ge=0)
+    failed: int = Field(default=0, ge=0)
 
 
 class AntigravityResult(BaseModel):
     status: Literal["passed", "failed"]
     branch: str | None = None
     commit: str | None = None
-    iterations: int = 1
+    iterations: int = Field(default=1, ge=1)
     tests: _Tests = Field(default_factory=_Tests)
     build_ok: bool = False
     files_changed: list[str] = Field(default_factory=list)
@@ -141,14 +141,9 @@ async def ensure_github_credential(settings: Settings, db: Any) -> str | None:
     if existing:
         return str(existing)
     try:
-        from google import genai
+        from ..llm.client import register_github_credential
 
-        key = settings.gemini_api_key.get_secret_value() if settings.gemini_api_key else None
-        client = genai.Client(api_key=key) if key else genai.Client()
-        request = {"type": "bearer_token", "id": CREDENTIAL_ID, "token": token, "header_name": "Authorization",
-                   "prefix": "Bearer"}
-        cred = await asyncio.to_thread(client.credentials.create, request=request)
-        cred_id = str(getattr(cred, "id", None) or CREDENTIAL_ID)
+        cred_id = await register_github_credential(settings, token, CREDENTIAL_ID)
     except Exception:  # noqa: BLE001 - optional capability; executor still runs (sandbox may lack push auth)
         return None
     if db is not None:
@@ -230,6 +225,10 @@ class AntigravityExecutor:
             return ExecutorResult(status="failed", iterations=0, first_pass_passed=False, branch=branch,
                                   failures=["missing or invalid FOUNDRY_RESULT line"], tokens_in=res.tokens_in,
                                   tokens_out=res.tokens_out, cost_usd=res.cost_usd, wall_seconds=wall)
+        if parsed.status == "passed" and (not parsed.build_ok or parsed.tests.failed or not parsed.tests.passed
+                                           or parsed.failures or parsed.branch not in (None, branch)):
+            parsed.status = "failed"
+            parsed.failures.append("inconsistent managed-agent verification result")
         return ExecutorResult(status=parsed.status, iterations=parsed.iterations,
                               first_pass_passed=parsed.iterations == 1 and parsed.status == "passed",
                               branch=parsed.branch or branch, commit=parsed.commit, tests_passed=parsed.tests.passed,

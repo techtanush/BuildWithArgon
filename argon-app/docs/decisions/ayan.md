@@ -23,3 +23,9 @@ Format: `| ID | Decision | Reason |` rows; IDs `<INITIAL>-NN`.
 | A-17 | `get_executor(settings, llm, db)` is async (reads `kv['executor.override']`) | Only the engineering handler calls it |
 | A-18 | GitHub connect returns `{redirect_url|null, approval_id, status}` (CR-A3) | The connect itself is gated (`integration`) |
 | A-19 | Worldgen paths are fixed under `kernel/data/worldgen/` (not `DATA_DIR`) | The spec commits these records as evidence; `DATA_DIR` is gitignored |
+
+| A-20 | Fake runs cannot publish, and promotion binds SHA-256 to complete passing real critical-probe evidence | A valid but subsequently edited module must not inherit another module's render scores |
+| A-21 | Capture/TypeScript subprocess groups are cancellable; live rounds persist deadline/cancellation failure | The 150-second demo budget must not freeze the kernel or leave orphaned browsers |
+| A-22 | Live local host execution fails closed unless explicitly opted into unsafe development mode; requested Docker never silently falls back | Stripping environment variables does not isolate host filesystem or network |
+| A-23 | Existing local Spaces only, through `CUA_SPACE_ID`; no cloud provisioning, paid accounts or funding | Exact pinned SDK APIs were inspected; local attachment is distinct from unverified cloud provisioning |
+| A-24 | `/computers` UI is the explicit user-requested ownership exception (CR-A8) | The Ayan branch needs a usable computer viewer; integration preserves Tanush's full route implementation |

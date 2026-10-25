@@ -13,14 +13,20 @@ from __future__ import annotations
 import asyncio
 import base64
 import json
+import re
 import sys
+from contextvars import ContextVar
 from typing import Any
 from urllib.parse import urlparse
 
 import httpx
 
 from .. import gates
+from ..errors import GateNotApproved
+from ..ids import utc_now
 from ..security import redact
+
+_approved_execution: ContextVar[Any] = ContextVar("composio_approved_execution", default=None)
 
 ALLOWED_TOOLKITS = {"github"}  # expand only with a recorded decision (02-models-and-integrations/08)
 
@@ -29,6 +35,7 @@ TOOL_SLUGS: dict[str, str] = {
     "get_authenticated_user": "GITHUB_GET_THE_AUTHENTICATED_USER",
     "create_repo": "GITHUB_CREATE_A_REPOSITORY_FOR_THE_AUTHENTICATED_USER",
     "get_ref": "GITHUB_GET_A_REFERENCE",
+    "get_pull_request": "GITHUB_GET_A_PULL_REQUEST",
     "create_branch": "GITHUB_CREATE_A_REFERENCE",
     "put_file": "GITHUB_CREATE_OR_UPDATE_FILE_CONTENTS",
     "open_pr": "GITHUB_CREATE_A_PULL_REQUEST",
@@ -166,6 +173,9 @@ class ComposioClient:
     # ------------------------------------------------------------------ tool execution (VERIFY)
 
     async def execute(self, tool_slug: str, user_id: str, arguments: dict[str, Any]) -> Any:
+        if tool_slug in (TOOL_SLUGS["merge_pull_request"], TOOL_SLUGS["create_issue_comment"]):
+            if _approved_execution.get() != (tool_slug, user_id, arguments):
+                raise GateNotApproved(None, "merge" if tool_slug == TOOL_SLUGS["merge_pull_request"] else "outreach")
         if not tool_slug.startswith(tuple(t.upper() + "_" for t in ALLOWED_TOOLKITS)):
             raise ComposioError(f"toolkit for {tool_slug} is not allowed")
         data = await self._request("POST", f"v3/tools/execute/{tool_slug}",
@@ -208,6 +218,11 @@ class ComposioClient:
         return dict(await self.execute(TOOL_SLUGS["open_pr"], user_id, {
             "owner": owner, "repo": repo, "head": head, "base": base, "title": title, "body": body}) or {})
 
+    async def get_pull_request(self, user_id: str, repo_full_name: str, number: int) -> dict[str, Any]:
+        owner, repo = _split_repo(repo_full_name)
+        return dict(await self.execute(TOOL_SLUGS["get_pull_request"], user_id,
+                                       {"owner": owner, "repo": repo, "pull_number": number}) or {})
+
     async def list_pr_files(self, user_id: str, repo_full_name: str, number: int) -> list[dict[str, Any]]:
         owner, repo = _split_repo(repo_full_name)
         return _as_list(await self.execute(TOOL_SLUGS["list_pr_files"], user_id,
@@ -242,22 +257,65 @@ async def github_integration(db: Any, venture_id: str) -> dict[str, Any] | None:
     return row
 
 
+async def _approved_target(db: Any, approval_id: str | None, gate_type: str, user_id: str,
+                           repo_full_name: str, number: int, *, body: str | None = None,
+                           method: str | None = None) -> dict[str, Any]:
+    async with db.tx() as tx:
+        approval = await gates.require_approved(tx, approval_id, gate_type)
+        venture = await tx.fetch_one("SELECT * FROM ventures WHERE id=?", (approval["venture_id"],))
+        try:
+            payload = json.loads(approval["payload_json"] or "{}")
+        except (TypeError, ValueError):
+            raise GateNotApproved(approval_id, gate_type) from None
+        number_key = "pr_number" if gate_type == "merge" else "issue_number"
+        if (not venture or venture["composio_user_id"] != user_id
+                or venture["repo_full_name"] != repo_full_name
+                or not isinstance(payload, dict) or payload.get("repo_full_name") != repo_full_name
+                or type(number) is not int or number < 1 or type(payload.get(number_key)) is not int
+                or payload[number_key] != number):
+            raise GateNotApproved(approval_id, gate_type)
+        if gate_type == "outreach" and (payload.get("channel") != "github_comment" or payload.get("body") != body):
+            raise GateNotApproved(approval_id, gate_type)
+        if gate_type == "merge" and (payload.get("local") is True or payload.get("merge_method", "squash") != method):
+            raise GateNotApproved(approval_id, gate_type)
+        if gate_type == "merge" and (method not in ("merge", "squash", "rebase")
+                or not isinstance(payload.get("head_sha"), str)
+                or not re.fullmatch(r"[0-9a-fA-F]{40}", payload["head_sha"])):
+            raise GateNotApproved(approval_id, gate_type)
+        key = "composio.approval_consumed." + str(approval_id)
+        if await tx.fetch_one("SELECT key FROM kv WHERE key=?", (key,)):
+            raise GateNotApproved(approval_id, gate_type)
+        await tx.execute("INSERT INTO kv (key, value_json, updated_at) VALUES (?,?,?)",
+                         (key, json.dumps({"venture_id": approval["venture_id"], "gate_type": gate_type}), utc_now()))
+        return payload
+
+
+async def _execute_approved(client: ComposioClient, slug: str, user_id: str, args: dict[str, Any]) -> Any:
+    token = _approved_execution.set((slug, user_id, args))
+    try:
+        return await client.execute(slug, user_id, args)
+    finally:
+        _approved_execution.reset(token)
+
+
 async def create_issue_comment(db: Any, client: ComposioClient, *, approval_id: str | None, user_id: str,
                                repo_full_name: str, number: int, body: str) -> dict[str, Any]:
-    """Post a public GitHub comment. Gated: `outreach`."""
-    await gates.require_approved(db, approval_id, "outreach")
+    """Post only the exact approved reply to the approved venture's repository and issue."""
+    await _approved_target(db, approval_id, "outreach", user_id, repo_full_name, number, body=body)
     owner, repo = _split_repo(repo_full_name)
-    return dict(await client.execute(TOOL_SLUGS["create_issue_comment"], user_id,
+    return dict(await _execute_approved(client, TOOL_SLUGS["create_issue_comment"], user_id,
                                      {"owner": owner, "repo": repo, "issue_number": number, "body": body}) or {})
 
 
 async def merge_pull_request(db: Any, client: ComposioClient, *, approval_id: str | None, user_id: str,
                              repo_full_name: str, number: int, method: str = "squash") -> dict[str, Any]:
-    """Merge a PR. Gated: `merge`."""
-    await gates.require_approved(db, approval_id, "merge")
+    """Merge only the exact approved PR for the approved venture and merge method."""
+    payload = await _approved_target(db, approval_id, "merge", user_id, repo_full_name, number, method=method)
     owner, repo = _split_repo(repo_full_name)
-    return dict(await client.execute(TOOL_SLUGS["merge_pull_request"], user_id,
-                                     {"owner": owner, "repo": repo, "pull_number": number, "merge_method": method}) or {})
+    args = {"owner": owner, "repo": repo, "pull_number": number, "merge_method": method}
+    if payload.get("head_sha"):
+        args["sha"] = payload["head_sha"]
+    return dict(await _execute_approved(client, TOOL_SLUGS["merge_pull_request"], user_id, args) or {})
 
 
 # ------------------------------------------------------------------ Step A.3 probe

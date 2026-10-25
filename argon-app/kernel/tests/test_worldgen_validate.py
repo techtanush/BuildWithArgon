@@ -56,3 +56,57 @@ def test_tsc_on_staging_separates_good_and_bad_modules() -> None:
     finally:
         for d in ("growth", "support"):
             (paths.STAGING_DIR / f"{d}.pytest.ts").unlink(missing_ok=True)
+
+
+def test_shared_kit_errors_fail_all_candidates(monkeypatch: pytest.MonkeyPatch) -> None:
+    from foundry_kernel.worldgen import validate as validator
+    monkeypatch.setattr(validator, 'run_tsc', lambda: (False, {'types.ts': ['TS2304: broken shared type']}, 'kit error'))
+    try:
+        result = validate({'growth': module('growth')}, suffix='.pytest')
+        assert result['growth'].tsc_ok is False
+        assert 'broken shared type' in result['growth'].tsc_errors
+    finally:
+        (paths.STAGING_DIR / 'growth.pytest.ts').unlink(missing_ok=True)
+
+
+async def test_async_validation_real_tsc_isolates_candidates() -> None:
+    from foundry_kernel.worldgen.validate import validate_async
+    try:
+        result = await validate_async({"growth": module("growth"), "support": module("support").replace("z: 7.2", "z: 'bad'")}, suffix=".pytest")
+        assert result["growth"].ok, result["growth"].tsc_errors
+        assert not result["support"].ok and "TS2322" in result["support"].tsc_errors
+    finally:
+        for d in ("growth", "support"):
+            (paths.STAGING_DIR / f"{d}.pytest.ts").unlink(missing_ok=True)
+
+
+@pytest.mark.parametrize("cancel", [False, True])
+async def test_async_validation_deadline_reaps_compiler(tmp_path, monkeypatch, cancel: bool) -> None:
+    import asyncio
+    import sys
+    from foundry_kernel.worldgen import validate as validator
+    # A real subprocess proves cancellation actually waits for child termination, not a thread.
+    child = tmp_path / "compiler.py"
+    child.write_text("import time; time.sleep(60)")
+    monkeypatch.setattr(validator, "tsc_bin", lambda: [sys.executable, str(child)])
+    original_spawn = asyncio.create_subprocess_exec
+    children = []
+    async def spawn(*args, **kwargs):
+        proc = await original_spawn(*args, **kwargs)
+        children.append(proc)
+        return proc
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", spawn)
+    try:
+        task = asyncio.create_task(validator.validate_async({"growth": module("growth")}, timeout_s=0.05, suffix=".pytest"))
+        if cancel:
+            while not children:
+                await asyncio.sleep(0.001)
+            task.cancel()
+            with pytest.raises(asyncio.CancelledError):
+                await task
+        else:
+            result = await task
+            assert not result["growth"].ok and "timed out" in result["growth"].tsc_errors
+        assert children and children[0].returncode is not None
+    finally:
+        (paths.STAGING_DIR / "growth.pytest.ts").unlink(missing_ok=True)

@@ -139,3 +139,51 @@ async def test_factory_failures_skip_then_circuit_breaks(cua_settings: Any, db: 
         assert res.status == "skipped" and "no gVisor" in res.reason
     res = await run(cua_settings, db, FakeLLM(), vid)
     assert res.status == "skipped" and "3 times" in res.reason
+
+async def test_computer_approval_cannot_authorize_substituted_action_or_computer(cua_settings: Any, db: Any) -> None:
+    vid = await make_venture(db)
+    llm = FakeLLM()
+    action = {"type": "type", "text": "hunter2", "reason": "enter the password"}
+    llm.script("computer_step", [action])
+    res = await run(cua_settings, db, llm, vid, start_url="https://acme.com/login")
+    apr = res.result["approval_id"]
+    async with db.tx() as tx:
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    with pytest.raises(GateNotApproved):
+        await loop.execute_gated_action(db, COMPUTERS[0], approval_id=apr,
+                                        action={**res.result["pending_action"], "text": "different"})
+    with pytest.raises(GateNotApproved):
+        await loop.execute_gated_action(db, cua_client.FakeComputer("other"), approval_id=apr,
+                                        action=res.result["pending_action"])
+
+async def test_computer_action_is_single_use_even_concurrently(cua_settings: Any, db: Any) -> None:
+    import asyncio
+    vid = await make_venture(db)
+    llm = FakeLLM()
+    llm.script("computer_step", [{"type": "type", "text": "hunter2", "reason": "enter password"}])
+    res = await run(cua_settings, db, llm, vid, start_url="https://acme.com/login")
+    apr = res.result["approval_id"]
+    async with db.tx() as tx:
+        await tx.execute("UPDATE approvals SET status='approved' WHERE id=?", (apr,))
+    results = await asyncio.gather(*(loop.execute_gated_action(db, COMPUTERS[0], approval_id=apr,
+                                      action=res.result["pending_action"]) for _ in range(2)), return_exceptions=True)
+    assert sum(isinstance(x, GateNotApproved) for x in results) == 1
+    assert COMPUTERS[0].actions.count(("type", "hunter2")) == 1
+
+async def test_actual_redirect_outside_allowlist_fails_closed(cua_settings: Any, db: Any) -> None:
+    class Redirect(cua_client.FakeComputer):
+        async def open_url(self, url):
+            await super().open_url(url)
+            self.current_url = "https://evil.com/"
+    async def factory(settings, name):
+        c = Redirect(name)
+        COMPUTERS.append(c)
+        return c
+    manager.set_factory(factory)
+    res = await run(cua_settings, db, FakeLLM(), await make_venture(db))
+    assert res.status == "failed" and "redirected" in res.reason
+    assert len(COMPUTERS[0].actions) == 1
+
+async def test_unknown_actual_browser_url_fails_closed() -> None:
+    with pytest.raises(cua_client.CuaUnavailable, match="actual browser URL"):
+        await loop._actual_url(object())
