@@ -77,7 +77,9 @@ def no_sleep(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_generation_config_rules() -> None:
     assert generation_config(job("engineering_design")) == {"thinking_level": "high", "max_output_tokens": 65_536}
     assert generation_config(job("talk")) == {"max_output_tokens": 1_024}  # no thinking_level for Flash (V10)
-    assert generation_config(job("sign")) == {"image_config": {"aspect_ratio": "4:1"}}
+    assert generation_config(job("texture")) == {"image_config": {"aspect_ratio": "4:1"}}  # signs
+    assert generation_config(job("worldgen_critic"), "medium")["thinking_level"] == "medium"  # fast live round
+    assert "thinking_level" not in generation_config(job("talk"), "medium")
     for j in JOBS.values():
         assert not set(generation_config(j)) & {"thinking_budget", "temperature", "top_p", "top_k", "cached_content"}
 
@@ -189,7 +191,7 @@ async def test_run_agent_shape(settings: Any) -> None:
 async def test_generate_images(settings: Any) -> None:
     img = SimpleNamespace(type="image", data=base64.b64encode(b"img").decode(), mime_type="image/jpeg")
     aio = FakeAio([interaction("", steps=[SimpleNamespace(type="model_output", content=[img])])])
-    res = await make_client(settings, aio).generate_images("sign", "a sign")
+    res = await make_client(settings, aio).generate_images("texture", "a sign")
     assert res.images == [(b"img", "image/jpeg")] and aio.create_kwargs[0]["response_modalities"] == ["image"]
 
 
@@ -222,3 +224,14 @@ async def test_incomplete_returns_partial_text(settings: Any) -> None:
     aio = FakeAio([interaction("", status="in_progress")], gets=[interaction("<<<FILE path=\"a.ts\">>>\npartial", status="incomplete")])
     res = await make_client(settings, aio).generate("engineering_build", "x")
     assert res.raw_status == "incomplete" and res.text.endswith("partial")
+
+
+def test_worldgen_and_system_jobs_match_the_agent_matrix() -> None:
+    import json as _json
+
+    from foundry_kernel.config import KERNEL_DIR
+
+    caps = _json.loads((KERNEL_DIR / "data" / "agent_capabilities.json").read_text())
+    for name in ("world.architect", "world.critic", "world.face-designer", "world.sign-painter", "computer.driver"):
+        assert set(caps["system_agents"][name]["jobs"]) <= set(JOBS)
+    assert not {"worldgen_critic_fast", "worldgen_patch_fast", "sign"} & set(JOBS)

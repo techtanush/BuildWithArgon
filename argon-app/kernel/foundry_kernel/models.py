@@ -55,20 +55,16 @@ JOBS: dict[str, Job] = {
     "worldgen_building": Job(ARGON, "high", 65_536, timeout_s=1200),
     "worldgen_critic": Job(ARGON, "high", 16_384, timeout_s=1200),
     "worldgen_patch": Job(ARGON, "high", 65_536, timeout_s=1200),
-    # World Lab live round (05-world/13 §2: "fast" -> thinking medium)
-    "worldgen_critic_fast": Job(ARGON, "medium", 16_384, timeout_s=600),
-    "worldgen_patch_fast": Job(ARGON, "medium", 65_536, timeout_s=600),
     "face_spec": Job(ARGON, "medium", 32_768, timeout_s=600),
     "portrait": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image", aspect_ratio="1:1"),
-    "texture": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image"),
-    "sign": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image", aspect_ratio="4:1"),
-    "sign_check": Job(FLASH, None, 256, timeout_s=60),
+    "texture": Job("gemini-nano-banana-2.1", timeout_s=180, modality="image", aspect_ratio="4:1"),  # building signs (ADR-018: no textures)
+    "sign_check": Job(FLASH, None, 256, timeout_s=60),  # sign legibility read-back (07 §3); CR-A7
     "music_loop": Job("lyria-3-clip-preview", timeout_s=300, modality="audio"),
     # cloud computers (cua)
     "computer_step": Job(FLASH, None, 1_024, timeout_s=30),
     "computer_plan": Job(ARGON, "high", 8_192, timeout_s=600),
     "computer_guard": Job(LITE, None, 256, timeout_s=10),
-    # managed agents (llm.client.run_agent accounting; the agent id comes from settings)
+    # managed agents (llm.client.run_agent accounting label; the agent id comes from settings); CR-A7
     "antigravity": Job(ARGON, None, None, background=True, timeout_s=3600),
     # coordination
     "standup_update": Job(FLASH, None, 512, timeout_s=60),

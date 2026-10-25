@@ -135,3 +135,21 @@ async def test_approved_without_github(settings, db) -> None:
     ctx = FakeHandlerContext(_live(settings), db=db, venture=v, approval_result={"approval_id": "apr_x", "status": "approved"})
     res = await load_handler("support.issue").handle(_ticket(), ctx)
     assert res.outcome == "done" and res.note == "approved — no GitHub connection"
+
+
+async def test_ana_drafts_the_reply_with_dept_artifact(settings, db) -> None:  # noqa: ANN001
+    from foundry_kernel.departments.support import SupportHandler
+    from tests.fakes import FakeHandlerContext
+
+    live = settings.model_copy(update={"llm_mode": "live"})
+    ctx = FakeHandlerContext(live, db=db, ticket_agent={"id": "su.triager", "department_id": "support", "display_name": "Yuki"})
+    ctx.llm.script("triage", [{"category": "question", "severity": "low", "summary": "How do I export?", "repro_steps": [],
+                               "suspected_area": "", "reply_draft": "Yuki draft", "duplicate_of": None}])
+    ctx.llm.script("dept_artifact", [{"reply": "Thanks for asking! You can export from Settings."}])
+    ticket = {"id": "tkt_X", "type": "support.issue", "title": "Export?", "body": "",
+              "payload": {"number": 5, "title": "Export?", "body": "How?", "author": "u", "url": "https://x/5", "labels": []}}
+    res = await SupportHandler().handle(ticket, ctx)
+    assert res.outcome == "waiting_approval" and res.approval is not None
+    assert res.approval.payload["body"].startswith("Thanks for asking") and res.approval.payload["drafted_by"] == "su.liaison"
+    call = next(k for k in ctx.llm.call_kwargs if k["job"] == "dept_artifact")
+    assert call["agent_id"] == "su.liaison"

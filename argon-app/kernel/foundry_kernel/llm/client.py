@@ -66,11 +66,12 @@ def compose_input(prompt: str | list[Part]) -> str | list[dict[str, Any]]:
     return [_part_dict(p) for p in prompt]
 
 
-def generation_config(j: Job) -> dict[str, Any]:
-    """thinking_level only for Argon (V10); max_output_tokens when set; never deprecated params."""
+def generation_config(j: Job, thinking_level: str | None = None) -> dict[str, Any]:
+    """thinking_level only for Argon (V10) — the job's, or a per-call override (e.g. a fast live round);
+    max_output_tokens when set; never deprecated params."""
     cfg: dict[str, Any] = {}
-    if j.model == ARGON and j.thinking_level:
-        cfg["thinking_level"] = j.thinking_level
+    if j.model == ARGON and (thinking_level or j.thinking_level):
+        cfg["thinking_level"] = thinking_level or j.thinking_level
     if j.max_output_tokens:
         cfg["max_output_tokens"] = j.max_output_tokens
     if j.aspect_ratio:
@@ -292,22 +293,24 @@ class LLMClient:
     async def generate(self, job: str, prompt: str | list[Part], *, system: str | None = None,
                        previous_interaction_id: str | None = None, run_id: str | None = None,
                        venture_id: str | None = None, agent_id: str | None = None,
-                       department_id: str | None = None, on_progress: ProgressFn | None = None) -> LLMResult:
-        """Routes to a normal call or a background long decode (Job.background)."""
+                       department_id: str | None = None, on_progress: ProgressFn | None = None,
+                       thinking_level: str | None = None) -> LLMResult:
+        """Routes to a normal call or a background long decode (Job.background). `thinking_level` overrides the
+        job's level for this call only (03-company-kernel/10 §3: worldgen jobs run "medium in a fast live round")."""
         if self.fake is not None:
             return await self.fake.generate(job, prompt, system=system)
         j = get_job(job)
         kwargs: dict[str, Any] = {"model": j.model, "input": compose_input(prompt)}
         if system:
             kwargs["system_instruction"] = system  # VERIFIED V1
-        cfg = generation_config(j)
+        cfg = generation_config(j, thinking_level)
         if cfg:
             kwargs["generation_config"] = cfg
         if j.modality:
             kwargs["response_modalities"] = [j.modality]
         if previous_interaction_id:
             kwargs["previous_interaction_id"] = previous_interaction_id  # VERIFIED V7
-        await self._log(run_id, "info", f"→ {job} model={j.model} thinking={j.thinking_level or '-'} chars_in={_chars(prompt)}")
+        await self._log(run_id, "info", f"→ {job} model={j.model} thinking={cfg.get('thinking_level', '-')} chars_in={_chars(prompt)}")
         started = time.monotonic()
         try:
             if j.background:
@@ -315,7 +318,7 @@ class LLMClient:
                 interaction = await self._create(kwargs, 120, run_id, job)
                 interaction = await self._poll(interaction, on_progress, run_id, job)
             else:
-                timeout = 1200 if (j.model == ARGON and j.thinking_level == "high") else j.timeout_s
+                timeout = 1200 if cfg.get("thinking_level") == "high" else j.timeout_s
                 interaction = await self._create(kwargs, timeout, run_id, job)
         except Exception as exc:
             await self._failed(job, exc)

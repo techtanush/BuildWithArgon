@@ -1,0 +1,59 @@
+{
+  "suite": "engineering",
+  "created_at": "2026-10-25T20:26:28.923Z",
+  "fake": false,
+  "summary": {
+    "baseline": {
+      "n": 1,
+      "all_pass": 1,
+      "mean_hidden_pass_ratio": 1.0,
+      "mean_iterations": 1.0,
+      "cost_usd": 0.0429,
+      "wall_seconds": 48.5
+    },
+    "loop": {
+      "n": 1,
+      "all_pass": 1,
+      "mean_hidden_pass_ratio": 1.0,
+      "mean_iterations": 1.0,
+      "cost_usd": 0.0595,
+      "wall_seconds": 69.1
+    }
+  },
+  "cases": [
+    {
+      "brief": "markdown-toc",
+      "condition": "baseline",
+      "repeat": 1,
+      "run_id": "run_01M5TBRYB1XCANJZ55F60FBW6Y",
+      "iterations": 1,
+      "first_pass_passed": null,
+      "tokens_in": 1805,
+      "tokens_out": 3932,
+      "cost_usd": 0.04293,
+      "files_changed": 4,
+      "hidden_passed": 7,
+      "hidden_total": 7,
+      "all_hidden_pass": true,
+      "wall_seconds": 48.52
+    },
+    {
+      "brief": "markdown-toc",
+      "condition": "loop",
+      "repeat": 1,
+      "run_id": "run_01M5TBTDQGENAQXBPJMZZT2Z8E",
+      "iterations": 1,
+      "first_pass_passed": true,
+      "tokens_in": 1805,
+      "tokens_out": 5592,
+      "cost_usd": 0.05953,
+      "files_changed": 3,
+      "builder_tests_passed": 8,
+      "builder_tests_failed": 0,
+      "hidden_passed": 7,
+      "hidden_total": 7,
+      "all_hidden_pass": true,
+      "wall_seconds": 69.06
+    }
+  ]
+}

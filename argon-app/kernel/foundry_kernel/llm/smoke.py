@@ -115,7 +115,7 @@ async def agent() -> bool:
 
 
 async def banana() -> bool:
-    res = await _client().generate_images("sign", "A small square photo of a red apple on a wooden table, 1:1.")
+    res = await _client().generate_images("texture", "A small square photo of a red apple on a wooden table, 1:1.")
     if not res.images:
         return _line("S7", False, res, "no image parts in output")
     data, mime = res.images[0]
@@ -139,8 +139,9 @@ async def video() -> bool:
     if not frames_to_webm(frames, path):
         print("SV FAIL no ffmpeg available to build the fixture")
         return False
-    res = await _client().generate("worldgen_critic_fast", [video_part(path.read_bytes(), "video/webm"),
-                                                            Part(kind="text", text="In this video, which direction does the orange ball move: left-to-right or right-to-left? Answer with one of those two phrases.")])
+    res = await _client().generate("worldgen_critic", [video_part(path.read_bytes(), "video/webm"),
+                                                            Part(kind="text", text="In this video, which direction does the orange ball move: left-to-right or right-to-left? Answer with one of those two phrases.")],
+                                    thinking_level="low")
     return _line("SV", "left-to-right" in res.text.lower().replace(" to ", "-to-"), res, f"video input: {res.text[:60]!r}")
 
 

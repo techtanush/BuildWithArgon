@@ -41,6 +41,10 @@ class TriageOut(BaseModel):
     duplicate_of: int | None = None
 
 
+class LiaisonReply(BaseModel):
+    reply: str = ""
+
+
 def _payload(ticket: dict[str, Any]) -> dict[str, Any]:
     p = ticket.get("payload")
     if p is None and ticket.get("payload_json"):
@@ -128,18 +132,38 @@ class SupportHandler:
                                meta=meta)
         result = {"category": triage.category, "severity": triage.severity, "issue_number": number}
         if triage.reply_draft.strip() and triage.category != "spam":
+            reply, drafted_by = await self._liaison_reply(ctx, label, issue, triage)
+            notes.append(f"reply drafted by {drafted_by}")
             messages.append(NewMessage(channel_slug="dept-support", kind="delegation",
                                        body=f"@Ana reply to {label} drafted — waiting on the founder's approval."))
             approval = NewApproval(
                 gate_type="outreach", title=f"Reply to issue {label}",
                 summary=f"Post this reply on GitHub issue {label}: {triage.summary}"[:300],
                 payload={"channel": "github_comment", "issue_number": number, "url": issue.get("url", ""),
-                         "body": redact(triage.reply_draft)})
+                         "body": redact(reply), "drafted_by": drafted_by})
             return HandlerResult(outcome="waiting_approval", note="; ".join(notes + ["reply → outreach gate"]),
                                  result=result, artifacts=[artifact], new_tickets=new_tickets, messages=messages,
                                  approval=approval)
         return HandlerResult(outcome="done", note="; ".join(notes) or triage.category, result=result,
                              artifacts=[artifact], new_tickets=new_tickets, messages=messages)
+
+    async def _liaison_reply(self, ctx: HandlerContext, label: str, issue: dict[str, Any],
+                             triage: TriageOut) -> tuple[str, str]:
+        """Ana (su.liaison) writes the user-facing reply with dept_artifact (03-company-kernel/10 §2), starting from
+        Yuki's draft; on any failure Yuki's draft is used and the note says so."""
+        prompt = (f"{_prompt('su.liaison')}\n\nDraft the reply to GitHub issue {label}.\nISSUE TITLE: {issue.get('title', '')}\n"
+                  f"ISSUE BODY:\n{str(issue.get('body', ''))[:4000]}\nTRIAGE: {triage.category}, {triage.severity}: {triage.summary}\n"
+                  f"YUKI'S DRAFT: {triage.reply_draft}\nReturn ONLY JSON: {{\"reply\": \"<= 120 words\"}}")
+        try:
+            out, _ = await ctx.llm.generate_json("dept_artifact", prompt, LiaisonReply, run_id=ctx.run_id,
+                                                 venture_id=ctx.venture.get("id"), agent_id="su.liaison",
+                                                 department_id="support")
+            reply = str(getattr(out, "reply", "")).strip()
+            if reply:
+                return reply, "su.liaison"
+        except Exception as exc:  # noqa: BLE001 — Yuki's draft still goes to the gate
+            await ctx.log("warn", f"su.liaison reply failed, using the triage draft: {str(exc)[:200]}")
+        return triage.reply_draft, "su.triager"
 
     async def _fix_decision(self, ctx: HandlerContext, number: Any) -> Literal["create", "open_exists", "escalate"]:
         """Loop protection (03-support-and-pr-loop.md): one open eng.fix per issue; 3 failed → escalate."""

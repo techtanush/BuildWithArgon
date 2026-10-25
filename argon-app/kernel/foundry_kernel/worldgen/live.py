@@ -259,8 +259,7 @@ async def architect_patch(llm: Any, settings: Any, dept: str, *, source: str, cr
 async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str | None, fake_capture: bool) -> None:
     lr, dept, root = state.lr, state.lr.department_id, state.dir
     d = paths.department(dept)
-    critic_job = "worldgen_critic_fast" if lr.fast else "worldgen_critic"
-    patch_job = "worldgen_patch_fast" if lr.fast else "worldgen_patch"
+    think = "medium" if lr.fast else None  # 05-world/13 §2 + 03-company-kernel/10 §3: fast round -> thinking medium
     try:
         # 1. capture "before" (the current generated module)
         await state.begin("capture_before")
@@ -271,7 +270,8 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
         await state.end("capture_before", note=f"probe score {before['probe_score']}", score=before["probe_score"])
         # 2. critique
         await state.begin("critique")
-        c_before = await critique(llm, d, report=before, root=root, source=source, job=critic_job, out_file=root / "critic-before.json")
+        c_before = await critique(llm, d, report=before, root=root, source=source, thinking_level=think,
+                                  out_file=root / "critic-before.json")
         lr.issues = c_before["issues"]
         lr.before = _side(before, c_before, root / "captures" / "before" / dept)
         await state.end("critique", note=f"{len(lr.issues)} issues; video input: {c_before['inputs']['video_input']}",
@@ -294,7 +294,7 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
             how = f"skipped world architect (only {budget:.0f}s left)"
             write_json(root / "architect.json", {"used": False, "skipped": how})
         if new_src is None:
-            p = await patch(llm, d, source=source, critic=c_before, report=before, job=patch_job, out_file=root / "patch.json")
+            p = await patch(llm, d, source=source, critic=c_before, report=before, thinking_level=think, out_file=root / "patch.json")
             new_src = p.get("source")
             how += "; Argon patch" if new_src else f"; Argon patch failed: {p.get('static_errors')}"
         if new_src is None:
@@ -309,7 +309,7 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
             fix = {**c_before, "issues": [*c_before["issues"], {"severity": "high", "where": "", "camera": "",
                                                                 "description": "module failed validation: " + "; ".join(v.errors) + (" tsc: " + v.tsc_errors if v.tsc_errors else ""),
                                                                 "fix": "make the module pass the static rules and tsc"}]}
-            p2 = await patch(llm, d, source=new_src, critic=fix, report=before, tsc_errors=v.tsc_errors, job=patch_job,
+            p2 = await patch(llm, d, source=new_src, critic=fix, report=before, tsc_errors=v.tsc_errors, thinking_level=think,
                              out_file=root / "patch-repair.json")
             if p2.get("source"):
                 new_src, repaired = p2["source"], True
@@ -328,7 +328,8 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
         await state.end("capture_after", note=f"probe score {after['probe_score']}", score=after["probe_score"])
         # 6. score (critique "after" for scores only)
         await state.begin("score")
-        c_after = await critique(llm, d, report=after, root=root, source=new_src, job=critic_job, out_file=root / "critic-after.json")
+        c_after = await critique(llm, d, report=after, root=root, source=new_src, thinking_level=think,
+                                 out_file=root / "critic-after.json")
         lr.after = _side(after, c_after, root / "captures" / "after" / dept)
         await state.end("score", note=f"visual {lr.before.visual_score} → {lr.after.visual_score}; realism "
                                       f"{lr.before.realism} → {lr.after.realism}", score=c_after["visual_score"])

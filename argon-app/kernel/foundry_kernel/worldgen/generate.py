@@ -59,7 +59,7 @@ async def reference_brief(llm: Any) -> str:
     cache = paths.ASSETS_DIR / "reference-brief.md"
     if cache.exists() and cache.read_text().startswith(f"<!-- {key} -->"):
         return cache.read_text().split("\n", 1)[1]
-    res = await llm.generate("cos_report", [Part(kind="text", text=DESCRIBE), *refs])
+    res = await llm.generate("worldgen_building", [Part(kind="text", text=DESCRIBE), *refs])  # world architect's job
     cache.parent.mkdir(parents=True, exist_ok=True)
     cache.write_text(f"<!-- {key} -->\n{res.text.strip()}\n")
     return res.text.strip()

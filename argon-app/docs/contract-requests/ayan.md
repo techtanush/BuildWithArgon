@@ -60,3 +60,12 @@ are relative to `DATA_DIR` (e.g. `computers/ctk_…/3.png`).
   The prompts follow the kit API and say so in a NOTES section.
 - "Exterior triangle budget ≤ 60k / interior ≤ 120k" vs P7 (≤ 250k / ≤ 400k after ADR-018). The prompts state the P7
   numbers (12-photoreal-look.md wins).
+
+## CR-A7 — Two jobs to add to the agent model matrix (frozen: `10-agent-model-matrix.md`, `agent_capabilities.json`)
+
+- `sign_check` (Flash) — the sign legibility read-back required by 07-nano-banana-assets.md §3 → add to
+  `system_agents["world.sign-painter"].jobs`.
+- `antigravity` — not a model call by a handler; `llm/client.run_agent` uses it as the ledger/accounting label for
+  managed-agent runs. Either list it under system agents or rename it in the merge.
+Everything else in ayan's lane now uses exactly the matrix jobs (signs → `texture`, live round → `worldgen_critic` /
+`worldgen_patch` with a `thinking_level="medium"` override, Ana → `dept_artifact`).

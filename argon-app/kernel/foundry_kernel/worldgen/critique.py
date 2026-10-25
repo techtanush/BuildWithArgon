@@ -52,6 +52,10 @@ class CriticOut(BaseModel):
     keep: list[str] = Field(default_factory=list)
 
 
+def _think(level: str | None) -> dict[str, Any]:
+    return {"thinking_level": level} if level else {}
+
+
 def visual_score(scores: dict[str, float]) -> float:
     return round(sum(float(scores[k]) for k in SCORE_KEYS) / len(SCORE_KEYS) / 10, 4)
 
@@ -106,14 +110,16 @@ def ensure_probe_issues(out: CriticOut, report: dict[str, Any]) -> CriticOut:
 
 
 async def critique(llm: Any, d: Department, *, report: dict[str, Any], root: Path, source: str, tsc_errors: str = "",
-                   job: str = "worldgen_critic", out_file: Path | None = None) -> dict[str, Any]:
+                   job: str = "worldgen_critic", thinking_level: str | None = None,
+                   out_file: Path | None = None) -> dict[str, Any]:
     """Returns {"scores", "issues", "keep", "visual_score", "realism", "interaction_id", "inputs"}; writes out_file."""
     parts, rec = media_parts(report, root, use_video=True)
     note = (f"{len(rec['screenshots'])} screenshots, " + (f"{len(rec['videos'])} walkthrough videos" if rec["video_input"]
             else f"{len(rec['frames'])} walkthrough frames (video fallback)"))
     system, task = prompts.critic_prompt(d, probe_report=report, source=source, tsc_errors=tsc_errors, media_note=note)
     try:
-        out, res = await llm.generate_json(job, [Part(kind="text", text=task), *parts], CriticOut, system=system)
+        out, res = await llm.generate_json(job, [Part(kind="text", text=task), *parts], CriticOut, system=system,
+                                           **_think(thinking_level))
     except LLMCallError as exc:
         if not rec["video_input"] or exc.status_code not in (400, 413, 415, 422):
             raise
@@ -121,12 +127,13 @@ async def critique(llm: Any, d: Department, *, report: dict[str, Any], root: Pat
         rec["video_error"] = str(exc)[:300]
         note = f"{len(rec['screenshots'])} screenshots, {len(rec['frames'])} walkthrough frames (video fallback)"
         system, task = prompts.critic_prompt(d, probe_report=report, source=source, tsc_errors=tsc_errors, media_note=note)
-        out, res = await llm.generate_json(job, [Part(kind="text", text=task), *parts], CriticOut, system=system)
+        out, res = await llm.generate_json(job, [Part(kind="text", text=task), *parts], CriticOut, system=system,
+                                           **_think(thinking_level))
     out = ensure_probe_issues(out, report)
     scores = out.scores.model_dump()
     result = {"scores": scores, "issues": [i.model_dump() for i in out.issues], "keep": out.keep,
               "visual_score": visual_score(scores), "realism": round(scores["realism"] / 10, 4),
-              "interaction_id": res.interaction_id, "model": res.model, "job": job,
+              "interaction_id": res.interaction_id, "model": res.model, "job": job, "thinking_level": thinking_level,
               "tokens": {"in": res.tokens_in, "out": res.tokens_out}, "cost_usd": res.cost_usd,
               "inputs": {**rec, "probe_score": report.get("probe_score"), "tsc_errors": bool(tsc_errors.strip())}}
     if out_file:
@@ -141,20 +148,21 @@ def needs_patch(report: dict[str, Any], critic: dict[str, Any] | None) -> bool:
 
 
 async def patch(llm: Any, d: Department, *, source: str, critic: dict[str, Any], report: dict[str, Any],
-                tsc_errors: str = "", job: str = "worldgen_patch", out_file: Path | None = None) -> dict[str, Any]:
+                tsc_errors: str = "", job: str = "worldgen_patch", thinking_level: str | None = None,
+                out_file: Path | None = None) -> dict[str, Any]:
     """Returns {"source": str | None, "static_errors": [...], "interaction_id", "repaired": bool, ...}."""
     failed = [p for p in report.get("probes", []) if not p.get("pass")]
     prev = critic.get("interaction_id")
     system, task = prompts.patch_prompt(d, issues=critic.get("issues", []), keep=critic.get("keep", []),
                                         failed_probes=failed, tsc_errors=tsc_errors, source=source, with_context=bool(prev))
     try:
-        res = await llm.generate(job, task, system=system, previous_interaction_id=prev)
+        res = await llm.generate(job, task, system=system, previous_interaction_id=prev, **_think(thinking_level))
     except LLMCallError:
         if not prev:
             raise
         system, task = prompts.patch_prompt(d, issues=critic.get("issues", []), keep=critic.get("keep", []),
                                             failed_probes=failed, tsc_errors=tsc_errors, source=source, with_context=False)
-        res = await llm.generate(job, task, system=system)
+        res = await llm.generate(job, task, system=system, **_think(thinking_level))
     record: dict[str, Any] = {"job": job, "interaction_id": res.interaction_id, "previous_interaction_id": prev,
                               "tokens": {"in": res.tokens_in, "out": res.tokens_out}, "cost_usd": res.cost_usd, "repaired": False}
     new_src = extract_module(res.text, d.id)
@@ -162,7 +170,7 @@ async def patch(llm: Any, d: Department, *, source: str, critic: dict[str, Any],
     if errors:  # one repair, continuing the patch interaction
         fix = ("Your module breaks these rules: " + json.dumps(errors) + f". Output exactly one corrected FILE block for "
                f"{paths.module_path(d.id)} and nothing else.")
-        res2 = await llm.generate(job, fix, system=system, previous_interaction_id=res.interaction_id)
+        res2 = await llm.generate(job, fix, system=system, previous_interaction_id=res.interaction_id, **_think(thinking_level))
         new_src = extract_module(res2.text, d.id)
         errors = static_check(d.id, new_src) if new_src else ["no FILE block in the repair output"]
         record.update({"repaired": True, "repair_interaction_id": res2.interaction_id})

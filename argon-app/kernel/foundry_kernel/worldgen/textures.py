@@ -68,7 +68,7 @@ async def make_signs(llm: Any, *, only: list[str] | None = None, retries: int = 
     out_dir = out_dir or paths.PUBLIC_GENERATED / "signs"
     out_dir.mkdir(parents=True, exist_ok=True)
     stamp = utc_now().replace(":", "").replace("-", "").split(".")[0]
-    log: dict[str, Any] = {"at": utc_now(), "job": "sign", "signs": {}}
+    log: dict[str, Any] = {"at": utc_now(), "job": "texture", "signs": {}}
     for d in paths.departments():
         if only and d.id not in only:
             continue
@@ -77,7 +77,7 @@ async def make_signs(llm: Any, *, only: list[str] | None = None, retries: int = 
         written = False
         for attempt in range(retries + 1):
             try:
-                res = await llm.generate_images("sign", prompt)
+                res = await llm.generate_images("texture", prompt)  # sign painter job (03-company-kernel/10 §3)
             except Exception as exc:  # noqa: BLE001 — record; the world falls back to a canvas sign
                 attempts.append({"attempt": attempt, "error": str(exc)[:300]})
                 continue

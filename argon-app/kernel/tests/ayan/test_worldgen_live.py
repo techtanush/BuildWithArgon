@@ -34,7 +34,7 @@ def fake_env(wg_paths: Path, monkeypatch: pytest.MonkeyPatch) -> FakeCapture:
 
 async def test_round_completes_with_managed_agent_patch_then_promotes(fake_env: FakeCapture, settings: Any, db: Any) -> None:
     llm = FakeLLM()
-    llm.script("worldgen_critic_fast", [critic_json(realism=5, high=True), critic_json(realism=8)])
+    llm.script("worldgen_critic", [critic_json(realism=5, high=True), critic_json(realism=8)])
     llm.script("antigravity", [file_block("engineering", module("engineering", "/* architect */ ")) +
                                '\nWORLD_ARCHITECT_RESULT {"tsc_ok": true, "validator_ok": true, "iterations": 2, "summary": "ok"}'])
     lr = await live.start_round(settings=settings, db=db, llm=llm, department_id="engineering", fake_capture=True, wait=True)
@@ -46,6 +46,7 @@ async def test_round_completes_with_managed_agent_patch_then_promotes(fake_env: 
     assert [c["iteration"] for c in fake_env.calls] == ["before", "after"] and fake_env.calls[0]["source"] == "generated"
     row = await db.fetch_one("SELECT status, promoted FROM worldgen_live_rounds WHERE id = ?", (lr.id,))
     assert row["status"] == "done" and row["promoted"] == 0
+    assert all(k.get("thinking_level") == "medium" for k in llm.call_kwargs if k["job"] == "worldgen_critic")  # fast round
     agent_call = next(k for k in llm.call_kwargs if k["job"] == "antigravity")
     assert agent_call["agent_config"] == {"type": "antigravity", "model": "gemini-4-argon"}
 
@@ -61,9 +62,9 @@ async def test_round_completes_with_managed_agent_patch_then_promotes(fake_env: 
 
 async def test_round_falls_back_to_argon_patch_when_agent_output_is_unusable(fake_env: FakeCapture, settings: Any) -> None:
     llm = FakeLLM()
-    llm.script("worldgen_critic_fast", [critic_json(high=True), critic_json()])
+    llm.script("worldgen_critic", [critic_json(high=True), critic_json()])
     llm.script("antigravity", ["I could not finish."])
-    llm.script("worldgen_patch_fast", [file_block("engineering", module("engineering", "/* argon */ "))])
+    llm.script("worldgen_patch", [file_block("engineering", module("engineering", "/* argon */ "))])
     lr = await live.start_round(settings=settings, db=None, llm=llm, department_id="engineering", fake_capture=True, wait=True)
     assert lr.status == "done" and lr.used_managed_agent is False
     assert "Argon patch" in next(s.note for s in lr.steps if s.name == "patch")
@@ -71,9 +72,9 @@ async def test_round_falls_back_to_argon_patch_when_agent_output_is_unusable(fak
 
 async def test_round_failure_is_reported_and_not_promotable(fake_env: FakeCapture, settings: Any) -> None:
     llm = FakeLLM()
-    llm.script("worldgen_critic_fast", [critic_json(high=True)])
+    llm.script("worldgen_critic", [critic_json(high=True)])
     llm.script("antigravity", ["nothing"])
-    llm.script("worldgen_patch_fast", ["no block", "no block either"])
+    llm.script("worldgen_patch", ["no block", "no block either"])
     lr = await live.start_round(settings=settings, db=None, llm=llm, department_id="engineering", fake_capture=True, wait=True)
     assert lr.status == "failed" and "patch" in (lr.error or "")
     assert [s.status for s in lr.steps] == ["done", "done", "failed", "skipped", "skipped", "skipped"]
