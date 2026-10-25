@@ -7,6 +7,7 @@ import manifestJson from '../../src/world/data/manifest.fallback.json';
 import house from '../../src/world/buildings/example/house.example';
 import { CRITICAL_PROBES } from '../../src/world/probes/types';
 import { mockApi } from '../../src/shared/worldApi';
+import { startVoiceCall } from '../../src/world/conversation/VoiceCall';
 import { PROP_FOOTPRINTS } from '../../src/world/kit/props.contract';
 import type { AssetManifest } from '../../src/world/assets/manifest.contract';
 import assetManifest from '../../public/assets/manifest.json';
@@ -43,6 +44,12 @@ describe('frozen world contracts', () => {
     const m: AssetManifest = assetManifest as AssetManifest;
     expect(m.version).toBe(1);
     expect(Array.isArray(m.textures) && Array.isArray(m.characters)).toBe(true);
+  });
+  it('voice call seed reports unavailable so callers fall back to push-to-talk', async () => {
+    const statuses: string[] = [];
+    const call = await startVoiceCall({ ventureId: 'ven_x', agentId: 'eng.builder', surface: 'world', onStatus: (st) => statuses.push(st) });
+    expect(call.status).toBe('unavailable');
+    expect(statuses).toContain('unavailable');
   });
   it('critical probes are P1-P5', () => {
     expect(CRITICAL_PROBES).toEqual(['P1', 'P2', 'P3', 'P4', 'P5']);

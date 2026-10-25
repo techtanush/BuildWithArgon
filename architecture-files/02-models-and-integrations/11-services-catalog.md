@@ -26,7 +26,7 @@ needs, and what happens without it.
 | **GitHub** | Each venture's product repo, PRs, issues | engineering, support | Connected via Composio; `GITHUB_SANDBOX_TOKEN` for sandboxes | Local `data/products/` |
 | **Cua** (SDK, sandboxes, Spaces) | Cloud computers: desktop + browser for agents; founder watch/take-over | Leo, Ines, Ben, Yuki | Cua CLI/SDK; Spaces app + login for `spaces` mode | Antigravity web / Deep Research / Playwright fallbacks |
 | **Google Cloud** (via Cua Spaces) | Where Spaces run in `spaces` mode (our own project) | Cua | GCP project + Spaces config (VERIFY) | Spaces on the demo Mac, or `sandbox` mode |
-| **ElevenLabs** | Agent voices + per-character timings for lip-sync | world conversation, standup playback | `ELEVENLABS_API_KEY` | Gemini TTS → browser voice |
+| **ElevenLabs** | Agent voices + per-character timings for lip-sync; **ElevenLabs Agents** for live voice calls with any agent (`12-elevenlabs-voice-agents.md`) | world conversation, standup playback, live calls (world + dashboard) | `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID` | Gemini TTS → browser voice; calls fall back to push-to-talk |
 | **Playwright + Chromium** | Worldgen capture/probes; e2e tests; headless QA fallback | worldgen, tests, `eng.qa` | none | Headed capture on the laptop |
 | **SQLite** (aiosqlite, WAL) | The company's memory: everything | kernel | none | — |
 | **SSE** | Live updates to dashboard and world | web | none | Polling every 5 s |
