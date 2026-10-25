@@ -7,11 +7,11 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, Field
 
 from .. import bus
-from ..contracts import Citation, HandlerResult, NewMessage
+from ..contracts import Citation, HandlerResult, NewMessage, TalkRequest
+from ..conversation.talk import answer
 from ..ids import utc_now
 from ..records import serialize_ticket
-from .base import generate_json, input_context, payload
-from .requests import validate_citations
+from .base import payload
 
 
 class Reprioritize(BaseModel):
@@ -39,11 +39,15 @@ class ChatReplyHandler:
     async def handle(self, ticket, ctx):
         data = payload(ticket)
         channel = await ctx.db.fetch_one("SELECT * FROM channels WHERE id=? AND venture_id=?", (data["channel_id"], ctx.venture["id"]))
-        root = await ctx.db.fetch_one("SELECT id FROM messages WHERE id=? AND channel_id=? AND thread_root_id IS NULL", (data["thread_root_id"], data["channel_id"]))
+        root = await ctx.db.fetch_one("SELECT id,body FROM messages WHERE id=? AND channel_id=? AND thread_root_id IS NULL", (data["thread_root_id"], data["channel_id"]))
         if channel is None or root is None:
             raise ValueError("Chat replies require a valid venture channel and thread root")
-        output = await generate_json(ctx, "concierge" if ctx.agent["id"] == "concierge" else "talk", await input_context(ticket, ctx) + "\nReply with citations. Only Rhea may return actions reprioritize or agent.request. Never execute gated actions; point to the approval.", ChatReply)
-        await validate_citations(ctx, output.citations)
+        grounded = await answer(db=ctx.db, llm=ctx.llm, settings=ctx.settings, venture_id=ctx.venture["id"], agent_id=ctx.agent["id"], req=TalkRequest(text=ticket.get("body") or root["body"]), company_wide=ctx.agent["id"]=="concierge", allow_actions=True)
+        output = ChatReply(text=grounded["text"], citations=grounded["citations"], actions=grounded["actions"])
+        if grounded["raw_citations"] and grounded["check"].status in ("unsupported", "partial"):
+            raise ValueError("Citation quotes must be exact, nonempty substrings of their record")
+        if grounded["check"].status in ("unsupported", "partial", "error"):
+            output.text = "I don't have a verified record to answer that yet. Please check the source records or ask the responsible department."
         if output.actions and ctx.agent["id"] != "cos.orchestrator":
             raise ValueError("Only the Chief of Staff may apply chat actions")
         applied = []
@@ -67,4 +71,4 @@ class ChatReplyHandler:
                 tid = await ctx.request(action.department_id, action.need, action.why)
                 applied.append(f"Created request {tid} for {action.department_id}.")
         text = output.text + ("\n\n" + "\n".join(applied) if applied else "")
-        return HandlerResult(outcome="done", result={"citations": [c.model_dump() for c in output.citations], "actions": applied}, messages=[NewMessage(channel_slug=channel["slug"], body=text, refs=[{"kind": c.kind, "id": c.id} for c in output.citations], kind="reply", thread_root_id=data["thread_root_id"])])
+        return HandlerResult(outcome="done", result={"answer_id": grounded["answer_id"], "check": grounded["check"].model_dump(), "citations": [c.model_dump() for c in output.citations], "actions": applied}, messages=[NewMessage(channel_slug=channel["slug"], body=text, refs=[{"kind": c.kind, "id": c.id} for c in output.citations], kind="reply", thread_root_id=data["thread_root_id"])])

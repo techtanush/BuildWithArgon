@@ -208,10 +208,12 @@ class RuntimeContext:
             raise ConflictError("The target agent belongs to another venture")
         from ..conversation.talk import talk
 
+        response_answer_id = None
         try:
             result = await talk(db=self.db, llm=self.llm.raw, settings=self.settings, venture_id=self.venture["id"],
                                 agent_id=agent_id, req=TalkRequest(text=question))
             answer = AskAnswer(agent_id=agent_id, text=result.text, citations=result.citations, check=result.check)
+            response_answer_id = result.answer_id
         except NotImplementedYet:
             # Step B can run independently of the richer Step D context pack.
             artifacts = await self.db.fetch_all("SELECT id,title,summary,content_md FROM artifacts WHERE venture_id=? AND department_id=? ORDER BY created_at DESC LIMIT 20", (self.venture["id"], target["department_id"]))
@@ -223,6 +225,16 @@ class RuntimeContext:
             valid = bool(checks) and all(c.status == "verified" for c in checks)
             answer = AskAnswer(agent_id=agent_id, text=output.text if valid else "I don't have a verified record to answer that yet.", citations=output.citations if valid else [],
                                check=AnswerCheck(status="verified" if valid else "unsupported", per_citation=checks))
+        if response_answer_id:
+            check_task = getattr(self.db, "_answer_check_tasks", {}).get(response_answer_id)
+            if check_task:
+                await check_task
+            checked = await self.db.fetch_one("SELECT check_status,check_json FROM answers WHERE id=? AND venture_id=?", (response_answer_id, self.venture["id"]))
+            if checked:
+                answer.check = AnswerCheck.model_validate(json_loads_or(checked["check_json"], {"status": checked["check_status"]}))
+                answer.check.status = checked["check_status"]
+        if answer.check.status in {"unsupported", "error"}:
+            answer.text, answer.citations = "I don't have a verified record to answer that yet.", []
         channel = f"dept-{self.agent['department_id']}"
         root = await self.post(channel, f"{self.agent['display_name']} → @{target['display_name']}: {question}",
                                [{"kind": "ticket", "id": self.ticket["id"]}], kind="ask")

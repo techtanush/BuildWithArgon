@@ -3,6 +3,7 @@
 """FastAPI app. Run: uv run uvicorn foundry_kernel.app:app --host 127.0.0.1 --port 8787 --reload"""
 from __future__ import annotations
 
+import asyncio
 import secrets
 import sqlite3
 from collections.abc import AsyncIterator
@@ -35,6 +36,13 @@ class HealthData(BaseModel):
 
 class HealthResponse(BaseModel):
     data: HealthData
+
+
+async def stop_answer_checks(db: Database) -> None:
+    tasks = list(getattr(db, "_answer_checks", set()))
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
 
 
 async def recover_interrupted(db: Database) -> None:
@@ -72,6 +80,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         async with AsyncExitStack() as cleanup:
             cleanup.push_async_callback(db.close)
             await db.connect()
+            cleanup.push_async_callback(stop_answer_checks, db)
             app.state.settings = cfg
             app.state.db = db
             app.state.llm = build_llm_client(cfg, db)

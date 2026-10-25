@@ -83,7 +83,7 @@ async def create(body: CreateVenture, request: Request):
         slug = stem
         if await tx.fetch_one("SELECT id FROM ventures WHERE slug=?", (slug,)):
             slug = f"{stem}-{vid[4:].lower()}"
-        await tx.execute("INSERT INTO ventures(id,name,slug,idea,founder_name,budget_usd,composio_user_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)", (vid, values["name"], slug, values["idea"], values["founder_name"], budget, vid, now, now))
+        await tx.execute("INSERT INTO ventures(id,name,slug,idea,founder_name,budget_usd,composio_user_id,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?)", (vid, values["name"], slug, values["idea"], values["founder_name"], budget, f"foundry:{vid}", now, now))
         await tx.execute("INSERT INTO agent_state(venture_id,agent_id) SELECT ?,id FROM agents WHERE venture_id IS NULL", (vid,))
         channels = [("all-hands", "All hands", "all_hands", None), ("exec", "Executive", "exec", None), ("incidents", "Incidents", "incident", None)]
         for dept in await tx.fetch_all("SELECT id,name FROM departments ORDER BY sort_order"):

@@ -43,3 +43,17 @@ Files: Ayan's `departments/engineering.py` and executors; frozen matrix/design i
 When the assigned agent has `generated=1`, include their exact approved `kv['agent.design.<id>']` instructions and tools in the executor input. Keep the existing build → tests → repair → review → QA → merge-approval checks. Resolve the newer matrix's default `dept_artifact` job versus the older improvement example's `engineering_build` through an explicit approved runtime policy; never route an `eng.build`, `eng.fix` or `qa.verify` ticket through a generic document handler.
 
 Affect: live engineering tickets resumed after capability hiring. Workaround: Tanush's scheduler retains each ticket's type-specific handler; the seed's explicit fake engineering path still supplies fake-labelled test/code evidence. Live executor support is Ayan's responsibility at merge; this branch does not claim that an untested generated hire can ship a real build.
+
+## T-CR-05 — Expanded company integrations requested by Tanush
+
+Affected: Ayan-owned `integrations/composio.py`, `api/integrations.py`, integration action adapters; frozen `schema.sql` currently limits `integrations.provider` to `github`. Add an owner-scoped migration rebuilding that CHECK for the approved provider allowlist (do not edit the frozen seed). `config.py` has no Higgsfield credential field: request a merge-time optional SecretStr only after its API/auth is verified. Video can use an existing doc artifact with URI/media metadata, avoiding an invented frozen ArtifactKind.
+
+The user explicitly expanded the intended product beyond GitHub to Gmail, LinkedIn and other company operations, including Higgsfield media generation. Implement a provider catalog and per-venture account binding for `github`, `gmail`, `linkedin`, `googlecalendar`, `googlemeet` and supported media providers; retain the current GitHub endpoint/signatures. Discover exact Composio tool schemas from the provider, allowlist each action and its arguments, and require an `integration` gate before binding a connection. Existing project-wide connections must never be silently assigned to a venture. Every email/send/public post remains an `outreach` approval containing the exact destination and content; media generation must honor the venture's spend budget. Do not treat connection metadata as proof that any external action executed.
+
+Workaround on Lane A: company planning, asks, approval UI and typed runtime tools work; adapter-owned integrations show their actual unavailable state until Ayan merges. Composio key was validated; project metadata shows active GitHub/Gmail/LinkedIn/Calendar/Meet connections, but no account was rebound and no message/post was sent. Higgsfield adapter/auth is absent from the agreed spec, so no Higgsfield result is claimed.
+
+## T-CR-06 — Standup audio field in frozen Python contract
+
+File: `kernel/foundry_kernel/contracts.py`, `StandupLatest`.
+
+Add `audio: list[StandupAudio] = Field(default_factory=list)`, with `StandupAudio` containing `agent_id: str`, `audio_url: str | None = None`, `alignment: Alignment | None = None`, matching the API endpoint table and TypeScript contract. Workaround: owned `api/org.py` defines `LatestStandup(StandupLatest)` with this exact additive field, so the live route and OpenAPI already expose the required shape.

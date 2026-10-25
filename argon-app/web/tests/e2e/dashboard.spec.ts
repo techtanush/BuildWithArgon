@@ -1,6 +1,6 @@
 // OWNER: tanush
 import { expect, test, type APIRequestContext, type Page } from '@playwright/test';
-import type { Approval, Artifact, ListPage, LiveRound, Run, Ticket, Venture, WorldgenRun } from '../../src/shared/contracts';
+import type { Approval, Artifact, ListPage, LiveRound, Run, TalkResponse, Ticket, Venture, WorldgenRun } from '../../src/shared/contracts';
 
 // Core dashboard flows use the running fake-mode kernel, with real SQLite and SSE.
 // Run with isolated ports using tests/unit/dashboard/dev.config.ts and E2E_BASE_URL.
@@ -124,6 +124,16 @@ test.describe('dashboard', () => {
     await expect(page.getByRole('heading', { name: 'Zara', exact: true })).toBeVisible();
     await expect(page.getByText('Runs on', { exact: true })).toBeVisible();
     await expect(page.getByText(/Antigravity/).first()).toBeVisible();
+    await page.getByLabel('Message Zara').fill('What are you working on right now?');
+    const answerReady = page.waitForResponse((response) => response.url().endsWith('/agents/eng.builder/talk') && response.request().method() === 'POST');
+    await page.getByRole('button', { name: 'Ask agent', exact: true }).click();
+    const response = await answerReady;
+    expect(response.ok()).toBeTruthy();
+    const answer = (await response.json()).data as TalkResponse;
+    expect(answer.answer_id).toMatch(/^ans_/); expect(answer.text.length).toBeGreaterThan(0);
+    await expect(page.getByText(answer.text, { exact: true }).last()).toBeVisible();
+    const stored = await data<{ text: string }>(request, `/v1/answers/${answer.answer_id}`);
+    expect(stored.text).toBe(answer.text);
     await page.getByRole('button', { name: 'Call Zara', exact: true }).click();
     const dialog = page.getByRole('dialog', { name: 'Call Zara' });
     await expect(dialog.getByText(/Voice calls unavailable/)).toBeVisible();
