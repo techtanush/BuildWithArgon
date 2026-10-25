@@ -166,6 +166,31 @@ class TtsResponse(BaseModel):
     latency_ms: int = 0
 
 
+class VoiceSessionRequest(BaseModel):
+    agent_id: str
+    venture_id: str
+    surface: Literal["world", "dashboard"] = "world"
+
+
+class VoiceOverrides(BaseModel):
+    prompt: str
+    first_message: str
+    voice_id: str | None = None
+
+
+class VoiceSessionInfo(BaseModel):
+    """Live voice call with an agent via ElevenLabs Agents (02-models-and-integrations/12-elevenlabs-voice-agents.md)."""
+    session_id: str
+    provider: Literal["elevenlabs", "unavailable"]
+    connection: Literal["webrtc", "websocket"] = "webrtc"
+    conversation_token: str | None = None
+    signed_url: str | None = None
+    overrides: VoiceOverrides | None = None
+    dynamic_variables: dict[str, str] = Field(default_factory=dict)
+    expires_at: str | None = None
+    reason: str | None = None
+
+
 class SttResponse(BaseModel):
     text: str
     provider: Literal["gemini", "none"] = "none"
@@ -497,3 +522,22 @@ class LiveRound(BaseModel):
     used_managed_agent: bool = False  # patch ran as an Antigravity managed agent
     promoted: bool = False
     error: str | None = None
+
+
+# ------------------------------------------------------------------ agent runtime (03-company-kernel/10-agent-model-matrix.md)
+
+
+class AgentRuntimeJob(BaseModel):
+    job: str
+    model: str
+    thinking_level: str | None = None
+    purpose: Literal["work", "conversation", "coordination"]
+
+
+class AgentRuntime(BaseModel):
+    """Built by tanush's agents API from kernel/data/agent_capabilities.json + models.JOBS."""
+    jobs: list[AgentRuntimeJob] = Field(default_factory=list)
+    managed_agents: list[str] = Field(default_factory=list)  # 'antigravity' | 'deep_research'
+    tools: list[str] = Field(default_factory=list)
+    gates: list[str] = Field(default_factory=list)
+    voice_call: bool = True

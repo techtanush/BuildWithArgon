@@ -28,7 +28,10 @@ export interface Agent {
   id: string; department_id: string; display_name: string; title: string; role_summary: string; model: string;
   tools: string[]; persona: string; voice_id: string | null; portrait_url: string | null; face: FaceSpec | null;
   npc_slot: string | null; is_lead: boolean; state?: AgentState;
+  runtime?: AgentRuntime; // 03-company-kernel/10-agent-model-matrix.md
 }
+export interface AgentRuntimeJob { job: string; model: string; thinking_level: string | null; purpose: 'work' | 'conversation' | 'coordination' }
+export interface AgentRuntime { jobs: AgentRuntimeJob[]; managed_agents: string[]; tools: string[]; gates: string[]; voice_call: boolean }
 
 export type TicketStatus = 'open' | 'in_progress' | 'waiting_approval' | 'blocked' | 'done' | 'failed' | 'cancelled';
 export interface Ticket {
@@ -89,6 +92,13 @@ export interface TtsResponse {
   provider: 'elevenlabs' | 'gemini' | 'browser'; latency_ms: number;
 }
 export interface SttResponse { text: string; provider: 'gemini' | 'none'; latency_ms: number }
+export interface VoiceSessionRequest { agent_id: string; venture_id: string; surface: 'world' | 'dashboard' }
+export interface VoiceSessionInfo {
+  session_id: string; provider: 'elevenlabs' | 'unavailable'; connection: 'webrtc' | 'websocket';
+  conversation_token: string | null; signed_url: string | null;
+  overrides: { prompt: string; first_message: string; voice_id: string | null } | null;
+  dynamic_variables: Record<string, string>; expires_at: string | null; reason: string | null;
+}
 export interface LatencySample { agent_id: string; stt_ms: number; answer_ms: number; tts_ms: number; total_ms: number }
 
 // ---- coordination
