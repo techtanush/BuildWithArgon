@@ -216,3 +216,9 @@ def test_fake_mode_returns_fake_client(settings: Any) -> None:
 
     assert isinstance(build_llm_client(settings), FakeLLM)
     assert json.loads(json.dumps({"x": 1})) == {"x": 1}
+
+
+async def test_incomplete_returns_partial_text(settings: Any) -> None:
+    aio = FakeAio([interaction("", status="in_progress")], gets=[interaction("<<<FILE path=\"a.ts\">>>\npartial", status="incomplete")])
+    res = await make_client(settings, aio).generate("engineering_build", "x")
+    assert res.raw_status == "incomplete" and res.text.endswith("partial")

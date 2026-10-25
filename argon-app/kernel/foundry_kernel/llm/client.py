@@ -31,7 +31,7 @@ from .jsonout import LLMOutputError, parse_model
 RETRY_STATUSES = {429, 500, 502, 503, 504}
 BACKOFF_S = (2, 4, 8, 16)
 RUNNING = ("in_progress", "queued")
-FAILED = ("failed", "cancelled", "incomplete", "budget_exceeded")
+FAILED = ("failed", "cancelled", "budget_exceeded")  # "incomplete" (output cap hit) returns the partial text, raw_status="incomplete"
 DEPRECATED = ("thinking_budget", "temperature", "top_p", "top_k", "cached_content")  # guide §3 — never sent
 log = logging.getLogger(__name__)
 LEDGER_KIND = {"image": "image", "transcribe": "stt", "tts_fallback": "tts"}
