@@ -66,6 +66,17 @@ def _safe_message(status: int) -> str:
     return f"Composio request failed (HTTP {status})"
 
 
+def _safe_connect_url(value: str) -> str:
+    parsed = urlparse(value)
+    allowed = {"connect.composio.dev", "backend.composio.dev"}
+    if parsed.path.startswith("/login/oauth"):
+        allowed.add("github.com")
+    if (parsed.scheme != "https" or parsed.hostname not in allowed
+            or parsed.username or parsed.password or parsed.netloc not in allowed | {host + ":443" for host in allowed}):
+        raise ComposioError("Composio returned an invalid connect link")
+    return value
+
+
 def _split_repo(repo_full_name: str) -> tuple[str, str]:
     owner, _, repo = repo_full_name.partition("/")
     if not owner or not repo:
@@ -165,9 +176,7 @@ class ComposioClient:
                     result = await self._request("POST", "v3/connected_accounts/link", body={
                         "auth_config_id": item["id"], "user_id": user_id, "callback_url": callback_url})
                     redirect = str(result.get("redirect_url") or "")
-                    parsed = urlparse(redirect)
-                    if parsed.scheme != "https" or not parsed.netloc or parsed.username or parsed.password:
-                        raise ComposioError("Composio returned an invalid connect link")
+                    _safe_connect_url(redirect)
                     return {"redirect_url": redirect, "connected_account_id": result.get("connected_account_id")}
             next_cursor = data.get("next_cursor")
             if not next_cursor or next_cursor == cursor:
@@ -177,6 +186,7 @@ class ComposioClient:
 
     async def toolkit_connection_status(self, toolkit: str, user_id: str) -> dict[str, Any]:
         cursor = None
+        observed = "not_connected"
         while True:
             params = {"toolkit_slugs": toolkit, "user_ids": user_id, "limit": 100}
             if cursor:
@@ -186,11 +196,17 @@ class ComposioClient:
                 if ((item.get("toolkit") or {}).get("slug") == toolkit and item.get("user_id") == user_id
                         and item.get("status") == "ACTIVE" and item.get("is_disabled") is not True):
                     return {"status": "active", "account_ref": item.get("id")}
+            for item in data.get("items", []):
+                if ((item.get("toolkit") or {}).get("slug") == toolkit and item.get("user_id") == user_id):
+                    if item.get("is_disabled") is True or item.get("status") in ("FAILED", "EXPIRED", "INACTIVE"):
+                        observed = "error"
+                    elif observed != "error" and item.get("status") in ("INITIATED", "INITIALIZING", "PENDING"):
+                        observed = "pending"
             next_cursor = data.get("next_cursor")
             if not next_cursor or next_cursor == cursor:
                 break
             cursor = next_cursor
-        return {"status": "not_connected", "account_ref": None}
+        return {"status": observed, "account_ref": None}
 
     # ------------------------------------------------------------------ connection flow
 
@@ -215,8 +231,7 @@ class ComposioClient:
         data = await self._request("POST", "v3/connected_accounts/link", body={
             "auth_config_id": auth_config_id, "user_id": user_id, "callback_url": callback_url})
         redirect = str((data or {}).get("redirect_url") or "")
-        if urlparse(redirect).scheme != "https":
-            raise ComposioError("Composio returned an invalid connect link")
+        _safe_connect_url(redirect)
         return {"redirect_url": redirect, "connected_account_id": (data or {}).get("connected_account_id")}
 
     async def connection_status(self, user_id: str) -> dict[str, Any]:
@@ -403,12 +418,17 @@ async def probe(settings: Any = None) -> int:
         return 0
     try:
         data = await client._request("GET", "v3.1/auth_configs",
-                                     params={"toolkit_slug": "github", "is_composio_managed": "true", "limit": 50})
+                                     params={"limit": 100})
     except ComposioError as exc:
         print(f"Composio probe FAIL: {exc.user_message}")
         return 1
-    print("Composio probe PASS — GET v3.1/auth_configs response shape:")
-    print(json.dumps(_shape(data), indent=2))
+    print("Composio configured:", client.configured)
+    print("Auth configs on first page:", len(data.get("items", [])), "enabled managed available:", any(item.get("status") == "ENABLED" and item.get("is_composio_managed") is True and (item.get("toolkit") or {}).get("slug") == "github" for item in data.get("items", [])))
+    counts: dict[str, int] = {}
+    for item in data.get("items", []):
+        key = str((item.get("toolkit") or {}).get("slug", "unknown")) + ":" + str(item.get("status", "unknown"))
+        counts[key] = counts.get(key, 0) + 1
+    print("Auth config toolkit/status counts:", json.dumps(counts), "has_more:", bool(data.get("next_cursor")))
     return 0
 
 

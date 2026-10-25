@@ -97,6 +97,7 @@ async def connect_github(db: Any, client: ComposioClient, venture: dict[str, Any
     approval = await gates.require_approved(db, approval_id, "integration")
     payload = json.loads(approval["payload_json"] or "{}")
     if (approval["venture_id"] != venture["id"] or payload.get("provider") != "github"
+            or (payload.get("composio_user_id") is not None and payload["composio_user_id"] != venture["composio_user_id"])
             or (payload.get("callback_url") is not None and payload["callback_url"] != callback_url)):
         raise GateNotApproved(approval_id, "integration")
     link = await client.create_connect_link(venture["composio_user_id"], callback_url)
@@ -127,7 +128,7 @@ async def github_connect(vid: str, body: ConnectRequest, request: Request) -> di
             approval_id = await gates.request_approval(
                 tx, venture_id=vid, gate_type="integration", title="Connect GitHub",
                 summary="Allow Foundry to connect your GitHub account through Composio (repos, PRs, issues).",
-                payload={"provider": "github", "callback_url": body.callback_url, "scopes": "Composio-managed"})
+                payload={"provider": "github", "callback_url": body.callback_url, "scopes": "Composio-managed GitHub repositories, pull requests and issues; provider consent required", "composio_user_id": venture["composio_user_id"]})
         return {"data": {"redirect_url": None, "approval_id": approval_id, "status": "waiting_approval"}}
     if latest["status"] == "pending":
         return {"data": {"redirect_url": None, "approval_id": latest["id"], "status": "waiting_approval"}}
@@ -153,7 +154,7 @@ async def github_refresh(vid: str, request: Request) -> dict[str, Any]:
     else:
         row = await db.fetch_one("SELECT status FROM integrations WHERE venture_id = ? AND provider = 'github'", (vid,))
         if row is not None:
-            await _upsert(db, venture, "pending", None, {"composio_status": status["status"]})
+            await _upsert(db, venture, "pending" if status["status"] in ("INITIATED", "INITIALIZING", "PENDING", "pending") else "not_connected" if status["status"] == "not_connected" else "error", None, {"composio_status": status["status"]})
     return {"data": await _item(db, await _venture(db, vid))}
 
 
@@ -192,13 +193,13 @@ async def toolkit_connect(vid: str, provider: str, body: ConnectRequest, request
         async with db.tx() as tx:
             aid = await gates.request_approval(tx, venture_id=vid, gate_type="integration", title=f"Connect {provider}",
                 summary="Authorize an optional account connection through Composio. Provider consent is still required. This does not authorize spending or tool execution.",
-                payload={"provider": provider, "callback_url": body.callback_url})
+                payload={"provider": provider, "callback_url": body.callback_url, "scopes": "Enabled toolkit-specific auth configuration; exact provider permissions require separate consent", "composio_user_id": venture["composio_user_id"]})
         return {"data": {"redirect_url": None, "approval_id": aid, "status": "waiting_approval"}}
     if latest["status"] == "pending":
         return {"data": {"redirect_url": None, "approval_id": latest["id"], "status": "waiting_approval"}}
     approval = await gates.require_approved(db, latest["id"], "integration")
     payload = json.loads(approval["payload_json"] or "{}")
-    if approval["venture_id"] != vid or payload.get("provider") != provider or payload.get("callback_url") != body.callback_url:
+    if approval["venture_id"] != vid or payload.get("provider") != provider or payload.get("callback_url") != body.callback_url or (payload.get("composio_user_id") is not None and payload["composio_user_id"] != venture["composio_user_id"]):
         raise GateNotApproved(latest["id"], "integration")
     try:
         link = await client.toolkit_connect_link(provider, venture["composio_user_id"], body.callback_url)

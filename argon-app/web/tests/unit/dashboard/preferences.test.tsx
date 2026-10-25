@@ -123,18 +123,16 @@ it("shows unavailable integrations without inventing a connection approval", asy
   );
 });
 it("shows an approval notice only when the server recorded a pending integration gate", async () => {
-  state.post.mockRejectedValue(new Error("Approval required"));
-  state.get.mockResolvedValue({
-    items: [{ id: "apr_connect", gate_type: "integration" }],
-  });
+  state.post.mockResolvedValue({ status: "waiting_approval", approval_id: "apr_connect", redirect_url: null });
   await render(<Integrations />);
   await act(async () =>
     [...element.querySelectorAll("button")]
       .find((button) => button.textContent === "Connect GitHub")!
       .click(),
   );
-  expect(element.textContent).toContain(
-    "Check Approvals for the GitHub connection request.",
-  );
+  expect(element.textContent).toContain("Review connection permission: GitHub");
+  expect(element.textContent).toContain("Approve & continue");
+  expect(element.textContent).toContain("This is not provider consent");
+  expect(state.post.mock.calls.some(([url]) => String(url).endsWith("/decision"))).toBe(false);
   expect(element.querySelector('[role="alert"]')).toBeNull();
 });

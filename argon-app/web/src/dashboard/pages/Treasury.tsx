@@ -134,6 +134,7 @@ export default function Treasury() {
         description="Agent payment proposals, with a founder decision before every payment."
       />
       <AgentWallets />
+
       <div className="notice">
         <strong>Stripe not connected.</strong> This workspace cannot move money.
         Approval does not move money. Approved proposals wait for a payment

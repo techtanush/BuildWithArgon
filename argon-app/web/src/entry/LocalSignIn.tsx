@@ -2,11 +2,12 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LOCAL_PROFILE_KEY, readLocalProfile } from './profile';
 import './entry.css';
+import YcbfBrand from '../shared/YcbfBrand';
 
 export default function LocalSignIn() {
   const [name, setName] = useState(() => readLocalProfile().name);
   const navigate = useNavigate();
-  return <main className="foundry-entry entry-signin"><Link className="entry-brand" to="/welcome"><span>f</span>Foundry.</Link><section className="entry-signin-card"><p className="entry-kicker">LOCAL DEMO · FOUNDER PROFILE</p><h1>Make yourself<br /><em>at home.</em></h1><p>This demo does not sign you into an account. Your optional display name stays in this browser until you use it to create a venture.</p><form onSubmit={(event) => {
+  return <main className="foundry-entry entry-signin"><Link className="entry-brand" to="/welcome"><YcbfBrand/></Link><section className="entry-signin-card"><p className="entry-kicker">LOCAL DEMO · FOUNDER PROFILE</p><h1>Make yourself<br /><em>at home.</em></h1><p>This demo does not sign you into an account. Your optional display name stays in this browser until you use it to create a venture.</p><form onSubmit={(event) => {
     event.preventDefault();
     try { localStorage.setItem(LOCAL_PROFILE_KEY, JSON.stringify({ name: name.trim() })); } catch { /* Profile is optional, including when storage is unavailable. */ }
     navigate('/onboarding');

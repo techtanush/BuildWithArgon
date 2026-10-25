@@ -36,7 +36,7 @@ it("persists discovery intent using the existing idea contract without connectin
   expect(state.post).toHaveBeenCalledWith("/v1/ventures", expect.objectContaining({ idea: expect.stringContaining("Founder intent: Discover an idea for me."), budget_usd: 25 }));
   expect(element.textContent).toContain("not deposited");
   expect(element.querySelector('a[href="/treasury"]')?.textContent).toContain("Review funding");
-  const connect = [...element.querySelectorAll("button")].find(b => b.textContent === "Connect")!;
+  const connect = [...element.querySelectorAll("button")].find(b => b.textContent === "Connect GitHub")!;
   expect(connect.disabled).toBe(true);
   expect(element.textContent).toContain("not configured on the server");
 });
@@ -78,18 +78,20 @@ it("rejects insecure connection redirects and never starts during connection", a
   await prepareLaunch();
   state.post.mockResolvedValueOnce({ redirect_url: "javascript:alert(1)" });
   state.get.mockResolvedValue({ items: [] });
-  await act(async () => [...element.querySelectorAll("button")].find(b => b.textContent === "Connect")!.click());
-  expect(element.textContent).toContain("did not return a secure sign-in link");
+  await act(async () => [...element.querySelectorAll("button")].find(b => b.textContent === "Connect GitHub")!.click());
+  expect(element.textContent).toContain("Unsafe provider sign-in link rejected");
   expect(state.post).toHaveBeenCalledTimes(2);
   expect(state.post.mock.calls.some(([url]) => String(url).endsWith("/start"))).toBe(false);
 });
 it("shows the real integration approval wait instead of pretending connected", async () => {
   await prepareLaunch();
-  state.post.mockRejectedValueOnce(new Error("Approval required"));
-  state.get.mockResolvedValue({ items: [{ gate_type: "integration", id: "apr_actual" }] });
-  await act(async () => [...element.querySelectorAll("button")].find(b => b.textContent === "Connect")!.click());
-  expect(element.textContent).toContain("waiting for your approval");
-  expect(element.textContent).toContain("Nothing has been connected yet");
+  state.post.mockResolvedValueOnce({ status: "waiting_approval", approval_id: "apr_actual", redirect_url: null });
+  await act(async () => [...element.querySelectorAll("button")].find(b => b.textContent === "Connect GitHub")!.click());
+  expect(element.textContent).toContain("Review connection permission: GitHub");
+  expect(element.textContent).toContain("This is not provider consent");
+  expect(element.textContent).toContain("Approve & continue");
+  expect(state.post.mock.calls.some(([url]) => String(url).endsWith("/decision"))).toBe(false);
+  expect(element.querySelector('a[target="_blank"]')).toBeNull();
   expect(state.post.mock.calls.some(([url]) => String(url).includes("wallet") || String(url).endsWith("/start"))).toBe(false);
 });
 

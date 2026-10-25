@@ -1,3 +1,4 @@
+import { IntegrationConnect } from "../components/IntegrationConnect";
 // OWNER: tanush
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -1161,43 +1162,13 @@ export function Settings() {
 }
 export function Integrations() {
   const { ventureId, system } = useCompany();
-  const action = useAction(), [notice, setNotice] = useState("");
   const query = useQuery<ListPage<{provider:string; status:string}>>(ventureId ? `/v1/ventures/${ventureId}/integrations` : null, () => get(`/v1/ventures/${ventureId}/integrations`));
-  async function connectGitHub() {
-    setNotice("");
-    await action.run(async () => {
-      try {
-        const response = await post<{redirect_url:string|null;status:string;approval_id:string}>(`/v1/ventures/${ventureId}/integrations/github/connect`, {callback_url: `${location.origin}/integrations?connected=github`});
-        if (response.status === "waiting_approval") {
-          invalidateQueries();
-          setNotice("Check Approvals for the GitHub connection request.");
-          return;
-        }
-        const url = safeUrl(response.redirect_url);
-        if (!url || !url.startsWith("https://")) throw new Error("The connection provider did not return a safe sign-in link.");
-        location.assign(url);
-      } catch (error) {
-        const pending = await get<ListPage<Approval>>(`/v1/ventures/${ventureId}/approvals?status=pending`).catch(() => null);
-        if (pending?.items.some(item => item.gate_type === "integration")) {
-          setNotice("Check Approvals for the GitHub connection request.");
-          return;
-        }
-        throw error;
-      }
-    });
-  }
   return <>
     <PageHeader title="Integrations" description="Your company's connected apps. Credentials stay on the server." />
     <Card title="GitHub for engineering">
       <p>Repositories, pull requests and verified changes. This connection works independently of the optional app catalog.</p>
       <Status value={query.data?.items.find(item => item.provider === "github")?.status ?? (query.error ? "unavailable" : "not_connected")} />
-      <ErrorNotice error={action.error} />
-      <div className="actions">
-        <button type="button" className="button primary" disabled={action.working || !ventureId} onClick={() => void connectGitHub()}>Connect GitHub</button>
-        <button type="button" className="button" disabled={action.working || !ventureId} onClick={() => void action.run(async () => { await post(`/v1/ventures/${ventureId}/integrations/github/refresh`); await query.refetch(); })}>Refresh connection</button>
-        <Link className="button" to="/approvals">Review approvals</Link>
-      </div>
-      {notice && <p role="status" className="notice">{notice}</p>}
+      {ventureId && <IntegrationConnect ventureId={ventureId} provider="github" name="GitHub" status={query.data?.items.find(item => item.provider === "github")?.status} />}
     </Card>
     {ventureId ? <IntegrationCatalog ventureId={ventureId} /> : <p>Select or create a venture to connect apps.</p>}
     <h2>Server providers</h2>

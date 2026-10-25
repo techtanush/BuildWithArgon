@@ -1,9 +1,13 @@
 // OWNER: karthik
 import type { ChatTurn, ConciergeResponse, TalkRequest, TalkResponse, VoiceSessionInfo } from '../../shared/contracts';
+import type { PartialOptions } from '@elevenlabs/client';
+import { voiceForAuthoredAsset } from './voiceProfile';
 import type { LipSync } from '../npc/LipSync';
 export type VoiceCallStatus = 'connecting' | 'listening' | 'thinking' | 'speaking' | 'ended' | 'unavailable' | 'error';
 export interface VoiceCallOptions {
   ventureId: string; agentId: string; surface: 'world' | 'dashboard';
+  /** Actual rendered licensed body asset, never guessed from a name or face. */
+  avatarAssetId?: string;
   talk?: (req: TalkRequest) => Promise<TalkResponse | ConciergeResponse>;
   lipSync?: LipSync;
   onStatus?: (status: VoiceCallStatus, reason?: string) => void;
@@ -46,6 +50,21 @@ function isValidAnswer(answer: unknown): answer is TalkResponse | ConciergeRespo
     && typeof (answer as TalkResponse).answer_id === 'string' && !!(answer as TalkResponse).answer_id
     && Array.isArray((answer as TalkResponse).citations) && !!(answer as TalkResponse).check;
 }
+export function sdkVoiceOverrides(info: VoiceSessionInfo, avatarAssetId?: string): PartialOptions['overrides'] {
+  const overrides = info.overrides;
+  if (!overrides) return undefined;
+  const voiceId = voiceForAuthoredAsset(avatarAssetId)?.voiceId ?? overrides.voice_id;
+  return { agent: { prompt: { prompt: overrides.prompt }, firstMessage: overrides.first_message },
+    ...(voiceId ? { tts: { voiceId } } : {}) };
+}
+function startupFailure(error: unknown): string {
+  const name = error && typeof error === 'object' && 'name' in error ? error.name : '';
+  if (name === 'NotAllowedError' || name === 'PermissionDeniedError') return 'Microphone permission was denied. Allow microphone access in browser settings, then start a new call. You can still type.';
+  if (name === 'NotFoundError' || name === 'DevicesNotFoundError') return 'No microphone was found. Connect a microphone, then start a new call. You can still type.';
+  if (name === 'NotReadableError' || name === 'TrackStartError') return 'The microphone is busy or unavailable. Close other microphone apps and try a new call. You can still type.';
+  if (name === 'OverconstrainedError') return 'The selected microphone is unavailable. Select an available input device in browser settings and retry.';
+  return 'Live voice could not connect. Check microphone access and your connection, then start a new call. You can still type.';
+}
 /** Resolves immediately with a handle; provider and microphone startup continue in the background. */
 export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallHandle> {
   let status: VoiceCallStatus = 'connecting', closed = false, ending: Promise<void> | null = null, muted = false;
@@ -54,7 +73,7 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
   const history: ChatTurn[] = [];
   let toolQueue: Promise<unknown> = Promise.resolve();
   // Capture routing once, including when a caller mutates its options during a call.
-  const ventureId = opts.ventureId, agentId = opts.agentId;
+  const ventureId = opts.ventureId, agentId = opts.agentId, avatarAssetId = opts.avatarAssetId;
   const answerIds: string[] = [], began = performance.now(), startup = new AbortController();
   let conversation: CallConnection | null = null;
   const disposed = new WeakMap<CallConnection, Promise<void>>();
@@ -75,7 +94,7 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
     closed = true; stopStartup(); notify(next, reason);
     void closeConnection(conversation); void summarize();
   };
-  const startupTimer = setTimeout(() => fail('unavailable', 'Live voice connection timed out. Use push-to-talk or typing.'), 30_000);
+  const startupTimer = setTimeout(() => fail('unavailable', 'Live voice connection timed out. Start a new call or type instead.'), 30_000);
   const handle: VoiceCallHandle = {
     get status() { return status; },
     end() {
@@ -87,12 +106,20 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
     },
     setMuted(value) {
       muted = value;
-      if (!closed) try { conversation?.setMicMuted(value); } catch { fail('error', 'Microphone control failed. Use push-to-talk or typing.'); }
+      if (!closed) try { conversation?.setMicMuted(value); } catch { fail('error', 'Microphone control failed. Start a new call or type instead.'); }
     },
   };
   // Importing this browser-only adapter from SSR/tests must not start network or mic work.
   if (typeof window === 'undefined') {
-    fail('unavailable', 'Live voice requires a browser. Use push-to-talk or typing.');
+    fail('unavailable', 'Live voice requires a browser. Start a new call or type instead.');
+    return handle;
+  }
+  if (window.isSecureContext === false) {
+    fail('unavailable', 'Microphone calls require HTTPS or localhost. Open a secure address, then start a new call.');
+    return handle;
+  }
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    fail('unavailable', 'This browser cannot access a microphone. Use a supported browser on HTTPS or localhost, or type instead.');
     return handle;
   }
   notify('connecting');
@@ -105,14 +132,14 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
       });
       const info = await abortable(sessionWork, startup.signal);
       if (closed) return;
-      if (info.provider !== 'elevenlabs') { fail('unavailable', info.reason || 'Live voice is unavailable. Use push-to-talk or typing.'); return; }
+      if (info.provider !== 'elevenlabs') { fail('unavailable', info.reason || 'Live voice is unavailable. Start a new call or type instead.'); return; }
       if (info.connection === 'webrtc' ? !info.conversation_token : !info.signed_url) throw new Error('Missing connection credentials');
       const { Conversation } = await abortable(import('@elevenlabs/client'), startup.signal);
       if (closed) return;
-      const overrides = info.overrides;
       const connectionWork = Conversation.startSession({
         ...(info.connection === 'webrtc' ? { conversationToken: info.conversation_token!, connectionType: 'webrtc' as const } : { signedUrl: info.signed_url!, connectionType: 'websocket' as const }),
-        overrides: overrides ? { agent: { prompt: { prompt: overrides.prompt }, firstMessage: overrides.first_message }, ...(overrides.voice_id ? { tts: { voiceId: overrides.voice_id } } : {}) } : undefined,
+        textOnly: false,
+        overrides: sdkVoiceOverrides(info, avatarAssetId),
         dynamicVariables: info.dynamic_variables,
         clientTools: {
           ask_company: (parameters: { question?: unknown }) => {
@@ -166,10 +193,12 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
           if (closed) return;
           if (next === 'connected') notify('listening');
           else if (next === 'connecting') notify('connecting');
-          else if (next === 'disconnected') void handle.end();
+          // SDK emits disconnected before rejecting startup (including permission denial).
+          // Let that rejection surface its actionable error instead of falsely ending normally.
+          else if (next === 'disconnected' && conversation) void handle.end();
         },
-        onError: () => fail('error', 'Live voice connection failed. Use push-to-talk or typing.'),
-      }).then(created => {
+        onError: () => fail('error', 'Live voice connection failed. Start a new call or type instead.'),
+      } satisfies PartialOptions).then(created => {
         // The SDK cannot abort its permission prompt. Close resources if it resolves after end/timeout.
         if (closed) void closeConnection(created);
         return created;
@@ -180,8 +209,8 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
       clearTimeout(startupTimer); created.setMicMuted(muted);
       opts.lipSync?.start({ kind: 'level', level: () => closed ? 0 : created.getOutputVolume() });
       if (status === 'connecting') notify('listening');
-    } catch {
-      fail('unavailable', 'Live voice could not connect. Check microphone permission and provider configuration; use push-to-talk or typing.');
+    } catch (error) {
+      fail('unavailable', startupFailure(error));
     }
   };
   void connect();

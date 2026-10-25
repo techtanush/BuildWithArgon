@@ -57,3 +57,19 @@ Current preview: http://127.0.0.1:15180/ . This supersedes15178. API18790; an is
 - Generic OAuth connections require approval, the correct venture and an existing enabled exact-toolkit auth configuration. Missing config reports setup required; it is NOT silently connected. No connection/auth-config writes or plan changes were performed in QA. Agent tool execution remains GitHub-only, stated in the UI.
 - Migration0005 preserves integration data/constraints while supporting validated toolkit slugs. Original private database was backed up before the isolated-copy migration.
 - Existing live voice/photorealism/complete engineering-run limitations above still apply. Do not reinterpret UI/schema tests as a successful live deployed company.
+
+## YCBF UI recovery update
+
+The product brand is now YCBF (You Can Be a Founder), without renaming existing ventures or the repository. Current UI preview remains http://127.0.0.1:15180/ . Original vector mark is public/ycbf-mark.svg. Entry now has a restrained Orbit-inspired original layout and a real lightweight Three.js scroll-responsive orb; it is not a copy of Orbit assets. Reduced-motion and no-WebGL paths use a static fallback, and GPU resources are cleaned up. Radix Colors3.0.0 is actually used with MIT attribution. Entry typography is isolated from lazy dashboard styles.
+
+Final source checks:809 backend tests,527 frontend tests, TypeScript and production build passed. Live desktop browser confirmed WebGL hero ready and scrollWidth1190/viewport1190 (no horizontal overflow). Phone viewport emulation is unavailable in the current browser wrapper; responsive CSS/specs exist, but a live phone-size pass was not claimed.
+
+Card setup/checkout was cancelled by the user. The experimental Stripe routes/migration/panel were removed; no charges or test purchases occurred.
+
+Composio has inline exact-provider permission review, an explicit approval step, safe persistent new-tab OAuth links and return-status refresh. The screenshot error for Facebook/Supadata was missing auth configurations, NOT evidence of a broken catalog key. Known setup failures are shown as actionable neutral setup panels, not hidden or changed to connected. OAuth still needs a toolkit auth configuration and provider consent.
+
+The call adapter now reports mic permission/device/startup failures previously swallowed by SDK disconnected ordering. Existing conversational voices are selected from actual authored body assets (not inferred real gender); the actual runtime avatar ID is wired into the call. Installed SDK serializer tests prove override shape. No new real microphone/audio acceptance call was performed.
+
+Marketing handler now generates a persisted, integrity-checked PDF from actual department model output. GitHub marketing publication is NOT implemented by an approved publisher and is explicitly blocked, not falsely pushed. Dashboard notification center uses persisted run/artifact/approval records. Company launch readiness explains Draft and dependencies; no company was started during this repair.
+
+BACKEND APPLICATION BLOCKER: source tests passed, but the running API cannot be restarted by this environment (OS EPERM, including after user permission). The active venture DB was backed up and not forked/reset. User can run ignored .local-preview/restart.sh to apply backend code in place. Until then, do not call new server-side PDF/connection validation changes live accepted. Existing backend remains on18790; static frontend updates are live on15180.

@@ -1,3 +1,4 @@
+import { DashboardNotificationCenter } from "./components/DashboardNotificationCenter";
 // OWNER: tanush — seed version; replace/extend freely but keep the exported names.
 
 import { useEffect, useState } from "react";
@@ -76,7 +77,7 @@ function Dashboard() {
     }
   });
   useEffect(() => {
-    document.title = `${navigation.find(([path]) => (path === "/" ? location.pathname === "/" : location.pathname.startsWith(path)))?.[1] ?? "Company"} · Foundry`;
+    document.title = `${navigation.find(([path]) => (path === "/" ? location.pathname === "/" : location.pathname.startsWith(path)))?.[1] ?? "Company"} · YCBF`;
   }, [location.pathname]);
   useEffect(() => {
     try {
@@ -87,14 +88,14 @@ function Dashboard() {
   if (loading)
     return (
       <div className="boot-screen">
-        <span className="brand-mark">f</span>
+        <img className="ycbf-brand-icon" src="/ycbf-mark.svg" alt=""/>
         <Loading />
       </div>
     );
   if (error && !ventures.length)
     return (
       <main className="boot-screen">
-        <h1>Foundry</h1>
+        <h1>YCBF</h1>
         <ErrorNotice error={error} retry={refresh} />
       </main>
     );
@@ -103,9 +104,9 @@ function Dashboard() {
     <div className="dashboard-shell">
       <aside className="sidebar">
         <Link className="brand" to="/dashboard">
-          <span className="brand-mark">f</span>
+          <img className="ycbf-brand-icon" src="/ycbf-mark.svg" alt=""/>
           <span>
-            Foundry<span className="brand-period">.</span>
+            YCBF<span className="brand-period">.</span>
           </span>
         </Link>
         <p className="sidebar-label">YOUR COMPANY</p>
@@ -166,6 +167,7 @@ function Dashboard() {
             </Link>
           </div>
           <div className="topbar-right">
+            <DashboardNotificationCenter />
             <span className={`live-indicator ${live}`}>
               <span />
               {live === "live"
@@ -276,7 +278,7 @@ function Dashboard() {
         </main>
         <footer className="app-footer">
           <span>Built by the company. Steered by you.</span>
-          <span>Foundry × Argon</span>
+          <span>YCBF × Argon</span>
         </footer>
       </div>
     </div>

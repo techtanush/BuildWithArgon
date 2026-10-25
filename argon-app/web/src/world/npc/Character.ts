@@ -42,6 +42,8 @@ export class Character {
   private rigPoseNodes = new Map<AvatarRig, { node: THREE.Object3D; rest: THREE.Quaternion; kind: "armL" | "armR" | "spine" }[]>();
   private poseOffset = new THREE.Quaternion();
   private poseAxis = new THREE.Vector3(1, 0, 0);
+  /** Authored visible body, not a gender inference from face or name. */
+  get avatarAssetId(): string | undefined { return this.rigs.length ? this.options.avatar?.id : undefined; }
   get activity(): Readonly<NpcActivity> { return this.currentActivity; }
   get isSeated(): boolean { return this.seated; }
   get isWalking(): boolean { return this.walking; }

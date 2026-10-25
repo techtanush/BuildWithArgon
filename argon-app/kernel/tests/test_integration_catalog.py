@@ -96,3 +96,17 @@ def test_migration_preserves_legacy_rows_and_repeat_application():
         con.execute("INSERT INTO integrations VALUES('k','v','https://evil','pending',NULL,'{}','c','u')")
     con.execute("DELETE FROM ventures WHERE id='v'")
     assert con.execute('SELECT COUNT(*) FROM integrations').fetchone()[0]==0
+
+@pytest.mark.parametrize('url', ['https://evil.example/x', 'https://connect.composio.dev.evil/x', 'https://x:y@connect.composio.dev/x', 'https://connect.composio.dev:444/x'])
+def test_connection_redirect_rejects_untrusted_origin(url):
+    from foundry_kernel.integrations.composio import _safe_connect_url
+    with pytest.raises(ComposioError):
+        _safe_connect_url(url)
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize('provider_status,expected', [('INITIATED','pending'),('FAILED','error'),('EXPIRED','error')])
+async def test_catalog_reports_pending_and_failure_truthfully(settings, provider_status, expected):
+    def handler(req):
+        return httpx.Response(200,json={'items':[{'toolkit':{'slug':'slack'},'user_id':'foundry:v','status':provider_status}]})
+    c=ComposioClient(settings.model_copy(update={'composio_api_key':SecretStr('test')}), transport=httpx.MockTransport(handler))
+    assert (await c.toolkit_connection_status('slack','foundry:v'))['status'] == expected

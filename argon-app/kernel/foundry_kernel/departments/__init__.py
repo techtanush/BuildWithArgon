@@ -27,7 +27,7 @@ REGISTRY: dict[str, str] = {
     "validation.synthetic_panel": P + "base:ArtifactHandler",
     "validation.interview_plan": P + "base:ArtifactHandler",
     "growth.positioning": P + "base:ArtifactHandler",
-    "growth.launch_plan": P + "base:ArtifactHandler",
+    "growth.launch_plan": P + "marketing:MarketingHandler",
     "leads.icp": P + "base:ArtifactHandler",
     "sales.proposal": P + "base:ArtifactHandler",
     # ayan (do not rename)

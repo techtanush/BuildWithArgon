@@ -37,6 +37,7 @@ export interface ConversationOptions {
   offline?: boolean;
   onChange?: (state: ConversationState) => void;
   getLipSync?: (id: string) => LipSync | undefined;
+  getAvatarAssetId?: (id: string) => string | undefined;
   onRoute?: (agentId: string, mode: "race" | "travel") => void;
   listen?: typeof startListening;
   speak?: typeof speak;
@@ -231,6 +232,7 @@ export class ConversationController {
       const call = await (this.options.startCall ?? startVoiceCall)({
         ventureId: venture, agentId: npc.agent_id, surface: "world",
         lipSync: this.options.getLipSync?.(npc.agent_id),
+        avatarAssetId: this.options.getAvatarAssetId?.(npc.agent_id),
         talk: async (req) => {
           if (!current()) throw new Error("Call ended");
           const answer = await (this.options.api.voiceAsk

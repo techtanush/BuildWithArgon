@@ -3,3 +3,9 @@
 html, body, #root { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--text); font-family: var(--font); }
 .app-loading { padding: 32px; color: var(--text-2); }
+
+/* Stable, eager document reset shared by public and lazy-loaded pages. */
+*, *::before, *::after { box-sizing: border-box; }
+button, input, textarea, select { font: inherit; }
+
+.ycbf-brand-icon{width:34px;height:34px;display:block;flex-shrink:0;border:0;background:none}

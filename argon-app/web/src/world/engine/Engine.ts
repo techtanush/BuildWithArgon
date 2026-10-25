@@ -265,6 +265,7 @@ export class Engine {
         offline: result.offline,
         onChange: (s) => this.patch({ conversation: s }),
         getLipSync: (id) => this.npcs.get(id)?.character.lipSync,
+        getAvatarAssetId: (id) => (this.npcs.get(id) ?? this.cityNpcs.get(id))?.character.avatarAssetId,
         onRoute: (id, mode) =>
           mode === "race" ? this.startRace(id) : void this.travel(id),
       });

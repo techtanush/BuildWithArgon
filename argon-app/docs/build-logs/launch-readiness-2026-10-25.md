@@ -1,0 +1,7 @@
+# Launch readiness bounded fix (2026-10-25)
+
+Read-only HTTP diagnosis through the active :15180 proxy found venture ven_01M5TMMMYWR891AV9XPR710BSR in draft with no tickets/artifacts, $25 budget and $0.006106 recorded spend, GitHub not_connected and a pending integration approval. Existing start creates the brief ticket and sets running; GitHub consent is not a start prerequisite. Existing engineering requires a connected repository for Antigravity, otherwise it selects local execution, which requires sandbox isolation. Configuration alone does not establish provider entitlement. Current preview CSP disallows connections, so generated-site AI chat is not enabled by the existing preview flow.
+
+Changed only dashboard Overview and new LaunchReadiness component, plus a focused test file. The checklist describes explicit Start consent, costs, pending OAuth, safe execution prerequisites, and real ticket/artifact counts. It does not create work, connect providers, promise a landing page or enable a chat broker.
+
+Validation: 15 frontend tests passed (launch-readiness + onboarding-build); 36 backend lifecycle/ledger/gate tests passed using test fixtures, no live provider calls. Typecheck initially passed; later full typecheck encountered an unrelated concurrent VoiceSessionInfo fixture error in tests/unit/voice/sdk-contract.test.ts (signed_url/expires_at/reason missing). No git, runtime restart, DB copy or live launch/provider mutation. Parent owns coordinated build/deployment. No new generated landing-page or site-chat capability was implemented.

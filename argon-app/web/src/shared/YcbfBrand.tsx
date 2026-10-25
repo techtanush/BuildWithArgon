@@ -1,0 +1,1 @@
+export default function YcbfBrand({className='',compact=false}:{className?:string;compact?:boolean}) { return <span className={'ycbf-brand '+className}><img src="/ycbf-mark.svg" alt="" width="34" height="34"/>{!compact&&<span>YCBF<span className="ycbf-brand-dot">.</span></span>}</span>; }

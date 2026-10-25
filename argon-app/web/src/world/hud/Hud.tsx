@@ -21,9 +21,9 @@ export function Hud({
     }}>
       <header className="world-topbar">
         <a className="world-brand" href="/dashboard" aria-label="Back to dashboard">
-          <span className="brand-mark">f.</span>
+          <img className="ycbf-brand-icon" src="/ycbf-mark.svg" alt=""/>
           <div>
-            FOUNDRY<small>YOUR COMPANY. YOUR CITY.</small>
+            YCBF<small>YOUR COMPANY. YOUR CITY.</small>
           </div>
         </a>
         <div className="world-location">
@@ -60,9 +60,9 @@ export function Hud({
       )}
       {!state.ready && !state.error && (
         <div className="world-loading">
-          <span className="brand-mark">f.</span>
+          <img className="ycbf-brand-icon" src="/ycbf-mark.svg" alt=""/>
           <h1>A city of possibility.</h1>
-          <p>Laying out the streets of Foundry.</p>
+          <p>Laying out the streets of YCBF.</p>
           <div className="loading-line" />
         </div>
       )}
@@ -105,7 +105,7 @@ export function Hud({
             state.mode !== "map" &&
             state.mode !== "paused" && (
               <div className="world-caption">
-                <span className="eyebrow">EXPLORE FOUNDRY</span>
+                <span className="eyebrow">EXPLORE YCBF</span>
                 <h1>
                   {state.scene === "city"
                     ? "The city is yours."

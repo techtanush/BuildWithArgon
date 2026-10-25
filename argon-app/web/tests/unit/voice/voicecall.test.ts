@@ -3,7 +3,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 const sdk = vi.hoisted(()=>({startSession:vi.fn()}));
 vi.mock('@elevenlabs/client',()=>({Conversation:sdk}));
 import { startVoiceCall } from '../../../src/world/conversation/VoiceCall';
-beforeEach(()=>{vi.stubGlobal('window',{});});
+beforeEach(()=>{vi.stubGlobal('window',{isSecureContext:true});vi.stubGlobal('navigator',{mediaDevices:{getUserMedia:vi.fn()}});});
 afterEach(()=>{vi.unstubAllGlobals(); vi.clearAllMocks(); vi.restoreAllMocks(); vi.useRealTimers();});
 const info={session_id:'s1',provider:'elevenlabs',connection:'webrtc',conversation_token:'temporary',overrides:{prompt:'grounded',first_message:'hello',voice_id:'voice'},dynamic_variables:{venture:'v'}};
 const response=(data:unknown)=>({ok:true,json:async()=>({data})});
@@ -174,4 +174,28 @@ it('cannot revive a cancelled pending verification poll',async()=>{
   const result=config.clientTools.ask_company({question:'wait?'});await vi.waitFor(()=>expect(fetcher).toHaveBeenCalledTimes(2));await h.end();
   resolvePoll(response({id:'pending',text:'Late verified claim',citations:[],check:{status:'verified'}}));
   expect(await result).toBe('The call has ended.');expect(onAnswer).toHaveBeenCalledTimes(1);expect(h.status).toBe('ended');
+});
+
+it.each([
+  ['NotAllowedError','permission was denied'],['NotFoundError','No microphone'],
+  ['NotReadableError','busy or unavailable'],['OverconstrainedError','selected microphone'],
+])('preserves %s after the actual SDK disconnected-before-reject sequence',async(name,reason)=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue(response(info)));
+  sdk.startSession.mockImplementation(async config=>{config.onStatusChange({status:'disconnected'});throw new DOMException('private provider detail',name);});
+  const onStatus=vi.fn();const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',onStatus});
+  await vi.waitFor(()=>expect(h.status).toBe('unavailable'));
+  expect(onStatus.mock.calls.at(-1)?.[1]).toContain(reason);
+  expect(onStatus.mock.calls.flat().join(' ')).not.toContain('private provider detail');
+  expect(onStatus.mock.calls.map(c=>c[0])).not.toContain('ended');
+});
+it('rejects insecure context before any provider or microphone work',async()=>{
+  vi.stubGlobal('window',{isSecureContext:false});const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);
+  const onStatus=vi.fn();const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world',onStatus});
+  expect(h.status).toBe('unavailable');expect(onStatus.mock.calls.at(-1)?.[1]).toContain('HTTPS or localhost');
+  expect(fetcher).not.toHaveBeenCalled();expect(sdk.startSession).not.toHaveBeenCalled();
+});
+it('rejects missing mediaDevices without starting provider work',async()=>{
+  vi.stubGlobal('navigator',{});const fetcher=vi.fn();vi.stubGlobal('fetch',fetcher);
+  const h=await startVoiceCall({ventureId:'v',agentId:'a',surface:'world'});
+  expect(h.status).toBe('unavailable');expect(fetcher).not.toHaveBeenCalled();expect(sdk.startSession).not.toHaveBeenCalled();
 });

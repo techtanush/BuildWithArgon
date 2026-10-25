@@ -12,6 +12,7 @@ import type {
   Venture,
 } from "../../shared/contracts";
 import { useCompany } from "../context";
+import { LaunchReadiness } from "../components/LaunchReadiness";
 import { BuildNotifications } from "../components/BuildNotifications";
 import { colors, currency, entityLink, titleCase } from "../types";
 import { ApprovalCard } from "../components/ApprovalCard";
@@ -95,7 +96,7 @@ export default function Overview() {
             disabled={action.working}
             onClick={() => void changeStatus()}
           >
-            {titleCase(operation)} company
+            {operation === "start" ? "Start building company" : `${titleCase(operation)} company`}
           </button>
         }
       />
@@ -158,6 +159,7 @@ export default function Overview() {
           <span className="muted small-text">Recorded merged pull requests</span>
         </Card>
       </div>
+      <LaunchReadiness />
       <BuildNotifications />
       <div className="overview-columns">
         <div>

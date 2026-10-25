@@ -21,9 +21,9 @@ afterEach(async () => { await act(async () => root.unmount()); host.remove(); vi
 async function render(node: React.ReactNode, url = '/') { await act(async () => root.render(<MemoryRouter initialEntries={[url]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{node}<Location /></MemoryRouter>)); }
 it('landing primary calls to action enter local demo sign-in rather than world or an invented OAuth flow', async () => {
   await render(<Landing />);
-  for (const text of ['Build your company', 'Start building', 'Let’s begin']) expect([...host.querySelectorAll('a')].find(a => a.textContent?.includes(text))?.getAttribute('href')).toBe('/signin');
+  for (const text of ['Build your company', 'Sign in', "Let's build something"]) expect([...host.querySelectorAll('a')].find(a => a.textContent?.includes(text))?.getAttribute('href')).toBe('/signin');
   expect(host.querySelector('a[href="/view"]')).toBeNull();
-  expect(host.textContent).toContain('Illustration');
+  expect(host.querySelector('[aria-label*="not live activity"]')).not.toBeNull();
   expect(host.querySelector('a[href="/dashboard"]')).not.toBeNull();
 });
 it('optional local profile enters onboarding without any network authentication or password collection', async () => {
@@ -55,7 +55,7 @@ it('dashboard alias retains normal work navigation and makes world entry explici
 
 it.each(['/', '/welcome'])('serves the full public landing at %s', async (url) => {
   await render(<App />, url);
-  expect(host.querySelector('h1')?.textContent).toContain('A whole company.');
+  expect(host.querySelector('h1')?.textContent).toContain('a founder.');
   expect(host.querySelector('.dashboard-shell')).toBeNull();
 });
 it('continues safely when optional local profile storage is blocked', async () => {
@@ -63,4 +63,13 @@ it('continues safely when optional local profile storage is blocked', async () =
   await render(<LocalSignIn />, '/signin');
   await act(async () => host.querySelector('form')!.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true })));
   expect(host.querySelector('[data-location]')?.textContent).toBe('/onboarding');
+});
+
+it('uses a clearly labeled static dashboard preview without fictional activity or decorative avatars', async () => {
+ await render(<Landing />);
+ expect(host.querySelector('.ycbf-product')?.getAttribute('aria-label')).toContain('not live activity');
+ expect(host.textContent).toContain('Workspace illustration');
+ expect(host.querySelectorAll('h1')).toHaveLength(1);
+ expect([...host.querySelectorAll('img')].every(image => image.getAttribute('src') === '/ycbf-mark.svg')).toBe(true);
+ expect(host.querySelector('.ycbf-product-body aside')?.textContent).toContain('Tickets');
 });

@@ -1,3 +1,4 @@
+import { IntegrationConnect } from "../components/IntegrationConnect";
 // OWNER: tanush
 import { IntegrationCatalog } from "../components/IntegrationCatalog";
 import { readLocalProfile } from "../../entry/profile";
@@ -5,7 +6,7 @@ import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { get, post } from "../../api/client";
 import { invalidateQueries, useQuery } from "../../api/hooks";
-import type { ListPage, Approval, Venture } from "../../shared/contracts";
+import type { ListPage, Venture } from "../../shared/contracts";
 import { useCompany } from "../context";
 import { ErrorNotice, Icon, useAction } from "../components/Shared";
 
@@ -19,7 +20,7 @@ export default function Onboarding() {
   const [created, setCreated] = useState<Venture | null>(null),
     [files, setFiles] = useState<{ file: File; status: string }[]>([]),
     [validation, setValidation] = useState(""),
-    [integration, setIntegration] = useState("");
+    [integration] = useState("");
   const action = useAction(),
     navigate = useNavigate(),
     { selectVenture, system } = useCompany(),
@@ -127,31 +128,6 @@ ${idea.trim()}`,
         setStep(4);
       });
     }
-  }
-  async function connect() {
-    setIntegration("");
-    await action.run(async () => {
-      try {
-        const result = await post<{ redirect_url: string }>(
-          `/v1/ventures/${created!.id}/integrations/github/connect`,
-          { callback_url: `${location.origin}/integrations?connected=github` },
-        );
-        if (!result.redirect_url || !/^https:\/\//i.test(result.redirect_url))
-          throw new Error("The provider did not return a secure sign-in link. Retry or review Integrations.");
-        const redirect = new URL(result.redirect_url);
-        if (redirect.username || redirect.password) throw new Error("Unsafe sign-in link rejected.");
-        location.assign(redirect.href);
-      } catch (error) {
-        const pending = await get<ListPage<Approval>>(
-          `/v1/ventures/${created!.id}/approvals?status=pending`,
-        ).catch(() => ({ items: [] }));
-        if (pending.items.some((a) => a.gate_type === "integration"))
-          setIntegration(
-            "The connection is waiting for your approval. Review it on the Approvals page. Nothing has been connected yet.",
-          );
-        else throw error;
-      }
-    });
   }
   async function launch() {
     await action.run(async () => {
@@ -348,14 +324,7 @@ ${idea.trim()}`,
                   <p role="status">{connections.error ? "Connection status unavailable. Retry below." : connections.loading ? "Checking connection…" : `GitHub: ${github?.status ?? "not connected"}`}</p>
                   <p>{system?.providers?.composio?.configured === false ? "Connection provider is not configured on the server." : "Provider configuration alone does not mean connected."}</p>
                 </div>
-                <button
-                  type="button"
-                  className="button"
-                  disabled={action.working || github?.status === "active" || system?.providers?.composio?.configured === false}
-                  onClick={() => void connect()}
-                >
-                  Connect
-                </button>
+                {created && <IntegrationConnect ventureId={created.id} provider="github" name="GitHub" status={github?.status} disabled={system?.providers?.composio?.configured === false} />}
               </div>
               <div className="actions">
                 <button className="button" type="button" onClick={() => void connections.refetch()}>Refresh connection status</button>
