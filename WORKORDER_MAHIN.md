@@ -45,8 +45,9 @@ in `argon-app/docs/decisions/mahin.md`.
 
 ```bash
 git fetch origin && git checkout mahin
-cd argon-app/web && pnpm install && pnpm typecheck && pnpm test   # 7 passed
+cd argon-app/web && pnpm install && pnpm typecheck && pnpm test   # 8 passed
 pnpm dev                                                          # http://localhost:5173/view?mock=1
+# No Gemini skill needed for your coding agent: the world never calls Gemini directly.
 # optional: run the seed kernel too (cd ../kernel && uv sync --extra dev && LLM_MODE=fake make -C .. kernel)
 ```
 
@@ -104,6 +105,7 @@ and an adapter in your own files. Check before every push: `make ownership WHO=m
 | Generated buildings | `buildings/generated/index.ts` → `generatedModules` | Empty → every building uses your fallback archetype |
 | Lip-sync (Karthik) | `const ls = new LipSync()`; each frame `ls.update(dt)` then read `ls.mouth` (`{open, width}` in meters) → jaw bone rotation (`open / 0.07 × 18°`) + viseme morph targets if the avatar has them | Seed: mouth stays at Rest |
 | Speech playback (Karthik) | `speak(text, ttsResponse \| null, { lipSync, onCaption })` → `{ started, done, stop }` | Seed: browser `speechSynthesis`, no lip-sync |
+| Live voice call (Karthik) | `startVoiceCall({ ventureId, agentId, surface: 'world', talk (pass mockApi.talk in mock mode), lipSync, onStatus, onTranscript, onAnswer })` → `{ status, end, setMuted }` (`conversation/VoiceCall.ts`) | Seed: reports `unavailable` → toast + stay in push-to-talk |
 | Push-to-talk (Karthik) | `Mic.supported()`; `startListening({ transcribe: worldApi.transcribe })` on V down → `session.stop()` on V up → `{ text, provider, latency_ms }`; empty text → offer typing | Seed: always empty → typing fallback |
 
 ## 5. What others rely on from you (keep these)
@@ -201,7 +203,11 @@ plaza, 3 exteriors and 3 interiors meet the quality bar (W-12).
 3. `ConversationController.ts` — orchestrates Karthik's modules: V down → `startListening(...)`,
    V up → transcript → `worldApi.talk/concierge` → `worldApi.tts` → `speak(text, tts, { lipSync })`;
    engage on E within range, typed input fallback (C-04), history, latency samples (STT, answer,
-   TTS, total) → `postLatency`.
+   TTS, total) → `postLatency`. **Live call mode:** while engaged, **C** starts Karthik's
+   `startVoiceCall({ surface: 'world', lipSync })` — captions from `onTranscript`, source/route cards
+   from `onAnswer`, the agent keeps facing the player and talking animation follows the status;
+   **C** again or walking > 6 m away ends it; `unavailable` → toast and push-to-talk (C-10/C-11,
+   `02-models-and-integrations/12-elevenlabs-voice-agents.md` §4). HUD: a small "Call" hint/button.
 4. HUD: `ConversationPanel` (captions, check status updating from `answer.checked` or polling
    `GET /v1/answers/{id}`), `SourceCard`, `RouteCard` (Race there / Take me there).
 5. Concierge: Nova auto-greets on arrival (C-02), route cards for routing questions; `?goto=<agent_id>`
