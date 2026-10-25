@@ -14,11 +14,12 @@ then validated and improved by the render → critique → fix loop
 
 ```
 foundry-worldgen faces              # FaceSpecs (Argon) -> kernel/data/faces.json
-foundry-worldgen portraits          # Nano Banana portraits -> web/public/generated/portraits/
-foundry-worldgen textures           # Nano Banana textures + signs -> web/public/generated/{textures,signs}/
+foundry-worldgen portraits --from-renders  # avatar headshots from the capture page (+ optional Nano Banana polish) -> web/public/generated/portraits/
+foundry-worldgen signs              # Nano Banana realistic signs -> web/public/generated/signs/
+                                    # (textures come from the CC0 asset pipeline, not worldgen — 12-photoreal-look.md)
 foundry-worldgen buildings          # one-pass generation of 13 modules (iteration 0)
 foundry-worldgen loop --max-iter 4  # render -> probe -> critique -> patch, keeps best per building
-foundry-worldgen all                # faces, portraits, textures, buildings, loop (in that order)
+foundry-worldgen all                # faces, signs, buildings, loop, portraits (in that order)
 foundry-worldgen --all              # alias for all
 foundry-worldgen report             # prints the score table of the latest run
 ```
@@ -138,13 +139,14 @@ TypeScript building modules against the KIT API below. Output ONLY 13 FILE block
 Each file must import only from '../../kit/types' and default-export a BuildingModule.
 No other imports, no DOM, no network, no randomness except k.rand().
 Follow DESIGN.md exactly. Make the 13 buildings consistent in style and clearly distinct in
-silhouette. Interiors must match the reference image's look (attached).
+silhouette. The town must look photoreal (quality bar below); the attached image is a composition
+reference only.
 
 ### KIT API
 {kit/types.ts verbatim}
 
-### PROPS LIBRARY (sizes, origin at floor center)
-{table of PropKind -> footprint w×d×h, generated from kit/props.ts}
+### PROPS LIBRARY (real 3D models; sizes, origin at floor center)
+{table of PropKind -> footprint w×d×h + note, generated from web/src/world/kit/props.contract.ts}
 
 ### RULES
 {the "Rules that apply to every building" section of 05-world/04-buildings.md verbatim}
@@ -159,7 +161,10 @@ silhouette. Interiors must match the reference image's look (attached).
 ### EXAMPLE (style and API usage; do not copy the design)
 {fallback/archetypes.ts 'house' archetype source}
 
-### REFERENCE IMAGE
+### PHOTOREAL QUALITY BAR
+{05-world/12-photoreal-look.md §1 verbatim}
+
+### COMPOSITION REFERENCE (layout and coziness only — the render style is photoreal)
 (attached: reference-bedroom.png)
 ```
 

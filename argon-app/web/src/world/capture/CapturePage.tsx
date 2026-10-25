@@ -12,6 +12,7 @@ export default function CapturePage() {
       ready: true,
       error: 'capture page not implemented yet (owner: mahin)',
       setCamera: async () => {},
+      playPath: async () => {},
     };
   }, []);
   return <div id="capture-root" style={{ width: 1280, height: 720, background: '#9FC7E8' }} />;

@@ -1,5 +1,13 @@
 # 07 — Nano Banana 2.1 Assets (portraits, textures, signs)
 
+> **Changed by ADR-018 (photoreal).** Tileable textures (§2) are replaced by real scanned CC0 PBR
+> texture sets from the asset pipeline (`05-world/12-photoreal-look.md` §3–4); Nano Banana textures
+> are no longer generated. Portraits (§1) are **rendered from the 3D avatars** and MAY be polished
+> by Nano Banana with the render as reference image (photographic headshot, identity unchanged —
+> `12-photoreal-look.md` §8); ignore the "stylized clay" prompt below. Signs (§3) remain, but
+> prompt for a **realistic** sign: "a real painted wooden/metal shop sign, photographed straight-on,
+> natural light, subtle wear".
+
 All image generation happens **offline** in the worldgen step (`foundry_kernel/worldgen/faces.py`
 and `textures.py`) and the results are committed under `web/public/generated/`. The running
 product never waits on image generation.

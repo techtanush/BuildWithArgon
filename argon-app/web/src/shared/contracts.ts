@@ -139,3 +139,33 @@ export interface SseEvent<T = unknown> {
   id: number; type: SseEventType | string; entity_kind: string | null; entity_id: string | null;
   level: string; created_at: string; data: T;
 }
+
+// ---- World Lab (05-world/13-world-lab-and-live-round.md; mirrors contracts.py)
+export interface CaptureSet { screenshots: Record<string, string>; videos: Record<string, string> }
+export interface WorldgenIterationView {
+  n: number; probe_score: number; visual_score: number | null; realism: number | null; failed_probes: string[];
+  issues: { severity: 'high' | 'medium' | 'low'; where: string; camera: string; description: string; fix: string }[];
+  keep: string[]; captures: CaptureSet;
+}
+export interface WorldgenBuildingHistory {
+  department_id: string; status: 'generated' | 'fallback'; best_iteration: number | null; iterations: WorldgenIterationView[];
+}
+export interface WorldgenIterationScore { n: number; world_score: number; visual_score: number | null; realism: number | null }
+export interface WorldgenRunSummary {
+  run_id: string; created_at: string; status: string; iterations: WorldgenIterationScore[];
+  final_world_score: number | null; final_visual_score: number | null; final_realism: number | null;
+  generated: number; fallback: number;
+}
+export interface WorldgenRun extends WorldgenRunSummary { buildings: WorldgenBuildingHistory[] }
+export type LiveRoundStatus =
+  | 'queued' | 'capturing' | 'critiquing' | 'patching' | 'validating' | 'recapturing' | 'scoring' | 'done' | 'failed';
+export interface LiveRoundStep {
+  name: string; status: 'pending' | 'running' | 'done' | 'failed' | 'skipped';
+  started_at: string | null; finished_at: string | null; note: string;
+}
+export interface LiveRoundSide { captures: CaptureSet; probe_score: number | null; visual_score: number | null; realism: number | null }
+export interface LiveRound {
+  id: string; department_id: string; status: LiveRoundStatus; fast: boolean; created_at: string; finished_at: string | null;
+  elapsed_s: number; steps: LiveRoundStep[]; before: LiveRoundSide; after: LiveRoundSide | null;
+  issues: WorldgenIterationView['issues']; used_managed_agent: boolean; promoted: boolean; error: string | null;
+}

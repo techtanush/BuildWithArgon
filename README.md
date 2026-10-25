@@ -4,8 +4,10 @@
 Argon-orchestrated company of 13 departments and 29 agents researches, plans, builds, ships and
 supports it — and the founder can step into a 3D town to talk with any agent face to face.
 
-Built for the **Gemini 4 Argon hackathon** (Cerebral Valley × Google DeepMind): Problem Statement 1
-(Million Token Engineering), Problem Statement 2 (More Dimensions) and Best use of Managed Agents.
+Built for the **Gemini 4 Argon hackathon** (Cerebral Valley × Google DeepMind). Our entry:
+**Problem Statement 2 — More Dimensions** (a photoreal 3D town Argon generates in one pass, then
+renders, watches, critiques and fixes in a loop — with a live round on stage) and **Best use of
+Managed Agents** (the Argon-orchestrated company of agents built on Google's agent APIs).
 
 - **Spec (read first):** [`architecture-files/README.md`](architecture-files/README.md)
 - **App:** [`argon-app/`](argon-app/README.md) — a frozen-contract seed: every module exists with its
@@ -14,7 +16,7 @@ Built for the **Gemini 4 Argon hackathon** (Cerebral Valley × Google DeepMind):
 
 | Builder | Branch | Work order |
 |---|---|---|
-| Tanush — kernel core, company & dashboard | `tanush` | `WORKORDER_TANUSH.md` on that branch |
-| Ayan — models, engineering, integrations & worldgen | `ayan` | `WORKORDER_AYAN.md` on that branch |
-| Mahin — the 3D world | `mahin` | `WORKORDER_MAHIN.md` on that branch |
-| Karthik — voice & lip-sync end to end, grounding eval | `karthik` | `WORKORDER_KARTHIK.md` on that branch |
+| Tanush — kernel core, company, dashboard (incl. World Lab), grounding eval | `tanush` | `WORKORDER_TANUSH.md` on that branch |
+| Ayan — models, the world loop (incl. live round), engineering, integrations | `ayan` | `WORKORDER_AYAN.md` on that branch |
+| Mahin — the photoreal 3D world | `mahin` | `WORKORDER_MAHIN.md` on that branch |
+| Karthik — photoreal asset pipeline, voice & lip-sync end to end | `karthik` | `WORKORDER_KARTHIK.md` on that branch |
