@@ -8,6 +8,8 @@ import house from '../../src/world/buildings/example/house.example';
 import { CRITICAL_PROBES } from '../../src/world/probes/types';
 import { mockApi } from '../../src/shared/worldApi';
 import { PROP_FOOTPRINTS } from '../../src/world/kit/props.contract';
+import type { AssetManifest } from '../../src/world/assets/manifest.contract';
+import assetManifest from '../../public/assets/manifest.json';
 
 const manifest = manifestJson as unknown as Manifest;
 
@@ -36,6 +38,11 @@ describe('frozen world contracts', () => {
   it('every prop kind has a positive footprint', () => {
     expect(Object.keys(PROP_FOOTPRINTS)).toHaveLength(29);
     for (const f of Object.values(PROP_FOOTPRINTS)) expect(f.w > 0 && f.d > 0 && f.h > 0).toBe(true);
+  });
+  it('asset manifest matches the contract', () => {
+    const m: AssetManifest = assetManifest as AssetManifest;
+    expect(m.version).toBe(1);
+    expect(Array.isArray(m.textures) && Array.isArray(m.characters)).toBe(true);
   });
   it('critical probes are P1-P5', () => {
     expect(CRITICAL_PROBES).toEqual(['P1', 'P2', 'P3', 'P4', 'P5']);

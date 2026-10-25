@@ -67,7 +67,7 @@ ring at its door: **E — Enter The Observatory**.
 
 ## 4. Inside a department
 
-1. Inside, the room looks like the reference render: warm wood floor, pale walls, glowing windows,
+1. Inside, the room looks like a real, photoreal workplace (`12-photoreal-look.md`), composed like the reference render: warm wood floor, pale walls, glowing windows,
    rounded furniture, a rug, a cable on the floor, a signature piece (the telescope, the vault door,
    the workbenches).
 2. The department's agents stand at their spots, idle-breathing and blinking; as you approach they

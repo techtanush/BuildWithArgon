@@ -85,7 +85,9 @@ class Engine {
 | [`02-look-kit.md`](02-look-kit.md) | Renderer, lighting, post-processing, materials, palette — the visual standard |
 | [`03-city-layout.md`](03-city-layout.md) | Exact geometry of plaza, roads, plots, props; the manifest |
 | [`04-buildings.md`](04-buildings.md) | The 13 buildings: exterior and interior design, NPC slots |
-| [`05-characters-and-faces.md`](05-characters-and-faces.md) | Procedural characters, FaceSpec, animation, lip-sync |
+| [`05-characters-and-faces.md`](05-characters-and-faces.md) | FaceSpec, animation behaviours, lip-sync (construction now realistic avatars — see 12) |
+| [`12-photoreal-look.md`](12-photoreal-look.md) | **The photoreal look (authoritative):** quality bar, assets, renderer, lighting, avatars, budgets |
+| [`13-world-lab-and-live-round.md`](13-world-lab-and-live-round.md) | World Lab page, live one-building loop round, video critique |
 | [`06-navigation-race-travel.md`](06-navigation-race-travel.md) | Player, collision, car, road graph, GPS, race, fast travel, map |
 | [`07-npc-conversation.md`](07-npc-conversation.md) | Talking to agents: flow, HUD, audio, source cards |
 | [`08-concierge.md`](08-concierge.md) | The Concierge and route cards |

@@ -1,8 +1,9 @@
 # 01 — The 12-Hour Build Plan
 
 > **Hackathon context.** One build day for the Gemini 4 Argon hackathon (plus the night before).
-> Targets: Problem Statement 1 (phase 5 + engineering eval), Problem Statement 2 (phases 6–8),
-> Best use of Managed Agents (phases 3, 5, 9). Every checkpoint should leave something demoable.
+> Targets (ADR-019): **Problem Statement 2 — More Dimensions** (phases 6–8 + photoreal look + World
+> Lab live round) and **Best use of Managed Agents** (phases 3, 5, 9). Every checkpoint should leave
+> something demoable. The engineering eval in phase 9 is optional.
 
 Follow the phases in order. Each phase ends with a **checkpoint**: run the verify commands, write a
 line in `argon-app/docs/BUILD_LOG.md` (`T+hh:mm phase N done — what works, what doesn't`), and
@@ -20,7 +21,7 @@ you build the next phase.
 | 0:00–0:30 | 0. Setup | `argon-app/` skeleton, deps, skills, docs, templates copied |
 | 0:30–1:00 | 1. Smoke tests | S1–S7 results; VERIFIED_API_SHAPES.md; STT + executor decisions |
 | 1:00–2:30 | 2. Kernel core | DB, seed, APIs, SSE, approvals, chat, FakeLLM, tests |
-| 2:30–4:00 | 3. Company orchestration | Scheduler, 13 department handlers, plan DAG, gates, ledger, **coordination (asks, `agent.request`, handoffs, standups, threads)**; fake-mode venture runs end to end. **Start background: faces → portraits → textures/signs** |
+| 2:30–4:00 | 3. Company orchestration | Scheduler, 13 department handlers, plan DAG, gates, ledger, **coordination (asks, `agent.request`, handoffs, standups, threads)**; fake-mode venture runs end to end. **Start background: faces → signs; asset pipeline (`pnpm assets`)** |
 | 4:00–5:00 | 4. Dashboard | All pages, SSE live updates, onboarding |
 | 5:00–6:30 | 5. Engineering loop | Template + cache, LocalLoop & Antigravity executors, review, QA, Composio PRs, merge gate |
 | 6:30–8:00 | 6. World core | Look kit, city, fallback buildings ×13, player, car, interiors, HUD shell, map. **Start background at 7:15: worldgen buildings (one pass)** |
@@ -90,8 +91,9 @@ escalation check) → chat automatic messages with kinds and threads → `coordi
 (`ask_agent`, `request`, `post`) + `requests.py` (`agent.request`) + `cos.standup` →
 fake executor for `eng.*` in fake mode. Spec: `03-company-kernel/09-agent-coordination.md`.
 
-At 2:45 start background job: `uv run foundry-worldgen faces && uv run foundry-worldgen portraits
-&& uv run foundry-worldgen textures` (needs only roster + Gemini; write outputs; review later).
+At 2:45 start background job: `uv run foundry-worldgen faces && uv run foundry-worldgen signs`
+(needs only roster + Gemini). Textures, HDRIs, models and avatars come from Karthik's asset pipeline
+(`pnpm assets`); portraits are rendered from the avatars later (`portraits --from-renders`).
 
 **Checkpoint:** `LLM_MODE=fake`: create + start a venture → within 2 minutes the DAG completes
 through `cos.report` (gates auto-approved by a test helper) — `tests/test_scheduler.py::test_fake_venture_end_to_end`.
@@ -188,11 +190,11 @@ checklist: [`07-team-split.md`](07-team-split.md).
 
 | Lane | Owner (branch) | Phases |
 |---|---|---|
-| A — Kernel core, company & dashboard | **Tanush** (`tanush`) | 2, 3, 4 (whole dashboard), kernel side of 7 (conversation, checker, manifest route), 9 (improvement loop, metrics) |
-| B — Models, engineering, integrations & worldgen | **Ayan** (`ayan`) | 1, 3's background asset jobs (faces → portraits → textures), 5, kernel/script side of 8, 9 (engineering eval, support loop, Cua computers) |
-| C — The 3D world | **Mahin** (`mahin`) | 6, web side of 7 (characters, conversation UI, race, fast travel, HUD), web side of 8 (capture page, probes), Town Hall playback, performance |
-| D — Voice & grounding eval (smaller lane, Claude Pro) | **Karthik** (`karthik`) | 7's voice pieces end to end (ElevenLabs/Gemini TTS + cache + voice assignment, STT, `/v1/voice/*`, browser mic/STT/speech, visemes, lip-sync), 9 (grounding eval) |
+| A — Kernel core, company & dashboard | **Tanush** (`tanush`) | 2, 3, 4 (whole dashboard incl. **World Lab** page), kernel side of 7 (conversation, checker, manifest route), 9 (grounding eval, improvement loop, metrics) |
+| B — Models, engineering, integrations & the world loop | **Ayan** (`ayan`) | 1, 5, kernel/script side of 8 (one pass, capture with **video**, critique with realism, patch, score, **live round** + World Lab API, portraits from renders), 9 (support loop, Cua; engineering eval optional) |
+| C — The photoreal 3D world | **Mahin** (`mahin`) | 6 with the photoreal kit (`05-world/12`), web side of 7 (realistic avatars, conversation UI, race, fast travel, HUD), web side of 8 (capture page incl. `playPath` + portrait mode, probes), Town Hall playback, performance |
+| D — Assets & voice (smaller lane, Claude Pro) | **Karthik** (`karthik`) | Photoreal asset pipeline first (CC0 textures, HDRIs, models, avatars → manifest), then voice end to end (visemes, lip-sync, mic, STT, speech; ElevenLabs/Gemini TTS, STT, voice assignment, `/v1/voice/*`) |
 
 The frozen contracts (agreed up front, edited only in the merge session): `schema.sql`,
-`contracts.py`, `shared/contracts.ts`, `kit/types.ts`, FaceSpec, `probes/types.ts`, the manifest
-(`world_layout.py`).
+`contracts.py`, `shared/contracts.ts`, `kit/types.ts`, `kit/props.contract.ts`,
+`assets/manifest.contract.ts`, FaceSpec, `probes/types.ts`, the manifest (`world_layout.py`).

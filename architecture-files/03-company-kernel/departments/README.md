@@ -1,8 +1,8 @@
 # Departments — Deep Dives
 
 > **Hackathon context.** The 13 departments are the managed-agent organization we enter for Best
-> use of Managed Agents; Engineering is the core of Problem Statement 1; their buildings make up the
-> More Dimensions world. See [`../../README.md`](../../README.md) §Why we're building this.
+> use of Managed Agents; Engineering's loop is a core capability; their buildings make up the More
+> Dimensions world (our problem statement). See [`../../README.md`](../../README.md) §Why we're building this.
 
 One file per department (and one for the Concierge). Each covers: mission, team, what each
 sub-agent does, the tickets they own, who directs them and whom they direct, handoffs, services,

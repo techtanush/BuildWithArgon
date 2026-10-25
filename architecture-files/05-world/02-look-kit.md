@@ -1,5 +1,12 @@
 # 02 — Look Kit (the visual standard)
 
+> **Superseded in part by [`12-photoreal-look.md`](12-photoreal-look.md) (ADR-018).** The world is
+> photoreal: tone mapping (AgX), HDRI lighting, cascaded shadows, post-processing, quality tiers and
+> materials (real scanned PBR texture sets via the asset manifest) follow that document. This page
+> still defines the material keys, the interaction ring, the interior shell dimensions and the
+> structure of `LookKit.ts`/`lights.ts`/`materials.ts`. The bedroom render below is now a
+> **composition** reference only (cozy, uncluttered, readable), not a style target.
+
 The look kit is the fixed rendering setup, materials and primitive API that every scene uses.
 **Argon never edits the kit**; it only calls the kit API from building modules. This is what keeps
 13 generated buildings consistent and good-looking.

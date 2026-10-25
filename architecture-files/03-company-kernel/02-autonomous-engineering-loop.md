@@ -1,9 +1,9 @@
 # 02 — The Autonomous Engineering Loop
 
-> **Hackathon context — Problem Statement 1 (Million Token Engineering).** This loop is our answer
-> to "do something monumental with Argon's codebase understanding and 1M-token output, and measure
-> improvement over a baseline." The baseline (one Argon call) vs loop comparison lives in
-> [`../06-execution/04-evals.md`](../06-execution/04-evals.md); only claim what that eval measures.
+> **Hackathon context.** We enter Problem Statement 2 + Managed Agents (ADR-019). This loop is a core
+> capability of the company and a centrepiece of the **Managed Agents** story (Antigravity sandboxes
+> building, testing and verifying code). The baseline-vs-loop eval in
+> [`../06-execution/04-evals.md`](../06-execution/04-evals.md) is optional (P2); only claim what it measures.
 
 This is the heart of the company and the main use of Argon's long-horizon engineering. Goal:
 **a ticket goes from spec to a verified, reviewed, merge-ready change with zero human input, and
