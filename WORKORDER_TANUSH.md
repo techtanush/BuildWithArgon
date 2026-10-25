@@ -31,7 +31,10 @@ Read these in order (they are on every branch, under `architecture-files/`):
    `04-dashboard/01-dashboard-spec.md`, `04-dashboard/02-onboarding.md`,
    `05-world/13-world-lab-and-live-round.md` §1, §3, §4 (the World Lab page),
    `05-world/03-city-layout.md` §Manifest, `05-world/07-npc-conversation.md`, `05-world/08-concierge.md`,
-   `06-execution/04-evals.md` §2 (grounding eval), `02-models-and-integrations/01-model-routing.md`.
+   `06-execution/04-evals.md` §2 (grounding eval), `02-models-and-integrations/01-model-routing.md`,
+   **`03-company-kernel/10-agent-model-matrix.md`** (which agent runs which job/model/managed agent/tools —
+   your handlers must use exactly these jobs), `02-models-and-integrations/12-elevenlabs-voice-agents.md` §4
+   (the dashboard Call button).
 7. `argon-app/AGENTS.md` and every seed file you own (they start with `# OWNER: tanush` / `// OWNER: tanush`).
 
 The spec is the contract. If this work order and the spec ever disagree, follow the spec and log it
@@ -42,10 +45,13 @@ in `argon-app/docs/decisions/tanush.md`.
 ```bash
 git fetch origin && git checkout tanush
 cd argon-app && cp .env.example .env          # add GEMINI_API_KEY if you have it; LLM_MODE=fake works without
-cd kernel && uv sync --extra dev && uv run pytest -q     # 11 passed
-cd ../web && pnpm install && pnpm typecheck && pnpm test  # 7 passed
+cd kernel && uv sync --extra dev && uv run pytest -q     # 12 passed
+cd ../web && pnpm install && pnpm typecheck && pnpm test  # 8 passed
 cd .. && make dev                                         # kernel :8787, web :5173
 ```
+
+Install the Gemini API skill for your coding agent: `npx skills add google-gemini/gemini-skills --skill gemini-api-dev`
+(`03-company-kernel/10-agent-model-matrix.md` §5).
 
 ## 2. What you own (edit only these)
 
@@ -101,6 +107,8 @@ Check before every push: `make ownership WHO=tanush`.
 | TTS for standup audio (Karthik) | `voice.tts.synthesize(settings=, db=, agent_id=, text=)` → `TtsResponse` | `provider="browser"`, no audio URL |
 | Voice availability per agent (Karthik) | `kernel/data/voices.json` (`agent_id → voice_id`) → manifest `voice_ready` | Missing → all `false` |
 | Startup hooks | `integrations.github_watch.start/stop(app)`, `computers.manager.start/stop(app)` | No-ops — keep calling them from `app.py` lifespan |
+| Agent runtime matrix | `kernel/data/agent_capabilities.json` (frozen): per agent `work_jobs`, `conversation_jobs`, `coordination_jobs`, `managed_agents`, `tools`, `gates`; with `models.JOBS` → `AgentRuntime` | Final |
+| Live voice calls (Karthik) | `startVoiceCall({ ventureId, agentId, surface: 'dashboard', onStatus, onTranscript, onAnswer })` from `web/src/world/conversation/VoiceCall.ts` → `{ status, end, setMuted }` | Seed: reports `unavailable` → show "Voice calls unavailable" and keep the Talk box |
 | Layout math | `world_layout.build_manifest(roster, registry=, faces=, voices=, extra_agents=)` | Final; identical to the web's fallback manifest |
 | Redaction | `security.redact(text)` | Final |
 
@@ -135,7 +143,8 @@ Commit after each step with its tests green; append `T+hh:mm step — result` to
 ### Step A — Kernel core (Phase 2)
 1. Review the seed `db.py`, `bus.py`, `gates.py`, `ledger.py`, `seed.py`, `app.py`; extend, don't
    rename. Add JSON column helpers, startup recovery (`in_progress` → `open`, K-10).
-2. Routers (envelope `{"data": …}`, error envelope, pagination, optional bearer `KERNEL_TOKEN`),
+2. Routers (envelope `{"data": …}`, error envelope, pagination, optional bearer `KERNEL_TOKEN`);
+   every `Agent` carries `runtime` (`AgentRuntime` built from `agent_capabilities.json` + `models.JOBS`),
    Pydantic response models in each `api/*.py` so they show in `/openapi.json`:
    system (`/v1/system/status`), ventures (create, list, get+stats, files upload with PDF/text
    extraction, start/pause/resume, budget), departments, agents, tickets (list/filter, get with
@@ -165,7 +174,9 @@ Commit after each step with its tests green; append `T+hh:mm step — result` to
 4. `scheduler.py`: dispatch with `SCHEDULER_CONCURRENCY`, per-ticket timeouts, retries, dependency
    resolution (`ref:<key>`), gate re-entry (K-08), startup recovery, standup timer
    (`STANDUP_MINUTES`), escalation (`ESCALATE_MINUTES`), `agent_state`, `runs` rows, automatic chat
-   posts with the exact templates in `03-company-kernel/06-group-chats.md`.
+   posts with the exact templates in `03-company-kernel/06-group-chats.md`. Every handler uses
+   exactly the jobs in `agent_capabilities.json` / `10-agent-model-matrix.md` (requests →
+   `agent_request`, standups → `standup_update`, Rhea's decisions → `cos_report`).
 5. `coordination.py`: the real `HandlerContext` (`log`, `context_for`, `ask_agent` ≤ 3 per run,
    `request`, `post`, `use_computer` → `computers.loop.run_task`).
 6. `orchestrator.py`: plan → ticket DAG across departments.
@@ -180,11 +191,14 @@ venture up to `plan.request` (real Argon plan) if you have a key.
 1. `api/client.ts` (seed works), `sse.ts` (one EventSource per venture, backoff 1→10 s, Live dot),
    `hooks.ts` (`useQuery`, SSE patching). Types from `src/shared/contracts.ts`.
 2. Layout (Sidebar incl. **World Lab**, TopBar with **Enter the view ▸** → `/view?venture=<vid>`,
-   SystemStrip), pages: Overview, Departments (+detail), Agents (+detail, Talk box using `/talk`,
-   **Find in the world** → `/view?venture=<vid>&goto=<agent_id>`), Tickets (+graph), Runs (+live
+   SystemStrip), pages: Overview, Departments (+detail), Agents (+detail: a **"Runs on"** line from
+   `agent.runtime` — e.g. *Argon high · Antigravity sandbox · GitHub · Cua* — the Talk box using `/talk`,
+   a **Call** button opening `components/CallPanel.tsx` (Karthik's `startVoiceCall`, live transcript,
+   source cards from `onAnswer`, End call), **Find in the world** → `/view?venture=<vid>&goto=<agent_id>`), Tickets (+graph), Runs (+live
    logs; **Antigravity runs show the interaction id, sandbox progress and result** — the managed
    agents must be visible), Approvals (all gate types incl. `computer_action` with screenshot), Chat
-   (threads, kinds, ref chips, @-autocomplete, Summarize), Org (who directs whom), Artifacts
+   (threads, kinds, ref chips, @-autocomplete, Summarize), Org (who directs whom, with the same runtime badges and a Call button per agent — the managed-agents
+   evidence, C-12), Artifacts
    (+detail), **Computers** (live screenshot every 1.5 s, action log, Stop, Take over link — Ayan's
    endpoints; empty state when none), Integrations, **Metrics** (world scores headline, grounding,
    cost, latency p50/p90, engineering baseline vs loop only if results exist), Settings, Onboarding.
@@ -230,7 +244,8 @@ without refresh; approving a gate unblocks its ticket; World Lab renders the fix
 
 ## 7. Definition of done
 
-- Acceptance: **K-01…K-11, CO-01…CO-06, D-01…D-05, G-08, C-05…C-07 (kernel side), E-09, V-02, V-03**
+- Acceptance: **K-01…K-11, CO-01…CO-06, D-01…D-05, G-08, C-05…C-07 (kernel side), C-12, E-09, V-02, V-03**
+  (and the dashboard side of C-10/C-11: the Call panel works with Karthik's module or falls back cleanly)
   (`06-execution/02-acceptance-criteria.md`).
 - `cd kernel && uv run pytest -q` green (seed tests included); `cd web && pnpm typecheck && pnpm test` green.
 - `make ownership WHO=tanush` clean. Branch pushed.
