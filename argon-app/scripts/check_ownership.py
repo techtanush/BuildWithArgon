@@ -170,6 +170,10 @@ PLANNED: dict[str, list[str]] = {
 }
 
 
+def repo_root() -> str:
+    """Paths in RULES are relative to the repo root, wherever the script is run from."""
+    return subprocess.run(["git", "rev-parse", "--show-toplevel"], capture_output=True, text=True, check=True).stdout.strip()
+
 def audit() -> int:
     bad = 0
     for expected, paths in PLANNED.items():
@@ -178,7 +182,7 @@ def audit() -> int:
             if got != expected:
                 print(f"FAIL  {path}: rules say {got}, plan says {expected}")
                 bad += 1
-    tracked = subprocess.run(["git", "ls-files"], capture_output=True, text=True, check=True).stdout.split()
+    tracked = subprocess.run(["git", "-C", repo_root(), "ls-files"], capture_output=True, text=True, check=True).stdout.split()
     for path in tracked:
         if owner_of(path) == "unowned":
             print(f"FAIL  {path}: no owner")
@@ -194,7 +198,8 @@ def main() -> int:
         print(__doc__)
         return 2
     who, base = sys.argv[1], (sys.argv[2] if len(sys.argv) > 2 else "origin/main")
-    out = subprocess.run(["git", "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True, check=True).stdout
+    out = subprocess.run(["git", "-C", repo_root(), "diff", "--name-only", f"{base}...HEAD"], capture_output=True, text=True,
+                         check=True).stdout
     changed = [p for p in out.splitlines() if p]
     bad, union = [], []
     for path in changed:
