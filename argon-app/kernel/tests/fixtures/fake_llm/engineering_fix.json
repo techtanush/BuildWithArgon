@@ -1,0 +1,3 @@
+[
+  "<<<FILE path=\"src/lib/core.ts\">>>\nexport function add(a: number, b: number): number {\n  return a + b;\n}\n<<<END FILE>>>\nFOUNDRY_NOTES {\"summary\":\"Fixed the failing case (fake fixture).\",\"tests_added\":[],\"assumptions\":[]}"
+]

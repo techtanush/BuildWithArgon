@@ -1,0 +1,15 @@
+[
+  {
+    "verdict": "approve",
+    "comments": [
+      {
+        "file": "src/lib/core.ts",
+        "line": 1,
+        "severity": "low",
+        "comment": "Consider documenting the function (fake fixture)."
+      }
+    ],
+    "security_notes": [],
+    "summary": "Looks correct and matches the acceptance criteria (fake fixture)."
+  }
+]

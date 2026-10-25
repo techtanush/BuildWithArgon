@@ -1,0 +1,3 @@
+[
+  "<<<FILE path=\"tests/acceptance/fake.test.ts\">>>\nimport { describe, it, expect } from 'vitest';\nimport { add } from '../../src/lib/core';\n\ndescribe('acceptance', () => {\n  it('AC-1: adds numbers', () => {\n    expect(add(1, 1)).toBe(2);\n  });\n});\n<<<END FILE>>>"
+]
