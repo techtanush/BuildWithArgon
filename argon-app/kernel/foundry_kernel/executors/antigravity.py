@@ -196,7 +196,10 @@ class AntigravityExecutor:
             return await LocalLoopExecutor(self.settings, self.llm).run(inp, log)
         started = time.monotonic()
         branch = branch_name(inp.ticket_id, inp.title, inp.mode)
-        cred = await kv_get(self.db, KV_CREDENTIAL)
+        cred = await kv_get(self.db, KV_CREDENTIAL) or await ensure_github_credential(self.settings, self.db)
+        if not cred:
+            await log("warn", "antigravity: no GitHub credential (GITHUB_SANDBOX_TOKEN unset or Credentials API failed) — "
+                              "the sandbox cannot push the branch")
 
         async def progress(msg: str) -> None:
             await log("info", f"antigravity: {msg}")

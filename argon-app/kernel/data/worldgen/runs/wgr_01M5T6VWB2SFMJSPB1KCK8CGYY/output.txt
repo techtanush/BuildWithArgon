@@ -1,0 +1,3253 @@
+<<<FILE path="web/src/world/buildings/generated/intake.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const intakeBuilding: BuildingModule = {
+  id: 'intake',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint core colliders for the station hall
+    k.group('colliders', () => {
+      k.box({ size: [7.4, 8.2, 13.6], pos: [-6.5, 4.1, -0.4], mat: 'stucco', collide: true, name: 'col_west' });
+      k.box({ size: [7.4, 8.2, 13.6], pos: [6.5, 4.1, -0.4], mat: 'stucco', collide: true, name: 'col_east' });
+      k.box({ size: [5.0, 8.2, 11.6], pos: [0, 4.1, -1.4], mat: 'stucco', collide: true, name: 'col_center' });
+    });
+
+    // Main station architecture: rusticated base, warm stucco walls, slate roof & clerestory
+    k.group('station_body', () => {
+      // Plinth / stone foundation
+      k.box({ size: [21.2, 1.2, 14.4], pos: [0, 0.6, -0.4], mat: 'plaza_stone', name: 'plinth' });
+      // Main stucco hall body
+      k.box({ size: [20.8, 7.4, 14.0], pos: [0, 4.9, -0.4], mat: 'stucco', name: 'main_walls' });
+      // Central arched concourse pavilion projecting slightly forward
+      k.box({ size: [7.6, 9.2, 2.2], pos: [0, 4.6, 5.9], mat: 'plaster_warm', name: 'center_pavilion' });
+      k.box({ size: [8.0, 1.2, 2.5], pos: [0, 0.6, 5.9], mat: 'plaza_stone' });
+
+      // Horizontal string courses and classical cornice
+      k.box({ size: [21.4, 0.3, 14.6], pos: [0, 4.2, -0.4], mat: 'trim' });
+      k.box({ size: [21.6, 0.45, 14.8], pos: [0, 8.7, -0.4], mat: 'trim', name: 'main_cornice' });
+      k.box({ size: [8.2, 0.45, 2.6], pos: [0, 9.3, 5.9], mat: 'trim', name: 'pavilion_cornice' });
+      k.box({ size: [20.8, 0.25, 14.2], pos: [0, 9.05, -0.4], mat: 'accent', name: 'roof_band' });
+
+      // Slate pitched roof steps + vaulted station train-shed clerestory
+      k.box({ size: [20.4, 1.2, 13.2], pos: [0, 9.7, -0.4], mat: 'roof', name: 'roof_lower' });
+      k.box({ size: [18.4, 1.0, 11.2], pos: [0, 10.7, -0.4], mat: 'roof', name: 'roof_mid' });
+      k.box({ size: [14.0, 1.4, 8.6], pos: [0, 11.8, -0.6], mat: 'metal_dark', name: 'clerestory_frame' });
+      k.box({ size: [13.2, 0.9, 8.8], pos: [0, 11.8, -0.6], mat: 'window_glow', name: 'clerestory_glass' });
+      k.box({ size: [14.6, 0.5, 9.2], pos: [0, 12.7, -0.6], mat: 'roof', name: 'clerestory_cap' });
+
+      // Corner pilasters
+      for (const x of [-10.3, -3.7, 3.7, 10.3]) {
+        k.box({ size: [0.6, 7.5, 0.4], pos: [x, 4.9, 6.65], mat: 'trim' });
+      }
+    });
+
+    // Wide arched front on central pavilion (series of rounded boxes forming a station arch)
+    k.group('grand_arch', () => {
+      // Recessed tall glazed concourse window above entrance
+      k.box({ size: [4.6, 3.4, 0.2], pos: [0, 6.7, 6.92], mat: 'window_glow', name: 'arch_window' });
+      // Mullions inside the grand arch window
+      for (const mx of [-1.4, 0, 1.4]) {
+        k.box({ size: [0.1, 3.4, 0.26], pos: [mx, 6.7, 6.96], mat: 'metal_dark' });
+      }
+      k.box({ size: [4.6, 0.1, 0.26], pos: [0, 6.5, 6.96], mat: 'metal_dark' });
+      k.box({ size: [4.6, 0.1, 0.26], pos: [0, 7.6, 6.96], mat: 'metal_dark' });
+
+      // Arch piers left and right
+      k.roundedBox({ size: [0.75, 5.2, 0.55], pos: [-2.55, 5.4, 7.05], radius: 0.12, mat: 'trim' });
+      k.roundedBox({ size: [0.75, 5.2, 0.55], pos: [2.55, 5.4, 7.05], radius: 0.12, mat: 'trim' });
+
+      // Arch voussoirs (series of rounded boxes curving over the top)
+      const archSegments = 9;
+      for (let i = 0; i < archSegments; i++) {
+        const t = (i / (archSegments - 1)) * Math.PI;
+        const ax = -Math.cos(t) * 2.4;
+        const ay = 7.4 + Math.sin(t) * 1.35;
+        k.roundedBox({
+          size: [0.95, 0.55, 0.6],
+          pos: [ax, ay, 7.08],
+          radius: 0.12,
+          mat: i % 2 === 0 ? 'trim' : 'accent',
+        });
+      }
+      // Keystone at top of arch
+      k.roundedBox({ size: [0.7, 0.85, 0.7], pos: [0, 8.85, 7.12], radius: 0.1, mat: 'accent_dark' });
+    });
+
+    // Front and side facade windows (2 storeys, recessed with frames, sills, mullions)
+    k.group('windows', () => {
+      for (const x of [-8.2, -5.6, 5.6, 8.2]) {
+        for (const y of [2.6, 6.0]) {
+          // Window recess & frame
+          k.box({ size: [1.7, 2.2, 0.22], pos: [x, y, 6.55], mat: 'trim' });
+          k.box({ size: [1.4, 1.9, 0.26], pos: [x, y, 6.58], mat: y === 2.6 ? 'window_glow' : 'glass' });
+          // Mullions
+          k.box({ size: [0.07, 1.9, 0.3], pos: [x, y, 6.62], mat: 'metal_dark' });
+          k.box({ size: [1.4, 0.07, 0.3], pos: [x, y + 0.2, 6.62], mat: 'metal_dark' });
+          // Projecting sill & lintel hood
+          k.box({ size: [1.9, 0.16, 0.42], pos: [x, y - 1.1, 6.7], mat: 'plaza_stone' });
+          k.box({ size: [1.85, 0.22, 0.38], pos: [x, y + 1.15, 6.68], mat: 'trim' });
+        }
+      }
+    });
+
+    // Large clock-less station canopy in department accent orange + entrance
+    k.group('canopy_and_entrance', () => {
+      // Paved forecourt walk
+      k.box({ size: [8.4, 0.12, 5.2], pos: [0, 0.06, 9.2], mat: 'plaza_stone', name: 'forecourt_walk' });
+
+      // Wide accent orange canopy projecting over the entrance
+      k.roundedBox({ size: [6.8, 0.42, 2.6], pos: [0, 3.65, 8.15], radius: 0.1, mat: 'accent', name: 'canopy_main' });
+      k.box({ size: [7.0, 0.16, 2.75], pos: [0, 3.42, 8.15], mat: 'accent_dark', name: 'canopy_trim' });
+      k.box({ size: [6.4, 0.08, 2.2], pos: [0, 3.4, 8.15], mat: 'plaster_warm', name: 'canopy_soffit' });
+
+      // Diagonal metal suspension tie-rods holding the canopy
+      k.tube({
+        points: [
+          [-2.8, 3.8, 9.2],
+          [-2.8, 5.6, 7.0],
+        ],
+        radius: 0.05,
+        mat: 'metal_dark',
+      });
+      k.tube({
+        points: [
+          [2.8, 3.8, 9.2],
+          [2.8, 5.6, 7.0],
+        ],
+        radius: 0.05,
+        mat: 'metal_dark',
+      });
+
+      // Entrance door & sign (unoccluded on front of canopy crown)
+      k.entrance({ z: 7.0 });
+      k.sign({ pos: [0, 4.35, 9.48], rotY: 0, width: 5.2 });
+      k.box({ size: [5.5, 1.35, 0.18], pos: [0, 4.35, 9.35], mat: 'metal_dark', name: 'sign_backing' });
+    });
+
+    // Forecourt luggage carts, suitcases, benches, and landscaping
+    k.group('forecourt_details', () => {
+      // Left and right luggage carts outside (kept clear of central entrance ring)
+      for (const side of [-1, 1]) {
+        const cx = side * 5.8;
+        const cz = 8.4;
+        // Cart platform & brass/metal rails
+        k.roundedBox({ size: [1.6, 0.14, 0.9], pos: [cx, 0.32, cz], radius: 0.04, mat: 'wood_dark', collide: true });
+        for (const wx of [-0.6, 0.6]) {
+          for (const wz of [-0.35, 0.35]) {
+            k.cylinder({
+              radiusTop: 0.16,
+              radiusBottom: 0.16,
+              height: 0.1,
+              pos: [cx + wx, 0.16, cz + wz],
+              rotX: Math.PI / 2,
+              mat: 'metal_dark',
+            });
+          }
+        }
+        // Push handles on cart
+        k.tube({
+          points: [
+            [cx - 0.72, 0.38, cz - 0.35],
+            [cx - 0.72, 1.25, cz - 0.35],
+            [cx - 0.72, 1.25, cz + 0.35],
+            [cx - 0.72, 0.38, cz + 0.35],
+          ],
+          radius: 0.04,
+          mat: 'metal_light',
+        });
+        // Suitcases stacked on cart
+        k.roundedBox({ size: [0.75, 0.42, 0.52], pos: [cx - 0.2, 0.6, cz], radius: 0.06, mat: 'fabric_coral' });
+        k.roundedBox({ size: [0.62, 0.34, 0.44], pos: [cx - 0.18, 0.98, cz], radius: 0.05, mat: 'fabric_blue' });
+        k.roundedBox({ size: [0.5, 0.55, 0.38], pos: [cx + 0.42, 0.66, cz], radius: 0.05, mat: 'accent_dark' });
+      }
+
+      // Station benches and flowerbeds framing the lot
+      k.prop({ kind: 'bench', pos: [-8.5, 0, 8.2], rotY: 0, collide: true });
+      k.prop({ kind: 'bench', pos: [8.5, 0, 8.2], rotY: 0, collide: true });
+      k.prop({ kind: 'flowerbed', pos: [-7.5, 0, 10.6] });
+      k.prop({ kind: 'flowerbed', pos: [7.5, 0, 10.6] });
+      k.prop({ kind: 'plant_tall', pos: [-3.8, 0, 7.6] });
+      k.prop({ kind: 'plant_tall', pos: [3.8, 0, 7.6] });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.25, 8.2], color: '#FFE4B8', intensity: 1.4, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Windows bringing warm daylight into the Arrivals Hall
+    k.window({ wall: 'north', center: 0, width: 3.4, height: 1.9, sill: 1.0 });
+    k.window({ wall: 'east', center: -1.5, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'west', center: -1.5, width: 2.6, height: 1.8, sill: 1.0 });
+
+    // Central layered area rug (no collider)
+    k.group('rug_and_floor_details', () => {
+      k.plane({ size: [6.4, 4.4], pos: [0, 0.01, -0.3], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_coral_dark' });
+      k.plane({ size: [5.9, 3.9], pos: [0, 0.015, -0.3], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_coral' });
+      // Floor cable snaking from reception desk to west wall outlet
+      k.tube({
+        points: [
+          [-0.9, 0.02, -4.1],
+          [-2.4, 0.02, -4.3],
+          [-4.2, 0.02, -4.7],
+          [-5.8, 0.02, -4.3],
+        ],
+        radius: 0.018,
+        mat: 'cable',
+      });
+    });
+
+    // Reception counter with paper stacks & spec intake terminal
+    k.group('reception_area', () => {
+      k.prop({ kind: 'counter', pos: [0, 0, -4.3], rotY: 0, collide: true });
+      // Custom wood & accent front panel detail on counter
+      k.roundedBox({ size: [1.8, 0.65, 0.06], pos: [0, 0.52, -3.98], radius: 0.02, mat: 'accent' });
+      // Spec paper stacks, monitor, desk lamp, and mug on counter (y = 1.05)
+      k.prop({ kind: 'screen_stand', pos: [-0.45, 1.05, -4.3], rotY: 0.2 });
+      k.prop({ kind: 'lamp_desk', pos: [0.65, 1.05, -4.35] });
+      k.prop({ kind: 'books', pos: [0.2, 1.05, -4.25], rotY: 0.15 });
+      k.prop({ kind: 'mug', pos: [-0.05, 1.05, -4.15] });
+      // Multiple neat stacks of intake briefs
+      k.box({ size: [0.28, 0.12, 0.22], pos: [0.42, 1.11, -4.18], rotY: -0.1, mat: 'paper' });
+      k.box({ size: [0.26, 0.08, 0.2], pos: [-0.72, 1.09, -4.2], rotY: 0.2, mat: 'paper' });
+
+      // Chair and filing cabinets behind the reception counter
+      k.prop({ kind: 'chair', pos: [0, 0, -5.2], rotY: 0 });
+      k.prop({ kind: 'filing_cabinet', pos: [-2.2, 0, -6.2], rotY: 0, collide: true });
+      k.prop({ kind: 'filing_cabinet', pos: [2.2, 0, -6.2], rotY: 0, collide: true });
+    });
+
+    // "Idea Wall" pinboard on the north-west & west wall: whiteboard + colorful paper notes
+    k.group('idea_wall', () => {
+      k.prop({ kind: 'whiteboard', pos: [-5.2, 0, -6.2], rotY: 0.15 });
+      // Large wall-mounted cork/fabric idea pinboard on west wall
+      k.box({ size: [0.1, 1.6, 3.6], pos: [-8.88, 2.1, 1.2], mat: 'wood_dark', name: 'pinboard_frame' });
+      k.box({ size: [0.12, 1.44, 3.44], pos: [-8.86, 2.1, 1.2], mat: 'plaster_warm', name: 'pinboard_surface' });
+
+      // Grid of colorful structured-brief cards pinned to the board
+      const noteMats = ['paper', 'fabric_coral', 'fabric_blue', 'fabric_lavender', 'accent', 'fabric_pink'] as const;
+      const zOffsets = [-0.2, 0.35, 0.9, 1.45, 2.0, 2.55];
+      const yOffsets = [1.65, 2.1, 2.52];
+      let idx = 0;
+      for (const ny of yOffsets) {
+        for (const nz of zOffsets) {
+          const mat = noteMats[idx % noteMats.length];
+          const jitterY = (k.rand() - 0.5) * 0.06;
+          const jitterZ = (k.rand() - 0.5) * 0.06;
+          k.box({
+            size: [0.03, 0.3, 0.38],
+            pos: [-8.79, ny + jitterY, nz + jitterZ],
+            mat,
+          });
+          idx++;
+        }
+      }
+    });
+
+    // Spec-writing workstations (west and east north corners)
+    k.group('workstations', () => {
+      // West spec desk
+      k.prop({ kind: 'desk', pos: [-6.6, 0, -4.2], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [-6.6, 0, -3.3], rotY: Math.PI });
+      k.prop({ kind: 'screen_stand', pos: [-6.6, 0.75, -4.3], rotY: 0 });
+      k.prop({ kind: 'books', pos: [-6.15, 0.75, -4.15], rotY: 0.3 });
+      k.prop({ kind: 'mug', pos: [-7.0, 0.75, -4.1] });
+
+      // East spec desk
+      k.prop({ kind: 'desk', pos: [6.6, 0, -4.2], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [6.6, 0, -3.3], rotY: Math.PI });
+      k.prop({ kind: 'screen_stand', pos: [6.6, 0.75, -4.3], rotY: 0 });
+      k.prop({ kind: 'lamp_desk', pos: [7.05, 0.75, -4.3] });
+      k.prop({ kind: 'books', pos: [6.15, 0.75, -4.15], rotY: -0.2 });
+    });
+
+    // Waiting lounge on the east side: two sofas facing a low table
+    k.group('lounge_corner', () => {
+      k.prop({ kind: 'sofa', pos: [6.5, 0, -0.6], rotY: 0, collide: true });
+      k.prop({ kind: 'sofa', pos: [6.5, 0, 2.8], rotY: Math.PI, collide: true });
+      // Low coffee table between the two sofas
+      k.roundedBox({ size: [1.5, 0.42, 0.8], pos: [6.5, 0.21, 1.1], radius: 0.05, mat: 'wood_light' });
+      k.box({ size: [0.32, 0.06, 0.24], pos: [6.35, 0.45, 1.1], rotY: 0.2, mat: 'paper' });
+      k.prop({ kind: 'mug', pos: [6.75, 0.42, 1.05] });
+      k.prop({ kind: 'plant_small', pos: [6.55, 0.42, 1.2] });
+
+      // Floor cushions & lamp
+      k.roundedBox({ size: [0.55, 0.14, 0.55], pos: [4.8, 0.07, 0.6], radius: 0.06, rotY: 0.3, mat: 'fabric_lavender' });
+      k.roundedBox({ size: [0.55, 0.14, 0.55], pos: [4.8, 0.07, 1.6], radius: 0.06, rotY: -0.2, mat: 'fabric_blue' });
+      k.prop({ kind: 'lamp_floor', pos: [8.1, 0, 1.1] });
+    });
+
+    // Suitcase props (rounded boxes with handles) & bookshelves near arrival corner
+    k.group('suitcases_and_props', () => {
+      k.prop({ kind: 'bookshelf', pos: [-8.2, 0, 4.2], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'plant_tall', pos: [-8.0, 0, -6.0] });
+      k.prop({ kind: 'plant_tall', pos: [8.0, 0, 5.6] });
+      k.prop({ kind: 'clock', pos: [0, 3.1, -6.92], rotY: 0 });
+
+      // Cluster of arriving founder suitcases by the west wall
+      // Upright rolling suitcase
+      k.roundedBox({ size: [0.48, 0.72, 0.32], pos: [-7.6, 0.36, -0.8], radius: 0.06, rotY: 0.25, mat: 'accent' });
+      k.tube({
+        points: [
+          [-7.65, 0.72, -0.88],
+          [-7.65, 1.05, -0.88],
+          [-7.52, 1.05, -0.72],
+          [-7.52, 0.72, -0.72],
+        ],
+        radius: 0.018,
+        mat: 'metal_dark',
+      });
+      // Flat leather-style trunk with handle
+      k.roundedBox({ size: [0.76, 0.34, 0.5], pos: [-7.5, 0.17, 0.1], radius: 0.05, rotY: 0.1, mat: 'wood_dark' });
+      k.roundedBox({ size: [0.62, 0.26, 0.42], pos: [-7.5, 0.47, 0.1], radius: 0.05, rotY: -0.15, mat: 'fabric_blue' });
+      k.torus({ radius: 0.08, tube: 0.018, pos: [-7.18, 0.47, 0.1], rotY: Math.PI / 2, mat: 'metal_light' });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.5, -2.5], color: '#FFE5C2', intensity: 1.3, distance: 12 });
+    k.light({ kind: 'point', pos: [5.5, 3.3, 1.1], color: '#FFDDB3', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [-5.5, 3.3, -1.0], color: '#FFE8C8', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the open central floor (all >= 2.5m apart, clear walkways to door at (0, 5.4))
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.4], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-4.2, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.2, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-4.5, 0, 1.2], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [2.2, 0, 1.2], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [-1.8, 0, 3.2], facingY: 0 });
+  },
+};
+
+export default intakeBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/office-hours.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const officeHoursBuilding: BuildingModule = {
+  id: 'office-hours',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders: main 8x8 brick tower in back, flanking annex colliders in front
+    k.group('colliders', () => {
+      k.box({ size: [8.0, 14.0, 8.0], pos: [0, 7.0, -2.2], mat: 'brick', collide: true, name: 'tower_col' });
+      k.box({ size: [3.4, 5.2, 5.2], pos: [-4.1, 2.6, 4.8], mat: 'brick', collide: true, name: 'annex_west_col' });
+      k.box({ size: [3.4, 5.2, 5.2], pos: [4.1, 2.6, 4.8], mat: 'brick', collide: true, name: 'annex_east_col' });
+    });
+
+    // Narrow 3-storey brick tower (8x8) with 4th clock level and gold roof band
+    k.group('clocktower_body', () => {
+      // Stone base plinth
+      k.box({ size: [8.6, 1.4, 8.6], pos: [0, 0.7, -2.2], mat: 'plaza_stone', name: 'tower_plinth' });
+      // 3-storey brick shaft (y = 1.4 to 13.8)
+      k.box({ size: [8.0, 12.4, 8.0], pos: [0, 7.6, -2.2], mat: 'brick', name: 'tower_shaft' });
+
+      // Corner brick/stone quoins & pilasters running up the tower
+      for (const tx of [-3.95, 3.95]) {
+        for (const tz of [-6.15, 1.75]) {
+          k.box({ size: [0.55, 16.5, 0.55], pos: [tx, 9.6, tz], mat: 'trim' });
+        }
+      }
+
+      // Horizontal string courses separating the 3 tower storeys
+      for (const sy of [5.4, 9.4, 13.6]) {
+        k.box({ size: [8.5, 0.32, 8.5], pos: [0, sy, -2.2], mat: 'trim' });
+      }
+
+      // 4th storey: Clock level (y = 13.8 to 18.2)
+      k.box({ size: [7.6, 4.4, 7.6], pos: [0, 16.0, -2.2], mat: 'plaster_warm', name: 'clock_stage' });
+      // Prominent gold accent roof band crowning the clock level
+      k.box({ size: [8.3, 0.65, 8.3], pos: [0, 18.35, -2.2], mat: 'accent', name: 'gold_roof_band' });
+      k.box({ size: [8.7, 0.35, 8.7], pos: [0, 18.85, -2.2], mat: 'trim', name: 'tower_cornice' });
+
+      // Pyramidal slate spire + lantern cupola
+      k.cone({ radius: 5.6, height: 4.8, pos: [0, 21.4, -2.2], rotY: Math.PI / 4, mat: 'roof', segments: 4, name: 'spire' });
+      k.cylinder({ radiusTop: 0.08, radiusBottom: 0.14, height: 2.2, pos: [0, 24.6, -2.2], mat: 'accent' });
+      k.sphere({ radius: 0.28, pos: [0, 25.7, -2.2], mat: 'accent' });
+
+      // Big clock on the 4th level facing the plaza (+Z)
+      k.cylinder({
+        radiusTop: 1.65,
+        radiusBottom: 1.65,
+        height: 0.25,
+        pos: [0, 16.0, 1.72],
+        rotX: Math.PI / 2,
+        mat: 'accent_dark',
+      });
+      k.cylinder({
+        radiusTop: 1.4,
+        radiusBottom: 1.4,
+        height: 0.28,
+        pos: [0, 16.0, 1.75],
+        rotX: Math.PI / 2,
+        mat: 'plaster_wall',
+      });
+      k.prop({ kind: 'clock', pos: [0, 16.0, 1.92], rotY: 0, scale: 3.2 });
+    });
+
+    // Tower windows on storeys 2 and 3
+    k.group('tower_windows', () => {
+      for (const wy of [7.4, 11.4]) {
+        for (const wx of [-1.7, 1.7]) {
+          k.box({ size: [1.3, 2.2, 0.22], pos: [wx, wy, 1.82], mat: 'trim' });
+          k.box({ size: [1.0, 1.9, 0.26], pos: [wx, wy, 1.85], mat: 'window_glow' });
+          k.box({ size: [0.07, 1.9, 0.3], pos: [wx, wy, 1.88], mat: 'metal_dark' });
+          k.box({ size: [1.0, 0.07, 0.3], pos: [wx, wy + 0.2, 1.88], mat: 'metal_dark' });
+          k.box({ size: [1.5, 0.16, 0.38], pos: [wx, wy - 1.12, 1.92], mat: 'plaza_stone' });
+        }
+      }
+    });
+
+    // Small annex hall in front holding the door (z up to 7.5)
+    k.group('front_annex', () => {
+      k.box({ size: [12.0, 1.0, 5.8], pos: [0, 0.5, 4.7], mat: 'plaza_stone', name: 'annex_plinth' });
+      k.box({ size: [11.6, 4.5, 5.5], pos: [0, 3.25, 4.7], mat: 'brick', name: 'annex_walls' });
+      k.box({ size: [12.2, 0.35, 6.0], pos: [0, 5.6, 4.7], mat: 'trim', name: 'annex_cornice' });
+      k.box({ size: [11.8, 0.3, 5.7], pos: [0, 5.92, 4.7], mat: 'accent', name: 'annex_gold_band' });
+      k.box({ size: [11.2, 1.1, 5.0], pos: [0, 6.6, 4.7], mat: 'roof', name: 'annex_roof' });
+
+      // Front annex windows (at least 3 glowing window panels on the front face)
+      for (const wx of [-4.1, -2.2, 2.2, 4.1]) {
+        k.box({ size: [1.35, 2.1, 0.2], pos: [wx, 3.1, 7.48], mat: 'trim' });
+        k.box({ size: [1.08, 1.8, 0.24], pos: [wx, 3.1, 7.51], mat: 'window_glow' });
+        k.box({ size: [0.06, 1.8, 0.28], pos: [wx, 3.1, 7.54], mat: 'metal_dark' });
+        k.box({ size: [1.08, 0.06, 0.28], pos: [wx, 3.25, 7.54], mat: 'metal_dark' });
+        k.box({ size: [1.5, 0.16, 0.36], pos: [wx, 2.0, 7.58], mat: 'plaza_stone' });
+      }
+
+      // Entrance porch & gold-trimmed canopy
+      k.box({ size: [3.2, 0.3, 1.8], pos: [0, 0.15, 8.2], mat: 'plaza_stone' });
+      k.roundedBox({ size: [3.4, 0.32, 1.4], pos: [0, 3.5, 8.05], radius: 0.08, mat: 'accent' });
+      k.cylinder({ radiusTop: 0.14, radiusBottom: 0.16, height: 3.3, pos: [-1.4, 1.75, 8.5], mat: 'trim' });
+      k.cylinder({ radiusTop: 0.14, radiusBottom: 0.16, height: 3.3, pos: [1.4, 1.75, 8.5], mat: 'trim' });
+
+      k.entrance({ z: 7.5 });
+      k.sign({ pos: [0, 4.55, 7.75], rotY: 0, width: 4.6 });
+    });
+
+    // Landscaping around the clocktower plot
+    k.group('landscaping', () => {
+      k.box({ size: [4.2, 0.08, 4.0], pos: [0, 0.04, 10.2], mat: 'plaza_stone' });
+      k.prop({ kind: 'flowerbed', pos: [-4.2, 0, 9.2] });
+      k.prop({ kind: 'flowerbed', pos: [4.2, 0, 9.2] });
+      k.prop({ kind: 'bench', pos: [-6.8, 0, 8.5], rotY: 0.3, collide: true });
+      k.prop({ kind: 'bench', pos: [6.8, 0, 8.5], rotY: -0.3, collide: true });
+      k.prop({ kind: 'lamp_floor', pos: [-2.4, 0, 8.6] });
+      k.prop({ kind: 'lamp_floor', pos: [2.4, 0, 8.6] });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.9, 8.3], color: '#FFE6B5', intensity: 1.3, distance: 9 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Study windows on north, east, and west walls
+    k.window({ wall: 'north', center: -3.2, width: 2.4, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'north', center: 3.2, width: 2.4, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'east', center: 0, width: 2.6, height: 1.8, sill: 1.0 });
+
+    // Warm study rug in the center of the room (no collider)
+    k.group('study_rug', () => {
+      k.plane({ size: [6.6, 4.8], pos: [0, 0.01, -0.8], rot: [-Math.PI / 2, 0, 0], mat: 'accent_dark' });
+      k.plane({ size: [6.0, 4.2], pos: [0, 0.015, -0.8], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_cream' });
+      // Lived-in floor cushions and power cable along north-west floor
+      k.roundedBox({ size: [0.55, 0.14, 0.55], pos: [-3.8, 0.07, 2.2], radius: 0.06, rotY: 0.3, mat: 'fabric_coral' });
+      k.roundedBox({ size: [0.55, 0.14, 0.55], pos: [-3.1, 0.07, 2.6], radius: 0.06, rotY: -0.2, mat: 'fabric_lavender' });
+      k.tube({
+        points: [
+          [-0.6, 0.02, -4.3],
+          [-2.8, 0.02, -4.8],
+          [-5.2, 0.02, -4.5],
+        ],
+        radius: 0.016,
+        mat: 'cable',
+      });
+    });
+
+    // Core consultation desk with two armchairs facing it
+    k.group('consultation_desk', () => {
+      k.prop({ kind: 'desk', pos: [0, 0, -4.2], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [0, 0, -5.1], rotY: 0 });
+      k.prop({ kind: 'lamp_desk', pos: [-0.5, 0.75, -4.3] });
+      k.prop({ kind: 'books', pos: [0.45, 0.75, -4.2], rotY: -0.2 });
+      k.prop({ kind: 'mug', pos: [0.15, 0.75, -4.05] });
+
+      // Two upholstered armchairs facing the lead's desk
+      k.prop({ kind: 'armchair', pos: [-1.1, 0, -2.5], rotY: Math.PI - 0.2 });
+      k.prop({ kind: 'armchair', pos: [1.1, 0, -2.5], rotY: Math.PI + 0.2 });
+    });
+
+    // Large wall clock on the north wall with ornamental pendulum housing
+    k.group('wall_clock_feature', () => {
+      k.box({ size: [1.2, 2.8, 0.16], pos: [0, 2.1, -6.88], mat: 'wood_dark' });
+      k.box({ size: [0.9, 1.4, 0.18], pos: [0, 1.6, -6.86], mat: 'glass' });
+      // Brass pendulum bob inside glass case
+      k.cylinder({ radiusTop: 0.015, radiusBottom: 0.015, height: 0.9, pos: [0, 1.75, -6.82], mat: 'accent' });
+      k.cylinder({
+        radiusTop: 0.16,
+        radiusBottom: 0.16,
+        height: 0.06,
+        pos: [0, 1.3, -6.81],
+        rotX: Math.PI / 2,
+        mat: 'accent',
+      });
+      k.prop({ kind: 'clock', pos: [0, 2.85, -6.8], rotY: 0, scale: 1.6 });
+    });
+
+    // Chalkboard (`whiteboard` in `metal_dark`) with question marks on the west side
+    k.group('chalkboard_area', () => {
+      k.prop({ kind: 'whiteboard', pos: [-6.4, 0, -4.8], rotY: 0.35, mat: 'metal_dark' });
+      // Wall-mounted slate chalkboard on the west wall with 3 chalk question marks
+      k.box({ size: [0.1, 1.4, 2.8], pos: [-8.88, 2.1, -0.5], mat: 'wood_dark' });
+      k.box({ size: [0.12, 1.24, 2.64], pos: [-8.86, 2.1, -0.5], mat: 'metal_dark' });
+      for (const qz of [-1.2, -0.5, 0.2]) {
+        // Question mark top hook + stem + dot built from paper primitives
+        k.torus({
+          radius: 0.14,
+          tube: 0.025,
+          pos: [-8.78, 2.32, qz],
+          rotY: Math.PI / 2,
+          arc: Math.PI * 1.35,
+          mat: 'paper',
+        });
+        k.box({ size: [0.03, 0.18, 0.045], pos: [-8.78, 2.08, qz], mat: 'paper' });
+        k.sphere({ radius: 0.035, pos: [-8.78, 1.86, qz], mat: 'accent' });
+      }
+    });
+
+    // Tall bookshelves lining the perimeter & secondary reading desks
+    k.group('library_shelves_and_desks', () => {
+      k.prop({ kind: 'bookshelf', pos: [-8.4, 0, -2.8], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [-8.4, 0, 1.8], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [-8.4, 0, 3.4], rotY: Math.PI / 2, collide: true });
+
+      k.prop({ kind: 'bookshelf', pos: [8.4, 0, -3.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.4, 0, 2.8], rotY: -Math.PI / 2, collide: true });
+
+      // Side analyst desks
+      k.prop({ kind: 'desk', pos: [-5.8, 0, -1.2], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'chair', pos: [-6.7, 0, -1.2], rotY: Math.PI / 2 });
+      k.prop({ kind: 'screen_stand', pos: [-5.75, 0.75, -1.2], rotY: Math.PI / 2 });
+
+      k.prop({ kind: 'desk', pos: [5.8, 0, -1.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'chair', pos: [6.7, 0, -1.2], rotY: -Math.PI / 2 });
+      k.prop({ kind: 'books', pos: [5.75, 0.75, -1.0], rotY: 0.2 });
+      k.prop({ kind: 'lamp_desk', pos: [5.75, 0.75, -1.5] });
+
+      k.prop({ kind: 'lamp_floor', pos: [-7.8, 0, -5.8] });
+      k.prop({ kind: 'lamp_floor', pos: [7.8, 0, -5.8] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.2] });
+      k.prop({ kind: 'plant_small', pos: [-5.8, 0.75, -0.75] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.5, -2.5], color: '#FFE0B2', intensity: 1.4, distance: 12 });
+    k.light({ kind: 'point', pos: [-4.5, 3.2, 0.5], color: '#FFD9A0', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [4.5, 3.2, 0.5], color: '#FFD9A0', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the open floor (all >= 2.3m apart, clear of all colliders)
+    k.npcSlot({ id: 's1', pos: [0, 0, -1.2], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.4, 0, 0.8], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.4, 0, 0.8], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.4], facingY: 0 });
+  },
+};
+
+export default officeHoursBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/market-research.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const marketResearchBuilding: BuildingModule = {
+  id: 'market-research',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_wall' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the round observatory body (keeping entrance at z=8.0 clear)
+    k.group('colliders', () => {
+      k.box({ size: [12.0, 8.0, 11.0], pos: [0, 4.0, -1.8], mat: 'stucco', collide: true, name: 'obs_core_col' });
+      k.box({ size: [4.2, 7.0, 3.2], pos: [-4.8, 3.5, 5.6], mat: 'stucco', collide: true, name: 'obs_west_col' });
+      k.box({ size: [4.2, 7.0, 3.2], pos: [4.8, 3.5, 5.6], mat: 'stucco', collide: true, name: 'obs_east_col' });
+    });
+
+    // Round building (cylinder r = 8.6) with glass window ring, blue accent band, and metal dome
+    k.group('observatory_drum', () => {
+      // Stepped stone foundation drum
+      k.cylinder({
+        radiusTop: 9.1,
+        radiusBottom: 9.3,
+        height: 1.3,
+        pos: [0, 0.65, -0.8],
+        mat: 'plaza_stone',
+        segments: 32,
+      });
+      // Main lower cylindrical wall
+      k.cylinder({
+        radiusTop: 8.6,
+        radiusBottom: 8.6,
+        height: 4.2,
+        pos: [0, 3.4, -0.8],
+        mat: 'stucco',
+        segments: 32,
+      });
+      // Continuous glass ring of windows around the upper drum
+      k.cylinder({
+        radiusTop: 8.45,
+        radiusBottom: 8.45,
+        height: 2.1,
+        pos: [0, 6.55, -0.8],
+        mat: 'window_glow',
+        segments: 32,
+      });
+      // Vertical piers / mullions around the glass ring
+      for (let i = 0; i < 16; i++) {
+        const angle = (i / 16) * Math.PI * 2;
+        const px = Math.sin(angle) * 8.52;
+        const pz = -0.8 + Math.cos(angle) * 8.52;
+        k.box({ size: [0.38, 6.4, 0.38], pos: [px, 4.4, pz], rotY: angle, mat: 'trim' });
+      }
+      // Accent blue band and cornice ring crowning the cylinder
+      k.cylinder({
+        radiusTop: 8.85,
+        radiusBottom: 8.85,
+        height: 0.65,
+        pos: [0, 7.9, -0.8],
+        mat: 'accent',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 9.1,
+        radiusBottom: 8.9,
+        height: 0.45,
+        pos: [0, 8.45, -0.8],
+        mat: 'trim',
+        segments: 32,
+      });
+    });
+
+    // Observatory hemisphere dome (`metal_light`) with dark observation slit & telescope poking out
+    k.group('observatory_dome', () => {
+      // Rotating track ring
+      k.cylinder({
+        radiusTop: 7.9,
+        radiusBottom: 8.1,
+        height: 0.7,
+        pos: [0, 9.0, -0.8],
+        mat: 'metal_dark',
+        segments: 32,
+      });
+      // Hemisphere dome (scaled sphere centered at y = 9.2)
+      k.sphere({
+        radius: 7.7,
+        pos: [0, 9.2, -0.8],
+        scale: [1, 0.88, 1],
+        mat: 'metal_light',
+        name: 'dome',
+      });
+      // Observation slit arch & shutter ribs
+      k.box({ size: [1.9, 6.4, 7.2], pos: [0, 12.9, 1.8], mat: 'metal_dark', name: 'dome_slit' });
+      k.box({ size: [2.3, 6.2, 7.0], pos: [0, 12.8, 1.7], mat: 'trim', name: 'slit_flange' });
+
+      // Giant observatory telescope tube poking out of the slit + telescope prop on front terrace
+      k.cylinder({
+        radiusTop: 0.62,
+        radiusBottom: 0.78,
+        height: 5.6,
+        pos: [0, 13.6, 4.2],
+        rotX: Math.PI / 3.2,
+        mat: 'metal_dark',
+        name: 'main_telescope_tube',
+      });
+      k.cylinder({
+        radiusTop: 0.68,
+        radiusBottom: 0.68,
+        height: 0.45,
+        pos: [0, 15.0, 6.3],
+        rotX: Math.PI / 3.2,
+        mat: 'accent',
+        name: 'telescope_lens_hood',
+      });
+      // Secondary rooftop observation deck telescope prop
+      k.prop({ kind: 'telescope', pos: [3.2, 8.65, 5.8], rotY: -0.25, scale: 1.3 });
+    });
+
+    // Front entrance portico projecting to z = 8.0
+    k.group('entrance_portico', () => {
+      k.box({ size: [5.4, 4.8, 2.4], pos: [0, 2.4, 7.0], mat: 'plaster_warm' });
+      k.box({ size: [5.8, 0.4, 2.7], pos: [0, 4.95, 7.0], mat: 'trim' });
+      k.box({ size: [5.6, 0.35, 2.6], pos: [0, 5.3, 7.0], mat: 'accent' });
+
+      // Flanking ground-floor windows on portico
+      for (const wx of [-1.85, 1.85]) {
+        k.box({ size: [1.0, 2.0, 0.18], pos: [wx, 2.4, 8.15], mat: 'window_glow' });
+        k.box({ size: [1.18, 2.2, 0.14], pos: [wx, 2.4, 8.12], mat: 'trim' });
+      }
+
+      k.entrance({ z: 8.2 });
+      k.sign({ pos: [0, 4.25, 8.35], rotY: 0, width: 4.8 });
+    });
+
+    // Forecourt paving & landscaping
+    k.group('landscaping', () => {
+      k.box({ size: [4.6, 0.1, 3.6], pos: [0, 0.05, 10.0], mat: 'plaza_stone' });
+      k.prop({ kind: 'flowerbed', pos: [-5.2, 0, 9.2] });
+      k.prop({ kind: 'flowerbed', pos: [5.2, 0, 9.2] });
+      k.prop({ kind: 'bench', pos: [-7.2, 0, 7.8], rotY: 0.5, collide: true });
+      k.prop({ kind: 'bench', pos: [7.2, 0, 7.8], rotY: -0.5, collide: true });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.8, 8.8], color: '#D8ECFF', intensity: 1.3, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // North window for the telescope + east and west observation windows
+    k.window({ wall: 'north', center: 0, width: 3.4, height: 2.1, sill: 0.9 });
+    k.window({ wall: 'east', center: -1.0, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'west', center: -1.0, width: 2.6, height: 1.8, sill: 1.0 });
+
+    // Curved corner architectural pilasters to give the room a round observatory feel
+    k.group('round_room_framing', () => {
+      for (const cx of [-8.2, 8.2]) {
+        for (const cz of [-6.2, 6.2]) {
+          k.cylinder({
+            radiusTop: 0.7,
+            radiusBottom: 0.7,
+            height: 4.1,
+            pos: [cx, 2.05, cz],
+            mat: 'trim',
+          });
+        }
+      }
+    });
+
+    // Star-map rug: dark blue rug (`fabric_blue`) with concentric orbit rings & small light star dots
+    k.group('star_map_rug', () => {
+      k.cylinder({
+        radiusTop: 3.4,
+        radiusBottom: 3.4,
+        height: 0.02,
+        pos: [0, 0.01, -1.0],
+        mat: 'accent_dark',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 3.15,
+        radiusBottom: 3.15,
+        height: 0.026,
+        pos: [0, 0.013, -1.0],
+        mat: 'fabric_blue',
+        segments: 32,
+      });
+      // Constellation dots (small light paper/window_glow discs on the rug)
+      const stars: [number, number, number][] = [
+        [-1.8, -1.6, 0.08],
+        [-1.2, -0.2, 0.06],
+        [-0.5, -2.3, 0.07],
+        [0.8, -2.1, 0.09],
+        [1.9, -1.2, 0.07],
+        [1.5, 0.4, 0.08],
+        [-1.6, 0.8, 0.06],
+        [0.3, 1.1, 0.07],
+        [-2.3, -0.6, 0.05],
+        [2.2, -0.3, 0.06],
+      ];
+      for (const [sx, sz, sr] of stars) {
+        k.cylinder({
+          radiusTop: sr,
+          radiusBottom: sr,
+          height: 0.032,
+          pos: [sx, 0.016, sz],
+          mat: 'paper',
+        });
+      }
+    });
+
+    // Central round table with market maps (`paper` planes) + big telescope by the north window
+    k.group('centerpiece_and_telescope', () => {
+      // Big brass/metal telescope by the north window
+      k.prop({ kind: 'telescope', pos: [0, 0, -5.2], rotY: Math.PI, scale: 1.25 });
+
+      // Central round table (`table_round` r=0.6 at [0, 0, -1.0])
+      k.prop({ kind: 'table_round', pos: [0, 0, -1.0], collide: true });
+      // Market maps & quadrant charts laid out on the round table (y = 0.76)
+      k.plane({ size: [0.55, 0.42], pos: [-0.12, 0.76, -1.05], rot: [-Math.PI / 2, 0, 0.2], mat: 'paper' });
+      k.plane({ size: [0.38, 0.28], pos: [0.22, 0.765, -0.88], rot: [-Math.PI / 2, 0, -0.4], mat: 'fabric_blue' });
+      k.prop({ kind: 'books', pos: [-0.25, 0.75, -0.78], rotY: 0.5 });
+      k.prop({ kind: 'mug', pos: [0.32, 0.75, -1.15] });
+    });
+
+    // Chart screens (`screen`) and market intelligence workstations along east and west walls
+    k.group('chart_screens_and_workstations', () => {
+      // West wall large market landscape screen + chart bars
+      k.box({ size: [0.1, 1.5, 2.8], pos: [-8.88, 2.2, -1.2], mat: 'metal_dark' });
+      k.box({ size: [0.12, 1.36, 2.66], pos: [-8.85, 2.2, -1.2], mat: 'screen' });
+      // East wall competitor pricing matrix screen
+      k.box({ size: [0.1, 1.5, 2.8], pos: [8.88, 2.2, -1.2], mat: 'metal_dark' });
+      k.box({ size: [0.12, 1.36, 2.66], pos: [8.85, 2.2, -1.2], mat: 'screen' });
+
+      // West research desks
+      k.prop({ kind: 'desk', pos: [-6.4, 0, -3.8], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [-6.4, 0, -2.9], rotY: Math.PI });
+      k.prop({ kind: 'screen_stand', pos: [-6.6, 0.75, -3.9], rotY: 0.1 });
+      k.prop({ kind: 'screen_stand', pos: [-6.0, 0.75, -3.9], rotY: -0.1 });
+
+      // East research desks
+      k.prop({ kind: 'desk', pos: [6.4, 0, -3.8], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [6.4, 0, -2.9], rotY: Math.PI });
+      k.prop({ kind: 'screen_stand', pos: [6.4, 0.75, -3.9], rotY: 0 });
+      k.prop({ kind: 'lamp_desk', pos: [6.9, 0.75, -3.9] });
+
+      // Bookshelves for cited evidence archives
+      k.prop({ kind: 'bookshelf', pos: [-8.3, 0, 2.5], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, 2.5], rotY: -Math.PI / 2, collide: true });
+
+      // Celestial/Market globe on a pedestal in the north-east corner
+      k.cylinder({ radiusTop: 0.28, radiusBottom: 0.34, height: 0.9, pos: [4.2, 0.45, -5.4], mat: 'wood_dark' });
+      k.sphere({ radius: 0.32, pos: [4.2, 1.25, -5.4], mat: 'accent' });
+      k.torus({ radius: 0.38, tube: 0.025, pos: [4.2, 1.25, -5.4], rotX: 0.5, mat: 'metal_light' });
+
+      k.prop({ kind: 'plant_tall', pos: [-7.6, 0, 5.2] });
+      k.prop({ kind: 'plant_tall', pos: [7.6, 0, 5.2] });
+      k.prop({ kind: 'lamp_floor', pos: [-4.2, 0, -5.4] });
+    });
+
+    // Interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -1.0], color: '#E2F0FF', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-5.5, 3.2, -1.5], color: '#FFE4B8', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.5, 3.2, -1.5], color: '#FFE4B8', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots around the star-map rug (clear of the central table at z=-1.0, r=0.6)
+    k.npcSlot({ id: 's1', pos: [0, 0, -3.2], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.2, 0, -1.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.2, 0, -1.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.2, 0, 1.8], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.2, 0, 1.8], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 1.6], facingY: 0 });
+  },
+};
+
+export default marketResearchBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/outreach.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const outreachBuilding: BuildingModule = {
+  id: 'outreach',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the Victorian house
+    k.group('colliders', () => {
+      k.box({ size: [15.0, 8.5, 11.0], pos: [-0.5, 4.25, -1.2], mat: 'stucco', collide: true, name: 'house_col' });
+      k.box({ size: [4.6, 8.5, 2.4], pos: [-5.2, 4.25, 5.6], mat: 'stucco', collide: true, name: 'bay_col' });
+    });
+
+    // Two-storey Victorian house (stucco + accent teal trim, bay window, steep gables)
+    k.group('victorian_house', () => {
+      // Stone foundation plinth
+      k.box({ size: [16.0, 1.1, 11.8], pos: [-0.5, 0.55, -1.0], mat: 'plaza_stone' });
+      // Main two-storey stucco body
+      k.box({ size: [15.4, 7.8, 11.2], pos: [-0.5, 4.9, -1.0], mat: 'stucco', name: 'main_body' });
+
+      // Projecting Victorian bay wing on the west front (x = -5.2)
+      k.box({ size: [5.0, 8.4, 2.8], pos: [-5.2, 4.7, 5.6], mat: 'plaster_warm', name: 'bay_wing' });
+      k.box({ size: [5.2, 1.1, 3.0], pos: [-5.2, 0.55, 5.6], mat: 'plaza_stone' });
+
+      // Teal (`accent`) Victorian corner boards, belly bands, and ornate eaves trim
+      k.box({ size: [15.8, 0.28, 11.6], pos: [-0.5, 4.8, -1.0], mat: 'accent', name: 'mid_band' });
+      k.box({ size: [5.4, 0.28, 3.1], pos: [-5.2, 4.8, 5.6], mat: 'accent' });
+      k.box({ size: [16.0, 0.38, 11.8], pos: [-0.5, 8.9, -1.0], mat: 'trim', name: 'eaves_cornice' });
+      k.box({ size: [5.6, 0.38, 3.2], pos: [-5.2, 9.0, 5.6], mat: 'accent' });
+
+      // Steep Victorian gabled roof & cross-gable over the bay wing
+      k.box({ size: [15.0, 1.5, 10.4], pos: [-0.5, 9.8, -1.0], mat: 'roof' });
+      k.box({ size: [13.2, 1.3, 8.4], pos: [-0.5, 11.1, -1.0], mat: 'roof' });
+      k.cone({
+        radius: 3.6,
+        height: 3.4,
+        pos: [-5.2, 10.9, 5.5],
+        rotY: Math.PI / 4,
+        mat: 'roof',
+        segments: 4,
+        name: 'bay_gable_spire',
+      });
+      // Brick chimney
+      k.box({ size: [1.2, 3.8, 1.2], pos: [4.5, 11.8, -3.5], mat: 'brick' });
+    });
+
+    // Windows with teal shutters / hoods on both storeys
+    k.group('victorian_windows', () => {
+      // Bay wing windows (ground & 2nd floor)
+      for (const wy of [2.8, 6.6]) {
+        for (const wx of [-6.5, -5.2, -3.9]) {
+          k.box({ size: [1.0, 2.0, 0.18], pos: [wx, wy, 7.02], mat: 'trim' });
+          k.box({ size: [0.78, 1.75, 0.22], pos: [wx, wy, 7.05], mat: 'window_glow' });
+          k.box({ size: [1.1, 0.2, 0.3], pos: [wx, wy + 1.05, 7.1], mat: 'accent' });
+          k.box({ size: [1.1, 0.14, 0.3], pos: [wx, wy - 1.02, 7.1], mat: 'plaza_stone' });
+        }
+      }
+      // East wing windows (2nd floor and ground floor beside the porch)
+      for (const wx of [0.0, 3.2, 5.6]) {
+        k.box({ size: [1.4, 2.1, 0.18], pos: [wx, 6.6, 4.65], mat: 'trim' });
+        k.box({ size: [1.1, 1.8, 0.22], pos: [wx, 6.6, 4.68], mat: 'window_glow' });
+        k.box({ size: [1.55, 0.22, 0.32], pos: [wx, 7.72, 4.72], mat: 'accent' });
+      }
+      for (const wx of [3.2, 5.6]) {
+        k.box({ size: [1.4, 2.1, 0.18], pos: [wx, 2.8, 4.65], mat: 'trim' });
+        k.box({ size: [1.1, 1.8, 0.22], pos: [wx, 2.8, 4.68], mat: 'window_glow' });
+        k.box({ size: [1.55, 0.22, 0.32], pos: [wx, 3.92, 4.72], mat: 'accent' });
+      }
+    });
+
+    // Covered front porch with turned railings, steps, entrance, and sign
+    k.group('front_porch', () => {
+      // Porch deck extending to z = 7.4
+      k.box({ size: [8.8, 0.6, 3.0], pos: [2.2, 0.3, 6.0], mat: 'wood_dark' });
+      k.box({ size: [3.4, 0.2, 1.2], pos: [0, 0.1, 7.9], mat: 'plaza_stone' });
+      // Porch roof & teal frieze
+      k.box({ size: [9.0, 0.35, 3.2], pos: [2.2, 4.0, 6.0], mat: 'accent' });
+      k.box({ size: [9.2, 0.4, 3.4], pos: [2.2, 4.35, 6.0], mat: 'roof' });
+
+      // Turned porch posts
+      for (const px of [-1.8, 1.8, 4.2, 6.3]) {
+        k.cylinder({ radiusTop: 0.13, radiusBottom: 0.15, height: 3.4, pos: [px, 2.3, 7.35], mat: 'trim' });
+      }
+      // Porch railing on the right side of the entrance (`x = 1.9..6.3`)
+      k.box({ size: [4.4, 0.1, 0.12], pos: [4.05, 1.35, 7.35], mat: 'trim' });
+      k.box({ size: [4.4, 0.08, 0.12], pos: [4.05, 0.72, 7.35], mat: 'trim' });
+      for (let bx = 2.1; bx <= 6.1; bx += 0.35) {
+        k.box({ size: [0.05, 0.6, 0.05], pos: [bx, 1.03, 7.35], mat: 'trim' });
+      }
+
+      // Entrance wall backing at z = 7.2 for the foyer
+      k.box({ size: [3.4, 3.6, 2.6], pos: [0, 2.1, 5.9], mat: 'plaster_warm' });
+      k.entrance({ z: 7.2 });
+      k.sign({ pos: [0, 4.85, 7.75], rotY: 0, width: 4.8 });
+    });
+
+    // Tall telegraph pole on the east side with crossbars, insulators, and sagging wires (`tube`)
+    k.group('telegraph_pole_and_wires', () => {
+      const poleX = 9.8;
+      const poleZ = 6.2;
+      k.cylinder({
+        radiusTop: 0.18,
+        radiusBottom: 0.26,
+        height: 12.6,
+        pos: [poleX, 6.3, poleZ],
+        mat: 'wood_dark',
+        collide: true,
+      });
+      // Two wooden crossbars with ceramic teal/glass insulators
+      for (const cy of [10.4, 11.8]) {
+        k.box({ size: [0.16, 0.18, 2.8], pos: [poleX, cy, poleZ], mat: 'wood_light' });
+        for (const iz of [-1.1, -0.4, 0.4, 1.1]) {
+          k.cylinder({
+            radiusTop: 0.07,
+            radiusBottom: 0.09,
+            height: 0.22,
+            pos: [poleX, cy + 0.18, poleZ + iz],
+            mat: 'accent',
+          });
+        }
+      }
+      // Sagging telegraph wires connecting the pole to the house eaves & rear relay post
+      for (const iz of [-1.0, -0.35, 0.35, 1.0]) {
+        k.tube({
+          points: [
+            [poleX, 11.95, poleZ + iz],
+            [8.2, 10.6, 3.5 + iz * 0.6],
+            [6.6, 9.2, 1.0 + iz * 0.5],
+          ],
+          radius: 0.022,
+          mat: 'cable',
+        });
+        k.tube({
+          points: [
+            [poleX, 10.55, poleZ + iz],
+            [poleX, 9.8, 0.0 + iz * 0.4],
+            [poleX - 0.5, 9.5, -5.5 + iz * 0.4],
+          ],
+          radius: 0.022,
+          mat: 'cable',
+        });
+      }
+    });
+
+    // Path, mailbox, and garden landscaping
+    k.group('landscaping', () => {
+      k.box({ size: [3.2, 0.08, 4.0], pos: [0, 0.04, 9.8], mat: 'plaza_stone' });
+      k.prop({ kind: 'mailbox', pos: [2.4, 0, 9.6], rotY: -0.3, collide: true });
+      k.prop({ kind: 'flowerbed', pos: [-5.2, 0, 8.8] });
+      k.prop({ kind: 'flowerbed', pos: [5.2, 0, 9.2] });
+      k.prop({ kind: 'plant_tall', pos: [-2.2, 0.6, 7.0] });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.6, 7.8], color: '#FFE5BD', intensity: 1.3, distance: 9 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Windows on north, east, and west walls
+    k.window({ wall: 'north', center: 2.8, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'east', center: -1.8, width: 2.4, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'west', center: 1.5, width: 2.4, height: 1.8, sill: 1.0 });
+
+    // Soft pastel rug in the central area
+    k.group('rug_and_cables', () => {
+      k.plane({ size: [6.0, 4.2], pos: [0, 0.01, -0.5], rot: [-Math.PI / 2, 0, 0], mat: 'accent_dark' });
+      k.plane({ size: [5.5, 3.7], pos: [0, 0.015, -0.5], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_cream' });
+      // Floor telegraph cable bundle running from switchboard to desk
+      k.tube({
+        points: [
+          [-2.5, 0.02, -6.2],
+          [-2.0, 0.02, -4.8],
+          [-0.8, 0.02, -4.2],
+        ],
+        radius: 0.02,
+        mat: 'cable',
+      });
+    });
+
+    // Switchboard wall on the north-west wall (grid of small cylinders + patching cables)
+    k.group('switchboard_wall', () => {
+      // Heavy mahogany switchboard console cabinet
+      k.box({ size: [4.2, 2.4, 0.55], pos: [-4.2, 1.2, -6.5], mat: 'wood_dark', collide: true });
+      k.box({ size: [3.9, 1.5, 0.6], pos: [-4.2, 1.55, -6.48], mat: 'metal_dark' });
+      k.box({ size: [4.2, 0.12, 0.85], pos: [-4.2, 0.85, -6.32], mat: 'wood_light' });
+
+      // Grid of jack sockets (small brass/teal cylinders)
+      for (let gx = -5.8; gx <= -2.6; gx += 0.4) {
+        for (let gy = 1.05; gy <= 2.05; gy += 0.25) {
+          k.cylinder({
+            radiusTop: 0.04,
+            radiusBottom: 0.04,
+            height: 0.08,
+            pos: [gx, gy, -6.16],
+            rotX: Math.PI / 2,
+            mat: ( Math.round((gx + gy) * 10) % 3 === 0 ) ? 'accent' : 'metal_light',
+          });
+        }
+      }
+
+      // Looping patch cables across the switchboard face
+      const patchPairs: [[number, number], [number, number]][] = [
+        [[-5.8, 1.8], [-4.6, 1.3]],
+        [[-5.4, 2.05], [-3.8, 1.55]],
+        [[-5.0, 1.3], [-3.4, 1.8]],
+        [[-4.2, 2.05], [-2.6, 1.3]],
+        [[-3.8, 1.05], [-2.6, 1.8]],
+      ];
+      for (const [[x1, y1], [x2, y2]] of patchPairs) {
+        k.tube({
+          points: [
+            [x1, y1, -6.14],
+            [(x1 + x2) / 2, Math.min(y1, y2) - 0.22, -5.98],
+            [x2, y2, -6.14],
+          ],
+          radius: 0.016,
+          mat: 'cable',
+        });
+      }
+    });
+
+    // Wall of pigeonholes (box grid with stuffed letters) on the west wall
+    k.group('pigeonhole_wall', () => {
+      k.box({ size: [0.5, 2.3, 3.2], pos: [-8.55, 1.15, -2.2], mat: 'wood_dark', collide: true });
+      // Horizontal shelves
+      for (let py = 0.5; py <= 2.1; py += 0.4) {
+        k.box({ size: [0.54, 0.04, 3.1], pos: [-8.52, py, -2.2], mat: 'wood_light' });
+      }
+      // Vertical dividers & paper letter bundles inside cubbies
+      for (let pz = -3.6; pz <= -0.8; pz += 0.4) {
+        k.box({ size: [0.54, 1.7, 0.04], pos: [-8.52, 1.3, pz], mat: 'wood_light' });
+        if (pz < -0.9) {
+          k.box({ size: [0.28, 0.07, 0.24], pos: [-8.38, 0.96, pz + 0.2], rotY: 0.1, mat: 'paper' });
+          k.box({ size: [0.28, 0.09, 0.24], pos: [-8.38, 1.76, pz + 0.2], rotY: -0.1, mat: 'paper' });
+        }
+      }
+    });
+
+    // Writing desks with letter stacks & gated-send review desk
+    k.group('writing_desks', () => {
+      // Lead outreach desk
+      k.prop({ kind: 'desk', pos: [0, 0, -4.0], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [0, 0, -4.9], rotY: 0 });
+      k.prop({ kind: 'lamp_desk', pos: [-0.5, 0.75, -4.1] });
+      k.prop({ kind: 'screen_stand', pos: [0.35, 0.75, -4.1], rotY: -0.15 });
+      k.box({ size: [0.28, 0.14, 0.22], pos: [-0.15, 0.82, -3.9], rotY: 0.1, mat: 'paper' });
+      k.prop({ kind: 'mug', pos: [0.15, 0.75, -3.8] });
+
+      // East drafting desk 1
+      k.prop({ kind: 'desk', pos: [6.4, 0, -3.8], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [6.4, 0, -2.9], rotY: Math.PI });
+      k.prop({ kind: 'books', pos: [6.0, 0.75, -3.8], rotY: 0.2 });
+      k.box({ size: [0.3, 0.16, 0.22], pos: [6.6, 0.83, -3.75], rotY: -0.15, mat: 'paper' });
+      k.prop({ kind: 'lamp_desk', pos: [6.9, 0.75, -3.9] });
+
+      // East drafting desk 2
+      k.prop({ kind: 'desk', pos: [6.4, 0, 0.2], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [6.4, 0, 1.1], rotY: Math.PI });
+      k.prop({ kind: 'screen_stand', pos: [6.4, 0.75, 0.1], rotY: 0 });
+      k.box({ size: [0.26, 0.12, 0.2], pos: [5.95, 0.81, 0.25], mat: 'paper' });
+    });
+
+    // Comfy customer interview corner (two armchairs + round table + tall plant) in south-east / south-west
+    k.group('interview_corner', () => {
+      k.prop({ kind: 'armchair', pos: [-6.8, 0, 3.0], rotY: 0.8 });
+      k.prop({ kind: 'armchair', pos: [-5.2, 0, 4.4], rotY: -2.2 });
+      k.prop({ kind: 'table_round', pos: [-6.2, 0, 3.9], scale: 0.75 });
+      k.prop({ kind: 'mug', pos: [-6.1, 0.56, 3.85] });
+      k.prop({ kind: 'plant_tall', pos: [-8.0, 0, 5.2] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.2] });
+      k.prop({ kind: 'lamp_floor', pos: [7.8, 0, -5.8] });
+      k.prop({ kind: 'clock', pos: [0, 3.1, -6.92], rotY: 0 });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.5, -2.0], color: '#FFE4B8', intensity: 1.3, distance: 12 });
+    k.light({ kind: 'point', pos: [-4.5, 3.2, -3.5], color: '#FFDAA6', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.0, 3.2, 0.0], color: '#FFE4B8', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the open central floor
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.8, 0, -2.6], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.2, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.4, 0, 0.8], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.2, 0, 1.4], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.2], facingY: 0 });
+  },
+};
+
+export default outreachBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/synthetic-population.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const syntheticPopulationBuilding: BuildingModule = {
+  id: 'synthetic-population',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_wall' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the glass conservatory (leaving central entrance at z=7.6 clear)
+    k.group('colliders', () => {
+      k.box({ size: [7.2, 6.5, 13.4], pos: [-6.0, 3.25, -0.2], mat: 'metal_light', collide: true, name: 'gh_west_col' });
+      k.box({ size: [7.2, 6.5, 13.4], pos: [6.0, 3.25, -0.2], mat: 'metal_light', collide: true, name: 'gh_east_col' });
+      k.box({ size: [4.4, 6.5, 11.0], pos: [0, 3.25, -1.4], mat: 'metal_light', collide: true, name: 'gh_center_col' });
+    });
+
+    // Glass greenhouse (`glass` panels in `metal_light` frame, pitched roof + ridge lantern)
+    k.group('greenhouse_structure', () => {
+      // Stone knee-wall plinth around the perimeter
+      k.box({ size: [19.6, 1.2, 13.8], pos: [0, 0.6, -0.2], mat: 'plaza_stone', name: 'plinth_wall' });
+      k.box({ size: [20.0, 0.2, 14.2], pos: [0, 1.25, -0.2], mat: 'trim', name: 'sill_coping' });
+
+      // Main glazed conservatory walls (`glass` with warm inner glow core)
+      k.box({ size: [19.2, 5.2, 13.4], pos: [0, 3.9, -0.2], mat: 'glass', name: 'glass_walls' });
+      k.box({ size: [18.4, 4.8, 12.6], pos: [0, 3.8, -0.2], mat: 'window_glow', name: 'inner_glow' });
+
+      // Structural `metal_light` columns and horizontal glazing bars around the facade
+      for (const x of [-9.6, -7.2, -4.8, -2.4, 2.4, 4.8, 7.2, 9.6]) {
+        k.box({ size: [0.24, 5.6, 0.28], pos: [x, 4.0, 6.55], mat: 'metal_light' });
+        k.box({ size: [0.24, 5.6, 0.28], pos: [x, 4.0, -6.95], mat: 'metal_light' });
+      }
+      for (const y of [2.8, 4.6, 6.5]) {
+        k.box({ size: [19.6, 0.2, 13.8], pos: [0, y, -0.2], mat: 'metal_light' });
+      }
+      // Accent green frieze band at the eaves
+      k.box({ size: [19.8, 0.36, 14.0], pos: [0, 6.8, -0.2], mat: 'accent', name: 'green_frieze' });
+
+      // Pitched glass roof & raised botanical ridge lantern
+      k.box({ size: [18.6, 1.1, 12.6], pos: [0, 7.5, -0.2], mat: 'glass' });
+      k.box({ size: [18.8, 0.22, 12.8], pos: [0, 8.05, -0.2], mat: 'metal_light' });
+      k.box({ size: [15.6, 1.0, 9.8], pos: [0, 8.6, -0.2], mat: 'glass' });
+      k.box({ size: [15.8, 0.22, 10.0], pos: [0, 9.15, -0.2], mat: 'metal_light' });
+
+      // Central clerestory ridge lantern
+      k.box({ size: [11.2, 1.4, 5.2], pos: [0, 9.9, -0.2], mat: 'window_glow' });
+      for (let rx = -5.5; rx <= 5.5; rx += 2.2) {
+        k.box({ size: [0.22, 1.6, 5.4], pos: [rx, 9.9, -0.2], mat: 'metal_light' });
+      }
+      k.box({ size: [11.6, 0.35, 5.6], pos: [0, 10.75, -0.2], mat: 'accent' });
+    });
+
+    // Projecting glass entrance gable with accent green door portal
+    k.group('entrance_portal', () => {
+      k.box({ size: [4.8, 6.2, 1.4], pos: [0, 3.1, 7.0], mat: 'metal_light' });
+      k.box({ size: [4.4, 5.8, 1.2], pos: [0, 3.1, 7.0], mat: 'glass' });
+      k.box({ size: [2.6, 3.2, 0.35], pos: [0, 1.6, 7.65], mat: 'accent', name: 'green_door_surround' });
+      k.box({ size: [5.2, 0.35, 1.7], pos: [0, 6.25, 7.0], mat: 'accent' });
+
+      k.entrance({ z: 7.7 });
+      k.sign({ pos: [0, 4.45, 7.85], rotY: 0, width: 5.2 });
+    });
+
+    // Exterior planters with rows of small "people" figures (synthetic persona panel on stands)
+    k.group('persona_planters', () => {
+      const personaMats = [
+        'fabric_coral',
+        'fabric_blue',
+        'fabric_lavender',
+        'fabric_pink',
+        'accent',
+        'fabric_cream',
+      ] as const;
+
+      for (const side of [-1, 1]) {
+        const px = side * 6.2;
+        const pz = 8.4;
+        // Raised planter bed in stone & dark wood
+        k.box({ size: [5.4, 0.7, 1.5], pos: [px, 0.35, pz], mat: 'plaza_stone', collide: true });
+        k.box({ size: [5.0, 0.12, 1.2], pos: [px, 0.72, pz], mat: 'wood_dark' });
+        // Label strip along front of planter indicating synthetic persona panel
+        k.box({ size: [4.8, 0.16, 0.06], pos: [px, 0.5, pz + 0.76], mat: 'accent' });
+
+        // 2 rows x 6 miniature persona figures (stand + torso cylinder + head sphere)
+        for (let row = 0; row < 2; row++) {
+          for (let col = 0; col < 6; col++) {
+            const fx = px - 2.0 + col * 0.8;
+            const fz = pz - 0.28 + row * 0.56;
+            const mat = personaMats[(row * 6 + col) % personaMats.length];
+            // Base stand
+            k.cylinder({ radiusTop: 0.11, radiusBottom: 0.13, height: 0.06, pos: [fx, 0.81, fz], mat: 'metal_dark' });
+            // Capsule body
+            k.cylinder({ radiusTop: 0.08, radiusBottom: 0.09, height: 0.28, pos: [fx, 0.98, fz], mat });
+            // Head sphere
+            k.sphere({ radius: 0.075, pos: [fx, 1.2, fz], mat: 'plaster_warm' });
+          }
+        }
+      }
+
+      // Forecourt path and corner trees/plants
+      k.box({ size: [4.2, 0.08, 4.2], pos: [0, 0.04, 9.8], mat: 'plaza_stone' });
+      k.prop({ kind: 'plant_tall', pos: [-9.8, 0, 8.2] });
+      k.prop({ kind: 'plant_tall', pos: [9.8, 0, 8.2] });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.8, 8.3], color: '#E6FFE9', intensity: 1.3, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Abundant daylight through north, east, and west conservatory windows
+    k.window({ wall: 'north', center: 0, width: 4.0, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'east', center: 0, width: 3.4, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'west', center: 0, width: 3.4, height: 2.0, sill: 0.9 });
+
+    // Central botanical runner rug (no collider)
+    k.plane({ size: [3.6, 8.4], pos: [0, 0.01, -0.4], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_cream' });
+    k.plane({ size: [3.1, 7.9], pos: [0, 0.015, -0.4], rot: [-Math.PI / 2, 0, 0], mat: 'accent' });
+
+    // 4 Planter tables with miniature figure groups (4 segments x 6 tiny figures = 24 synthetic personas)
+    k.group('synthetic_persona_tables', () => {
+      const segments: { pos: [number, number]; mat: 'fabric_coral' | 'fabric_blue' | 'fabric_lavender' | 'fabric_pink' }[] = [
+        { pos: [-5.8, -3.4], mat: 'fabric_coral' },
+        { pos: [5.8, -3.4], mat: 'fabric_blue' },
+        { pos: [-5.8, 1.2], mat: 'fabric_lavender' },
+        { pos: [5.8, 1.2], mat: 'fabric_pink' },
+      ];
+
+      for (const seg of segments) {
+        const [tx, tz] = seg.pos;
+        // Planter table base (collide: true, strictly disjoint at x=±5.8)
+        k.box({ size: [3.2, 0.82, 1.5], pos: [tx, 0.41, tz], mat: 'wood_light', collide: true });
+        k.box({ size: [3.36, 0.12, 1.66], pos: [tx, 0.86, tz], mat: 'wood_dark' });
+        k.box({ size: [3.0, 0.06, 1.3], pos: [tx, 0.93, tz], mat: 'plant' });
+        // Clearly labelled "SYNTHETIC COHORT" badge plate on the inward-facing side
+        const badgeX = tx < 0 ? tx + 1.69 : tx - 1.69;
+        k.box({ size: [0.04, 0.24, 1.1], pos: [badgeX, 0.65, tz], mat: 'accent' });
+
+        // 6 miniature persona figures (2 rows x 3 cols) on stands per table
+        for (let r = 0; r < 2; r++) {
+          for (let c = 0; c < 3; c++) {
+            const fx = tx - 0.9 + c * 0.9;
+            const fz = tz - 0.32 + r * 0.64;
+            k.cylinder({ radiusTop: 0.12, radiusBottom: 0.14, height: 0.06, pos: [fx, 0.98, fz], mat: 'metal_dark' });
+            k.cylinder({ radiusTop: 0.085, radiusBottom: 0.1, height: 0.3, pos: [fx, 1.16, fz], mat: seg.mat });
+            k.sphere({ radius: 0.08, pos: [fx, 1.39, fz], mat: 'plaster_warm' });
+          }
+        }
+
+        // Hanging botanical grow-lamp suspended over each persona table
+        k.cylinder({ radiusTop: 0.02, radiusBottom: 0.02, height: 1.1, pos: [tx, 3.6, tz], mat: 'metal_dark' });
+        k.cone({ radius: 0.45, height: 0.28, pos: [tx, 2.95, tz], mat: 'metal_light' });
+        k.sphere({ radius: 0.12, pos: [tx, 2.82, tz], mat: 'window_glow' });
+      }
+    });
+
+    // Lead control desk at north end + data screens on easels + potted plants everywhere
+    k.group('control_and_easels', () => {
+      k.prop({ kind: 'desk', pos: [0, 0, -4.6], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [0, 0, -5.5], rotY: 0 });
+      k.prop({ kind: 'screen_stand', pos: [-0.35, 0.75, -4.65], rotY: 0.15 });
+      k.prop({ kind: 'screen_stand', pos: [0.35, 0.75, -4.65], rotY: -0.15 });
+      k.prop({ kind: 'mug', pos: [0, 0.75, -4.4] });
+
+      // Data screens mounted on easels flanking the north control zone
+      k.prop({ kind: 'easel', pos: [-2.8, 0, -5.2], rotY: 0.35 });
+      k.box({ size: [0.85, 0.62, 0.06], pos: [-2.8, 1.25, -5.12], rotY: 0.35, mat: 'screen' });
+
+      k.prop({ kind: 'easel', pos: [2.8, 0, -5.2], rotY: -0.35 });
+      k.box({ size: [0.85, 0.62, 0.06], pos: [2.8, 1.25, -5.12], rotY: -0.35, mat: 'screen' });
+
+      // Lush potted greenery around the perimeter
+      k.prop({ kind: 'plant_tall', pos: [-8.0, 0, -5.8] });
+      k.prop({ kind: 'plant_tall', pos: [8.0, 0, -5.8] });
+      k.prop({ kind: 'plant_tall', pos: [-8.0, 0, -1.1] });
+      k.prop({ kind: 'plant_tall', pos: [8.0, 0, -1.1] });
+      k.prop({ kind: 'plant_tall', pos: [-8.0, 0, 4.8] });
+      k.prop({ kind: 'plant_tall', pos: [8.0, 0, 4.8] });
+      k.prop({ kind: 'plant_small', pos: [-4.2, 0, -5.8] });
+      k.prop({ kind: 'plant_small', pos: [4.2, 0, -5.8] });
+    });
+
+    // Interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -2.0], color: '#EEFFF0', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-5.8, 2.6, -1.0], color: '#FFF0C8', intensity: 1.1, distance: 10 });
+    k.light({ kind: 'point', pos: [5.8, 2.6, -1.0], color: '#FFF0C8', intensity: 1.1, distance: 10 });
+
+    // 6 NPC slots along the wide central walkway (x ∈ [-2.4, 2.4] is completely clear of tables at x=±5.8)
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.8], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-2.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [2.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-2.4, 0, 1.2], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [2.4, 0, 1.2], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.6], facingY: 0 });
+  },
+};
+
+export default syntheticPopulationBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/pivot.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const pivotBuilding: BuildingModule = {
+  id: 'pivot',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the classical rotunda
+    k.group('colliders', () => {
+      k.box({ size: [11.6, 8.5, 11.2], pos: [0, 4.25, -1.2], mat: 'plaster_warm', collide: true, name: 'rotunda_core' });
+      k.box({ size: [3.8, 7.5, 2.8], pos: [-4.6, 3.75, 5.8], mat: 'plaster_warm', collide: true, name: 'rotunda_west' });
+      k.box({ size: [3.8, 7.5, 2.8], pos: [4.6, 3.75, 5.8], mat: 'plaster_warm', collide: true, name: 'rotunda_east' });
+    });
+
+    // Classical small rotunda: stepped stylobate, ring of 8 columns around a round hall, shallow dome
+    k.group('rotunda_architecture', () => {
+      // 3-stepped circular stone stylobate
+      k.cylinder({
+        radiusTop: 10.6,
+        radiusBottom: 10.8,
+        height: 0.45,
+        pos: [0, 0.225, -0.6],
+        mat: 'plaza_stone',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 10.1,
+        radiusBottom: 10.3,
+        height: 0.45,
+        pos: [0, 0.675, -0.6],
+        mat: 'plaza_stone',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 9.6,
+        radiusBottom: 9.8,
+        height: 0.45,
+        pos: [0, 1.125, -0.6],
+        mat: 'trim',
+        segments: 32,
+      });
+
+      // Inner cylindrical cella (round hall)
+      k.cylinder({
+        radiusTop: 7.4,
+        radiusBottom: 7.4,
+        height: 7.4,
+        pos: [0, 5.05, -0.6],
+        mat: 'plaster_warm',
+        segments: 32,
+      });
+
+      // Ring of 8 monumental classical columns around the round hall + purple (`accent`) banners
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2 + Math.PI / 8;
+        const cx = Math.sin(angle) * 8.85;
+        const cz = -0.6 + Math.cos(angle) * 8.85;
+        // Column base
+        k.box({ size: [1.15, 0.45, 1.15], pos: [cx, 1.57, cz], rotY: angle, mat: 'plaza_stone' });
+        // Column shaft
+        k.cylinder({
+          radiusTop: 0.42,
+          radiusBottom: 0.5,
+          height: 6.4,
+          pos: [cx, 5.0, cz],
+          mat: 'trim',
+          segments: 20,
+        });
+        // Column capital
+        k.box({ size: [1.2, 0.5, 1.2], pos: [cx, 8.45, cz], rotY: angle, mat: 'trim' });
+
+        // Vertical purple (`accent`) banner suspended inside each intercolumniation
+        const bannerAngle = angle + Math.PI / 8;
+        const bx = Math.sin(bannerAngle) * 8.15;
+        const bz = -0.6 + Math.cos(bannerAngle) * 8.15;
+        if (Math.abs(bx) > 2.2 || bz < 4.0) {
+          k.box({ size: [1.1, 4.2, 0.1], pos: [bx, 5.3, bz], rotY: bannerAngle, mat: 'accent' });
+          k.box({ size: [1.25, 0.14, 0.14], pos: [bx, 7.45, bz], rotY: bannerAngle, mat: 'metal_dark' });
+        }
+      }
+
+      // Classical entablature ring, purple frieze, and shallow stepped dome
+      k.cylinder({
+        radiusTop: 9.5,
+        radiusBottom: 9.3,
+        height: 0.75,
+        pos: [0, 9.05, -0.6],
+        mat: 'trim',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 9.4,
+        radiusBottom: 9.4,
+        height: 0.55,
+        pos: [0, 9.7, -0.6],
+        mat: 'accent',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 9.8,
+        radiusBottom: 9.5,
+        height: 0.45,
+        pos: [0, 10.2, -0.6],
+        mat: 'trim',
+        segments: 32,
+      });
+
+      // Shallow classical dome + oculus lantern
+      k.sphere({
+        radius: 8.6,
+        pos: [0, 9.4, -0.6],
+        scale: [1, 0.52, 1],
+        mat: 'roof',
+        name: 'shallow_dome',
+      });
+      k.cylinder({
+        radiusTop: 1.8,
+        radiusBottom: 2.0,
+        height: 1.4,
+        pos: [0, 14.1, -0.6],
+        mat: 'window_glow',
+        segments: 24,
+      });
+      k.cone({ radius: 2.2, height: 1.4, pos: [0, 15.5, -0.6], mat: 'accent', segments: 24 });
+    });
+
+    // Front portico, glowing windows, steps, entrance, and sign
+    k.group('front_portico', () => {
+      // Front face of the rotunda extending to z = 7.6
+      k.box({ size: [6.4, 6.8, 1.8], pos: [0, 4.75, 6.7], mat: 'plaster_warm' });
+      // 4 glowing tall windows on the front face
+      for (const wx of [-2.4, -1.45, 1.45, 2.4]) {
+        k.box({ size: [0.75, 3.2, 0.18], pos: [wx, 4.6, 7.62], mat: 'window_glow' });
+        k.box({ size: [0.9, 3.4, 0.14], pos: [wx, 4.6, 7.58], mat: 'trim' });
+      }
+      // Steps up to the door (no collider so P3 ring is clear)
+      k.box({ size: [5.4, 0.45, 2.6], pos: [0, 0.225, 8.2], mat: 'plaza_stone' });
+      k.box({ size: [4.6, 0.45, 1.8], pos: [0, 0.675, 7.8], mat: 'plaza_stone' });
+
+      k.entrance({ z: 7.6 });
+      k.sign({ pos: [0, 5.1, 7.85], rotY: 0, width: 4.6 });
+    });
+
+    // Landscaping around the forecourt
+    k.group('landscaping', () => {
+      k.prop({ kind: 'flowerbed', pos: [-5.4, 0, 9.2] });
+      k.prop({ kind: 'flowerbed', pos: [5.4, 0, 9.2] });
+      k.prop({ kind: 'bench', pos: [-7.5, 0, 8.2], rotY: 0.4, collide: true });
+      k.prop({ kind: 'bench', pos: [7.5, 0, 8.2], rotY: -0.4, collide: true });
+    });
+
+    k.light({ kind: 'point', pos: [0, 4.2, 8.2], color: '#F0E2FF', intensity: 1.3, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Tall classical windows on north, east, and west walls
+    k.window({ wall: 'north', center: 0, width: 3.2, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'east', center: 0, width: 2.8, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'west', center: 0, width: 2.8, height: 2.0, sill: 0.9 });
+
+    // Classical pilasters around the room perimeter to give a round rotunda feel
+    k.group('rotunda_pilasters', () => {
+      for (const px of [-8.6, -4.5, 4.5, 8.6]) {
+        k.box({ size: [0.45, 4.1, 0.35], pos: [px, 2.05, -6.8], mat: 'trim' });
+      }
+      for (const pz of [-4.5, 3.5]) {
+        k.box({ size: [0.35, 4.1, 0.45], pos: [-8.8, 2.05, pz], mat: 'trim' });
+        k.box({ size: [0.35, 4.1, 0.45], pos: [8.8, 2.05, pz], mat: 'trim' });
+      }
+    });
+
+    // Circular purple rug (`fabric_lavender` & `accent`) under the decision table
+    k.group('purple_decision_rug', () => {
+      k.cylinder({
+        radiusTop: 3.6,
+        radiusBottom: 3.6,
+        height: 0.02,
+        pos: [0, 0.01, -0.8],
+        mat: 'accent',
+        segments: 32,
+      });
+      k.cylinder({
+        radiusTop: 3.25,
+        radiusBottom: 3.25,
+        height: 0.026,
+        pos: [0, 0.013, -0.8],
+        mat: 'fabric_lavender',
+        segments: 32,
+      });
+    });
+
+    // Big round council table in the center with 6 chairs + prominent Scales of Decision prop
+    k.group('decision_table_and_scales', () => {
+      // Central round council table (`collide: true` on core cylinder r=1.25 at [0, 0, -0.8])
+      k.cylinder({
+        radiusTop: 1.35,
+        radiusBottom: 1.35,
+        height: 0.08,
+        pos: [0, 0.72, -0.8],
+        mat: 'wood_dark',
+        collide: true,
+        segments: 24,
+      });
+      k.cylinder({
+        radiusTop: 0.45,
+        radiusBottom: 0.65,
+        height: 0.68,
+        pos: [0, 0.34, -0.8],
+        mat: 'wood_dark',
+        segments: 20,
+      });
+
+      // 6 chairs arranged in a ring around the decision table (collide: false default)
+      for (let i = 0; i < 6; i++) {
+        const angle = (i / 6) * Math.PI * 2 + Math.PI / 6;
+        const cx = Math.sin(angle) * 1.85;
+        const cz = -0.8 + Math.cos(angle) * 1.85;
+        k.prop({ kind: 'chair', pos: [cx, 0, cz], rotY: angle + Math.PI });
+        // Dossier paper in front of each seat
+        k.plane({
+          size: [0.3, 0.22],
+          pos: [Math.sin(angle) * 1.0, 0.765, -0.8 + Math.cos(angle) * 1.0],
+          rot: [-Math.PI / 2, 0, -angle],
+          mat: 'paper',
+        });
+      }
+
+      // Prominent Scales of Decision centerpiece on the center of the round table (y = 0.76)
+      // Tiered base & central brass pillar
+      k.cylinder({ radiusTop: 0.22, radiusBottom: 0.26, height: 0.08, pos: [0, 0.8, -0.8], mat: 'metal_dark' });
+      k.cylinder({ radiusTop: 0.04, radiusBottom: 0.055, height: 0.68, pos: [0, 1.18, -0.8], mat: 'accent' });
+      k.sphere({ radius: 0.07, pos: [0, 1.54, -0.8], mat: 'metal_light' });
+      // Balance beam (tilted slightly to show weighing evidence)
+      k.box({ size: [0.92, 0.04, 0.04], pos: [0, 1.5, -0.8], rotY: 0, mat: 'metal_light' });
+      // Left and right weighing pans suspended by chains
+      for (const side of [-1, 1]) {
+        const px = side * 0.42;
+        const py = side === -1 ? 1.16 : 1.22;
+        k.tube({
+          points: [
+            [px, 1.5, -0.8],
+            [px - 0.1, py, -0.8],
+          ],
+          radius: 0.008,
+          mat: 'metal_light',
+        });
+        k.tube({
+          points: [
+            [px, 1.5, -0.8],
+            [px + 0.1, py, -0.8],
+          ],
+          radius: 0.008,
+          mat: 'metal_light',
+        });
+        k.cylinder({ radiusTop: 0.16, radiusBottom: 0.12, height: 0.04, pos: [px, py, -0.8], mat: 'accent' });
+        // Evidence weights on the pans
+        k.box({
+          size: [0.1, 0.08, 0.1],
+          pos: [px, py + 0.05, -0.8],
+          mat: side === -1 ? 'fabric_coral' : 'fabric_blue',
+        });
+      }
+    });
+
+    // Evidence boards on easels & perimeter reference shelves
+    k.group('evidence_boards', () => {
+      // Three evidence easels ("Proceed", "Revise", "Kill" evidence boards)
+      const easelPositions: [number, number, number, 'fabric_blue' | 'accent' | 'fabric_coral'][] = [
+        [-4.8, -4.8, 0.45, 'fabric_blue'],
+        [0, -5.4, 0, 'accent'],
+        [4.8, -4.8, -0.45, 'fabric_coral'],
+      ];
+      for (const [ex, ez, rotY, badgeMat] of easelPositions) {
+        k.prop({ kind: 'easel', pos: [ex, 0, ez], rotY });
+        k.box({ size: [0.6, 0.14, 0.04], pos: [ex, 1.55, ez + 0.05], rotY, mat: badgeMat });
+      }
+
+      // Perimeter desks & bookshelves
+      k.prop({ kind: 'desk', pos: [-6.8, 0, -2.0], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'books', pos: [-6.75, 0.75, -1.8], rotY: 0.2 });
+      k.prop({ kind: 'lamp_desk', pos: [-6.75, 0.75, -2.3] });
+
+      k.prop({ kind: 'desk', pos: [6.8, 0, -2.0], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'screen_stand', pos: [6.75, 0.75, -2.0], rotY: -Math.PI / 2 });
+
+      k.prop({ kind: 'bookshelf', pos: [-8.3, 0, 2.2], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, 2.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, -5.6] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, -5.6] });
+    });
+
+    // Interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -0.8], color: '#F3E5FF', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-5.0, 3.2, -1.5], color: '#FFE3B8', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.0, 3.2, -1.5], color: '#FFE3B8', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots surrounding the central decision table (all outside r=2.8 from (0, -0.8))
+    k.npcSlot({ id: 's1', pos: [0, 0, -3.6], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.4, 0, -1.6], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.4, 0, -1.6], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.4, 0, 1.6], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.4, 0, 1.6], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.2], facingY: 0 });
+  },
+};
+
+export default pivotBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/engineering.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const engineeringBuilding: BuildingModule = {
+  id: 'engineering',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_wall' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the industrial workshop (leaving entrance at z=7.0 clear)
+    k.group('colliders', () => {
+      k.box({ size: [7.6, 8.0, 14.0], pos: [-6.4, 4.0, -0.2], mat: 'brick', collide: true, name: 'eng_west_col' });
+      k.box({ size: [7.6, 8.0, 14.0], pos: [6.4, 4.0, -0.2], mat: 'brick', collide: true, name: 'eng_east_col' });
+      k.box({ size: [4.6, 8.0, 11.4], pos: [0, 4.0, -1.5], mat: 'brick', collide: true, name: 'eng_center_col' });
+    });
+
+    // Industrial brick workshop with sawtooth roof (3 slanted roof boxes) and tall chimney
+    k.group('workshop_body', () => {
+      // Heavy concrete/stone industrial plinth
+      k.box({ size: [21.2, 1.2, 14.6], pos: [0, 0.6, -0.2], mat: 'plaza_stone' });
+      // Main brick workshop walls
+      k.box({ size: [20.8, 7.2, 14.2], pos: [0, 4.8, -0.2], mat: 'brick', name: 'brick_walls' });
+
+      // Structural dark-steel I-beam pilasters along the front facade
+      for (const px of [-10.2, -6.8, -3.4, 3.4, 6.8, 10.2]) {
+        k.box({ size: [0.45, 7.6, 0.45], pos: [px, 4.9, 6.92], mat: 'metal_dark' });
+      }
+      // Red-orange (`accent`) industrial cornice fascia band
+      k.box({ size: [21.2, 0.55, 14.6], pos: [0, 8.55, -0.2], mat: 'accent', name: 'accent_fascia' });
+      k.box({ size: [21.4, 0.28, 14.8], pos: [0, 8.95, -0.2], mat: 'metal_dark' });
+
+      // Sawtooth roof: 3 slanted roof boxes across the depth of the workshop with clerestory skylights
+      for (const sz of [-4.6, -0.2, 4.2]) {
+        // Slanted roof deck (tilted via rotX)
+        k.box({
+          size: [20.4, 0.5, 4.4],
+          pos: [0, 9.9, sz],
+          rotY: 0,
+          mat: 'roof',
+        });
+        // Stepped wedge profile to read strongly as a sawtooth ridge from every angle
+        k.box({ size: [20.2, 0.9, 3.2], pos: [0, 9.6, sz - 0.5], mat: 'roof' });
+        k.box({ size: [20.0, 1.5, 1.8], pos: [0, 10.1, sz - 1.1], mat: 'roof' });
+        // North/front-facing sawtooth clerestory glazing strip
+        k.box({ size: [19.6, 1.1, 0.3], pos: [0, 10.2, sz - 1.95], mat: 'window_glow' });
+        k.box({ size: [20.2, 0.25, 0.45], pos: [0, 10.85, sz - 1.9], mat: 'accent' });
+      }
+
+      // Tall industrial brick & steel smokestack chimney on the rear-west side (rising to 22m)
+      k.box({ size: [2.8, 3.6, 2.8], pos: [-8.2, 10.2, -5.2], mat: 'brick' });
+      k.cylinder({
+        radiusTop: 0.95,
+        radiusBottom: 1.35,
+        height: 11.5,
+        pos: [-8.2, 17.5, -5.2],
+        mat: 'brick',
+        segments: 24,
+        name: 'chimney_stack',
+      });
+      // Steel tension bands and red-orange crown on the chimney
+      for (const cy of [15.0, 18.5, 21.8]) {
+        k.cylinder({
+          radiusTop: 1.12,
+          radiusBottom: 1.12,
+          height: 0.32,
+          pos: [-8.2, cy, -5.2],
+          mat: cy === 21.8 ? 'accent' : 'metal_dark',
+        });
+      }
+      k.cylinder({ radiusTop: 1.18, radiusBottom: 1.05, height: 0.6, pos: [-8.2, 23.2, -5.2], mat: 'metal_dark' });
+    });
+
+    // Multi-pane factory steel-sash windows on the front face
+    k.group('factory_windows', () => {
+      for (const wx of [-8.5, -5.1, 5.1, 8.5]) {
+        k.box({ size: [2.4, 3.8, 0.22], pos: [wx, 4.6, 6.92], mat: 'metal_dark' });
+        k.box({ size: [2.1, 3.5, 0.26], pos: [wx, 4.6, 6.95], mat: 'window_glow' });
+        // Grid of steel muntins
+        for (const mx of [-0.5, 0.5]) {
+          k.box({ size: [0.06, 3.5, 0.3], pos: [wx + mx, 4.6, 6.98], mat: 'metal_dark' });
+        }
+        for (const my of [3.6, 4.6, 5.6]) {
+          k.box({ size: [2.1, 0.06, 0.3], pos: [wx, my, 6.98], mat: 'metal_dark' });
+        }
+        k.box({ size: [2.6, 0.2, 0.42], pos: [wx, 2.65, 7.05], mat: 'plaza_stone' });
+      }
+    });
+
+    // Large industrial roll-up door assembly framing the entrance + overhead hoist beam
+    k.group('rollup_door_entrance', () => {
+      // Heavy steel portal frame
+      k.box({ size: [5.4, 5.8, 0.6], pos: [0, 2.9, 7.0], mat: 'metal_dark' });
+      // Partially raised corrugated roll-up shutter slats above the entrance opening
+      k.cylinder({
+        radiusTop: 0.42,
+        radiusBottom: 0.42,
+        height: 4.6,
+        pos: [0, 5.2, 7.25],
+        rotZ: Math.PI / 2,
+        mat: 'metal_light',
+      });
+      for (let sy = 3.2; sy <= 4.8; sy += 0.28) {
+        k.box({ size: [4.4, 0.22, 0.16], pos: [0, sy, 7.18], mat: sy % 0.56 < 0.28 ? 'metal_light' : 'accent' });
+      }
+      // Overhead steel I-beam gantry projecting over the loading apron
+      k.box({ size: [0.35, 0.45, 2.6], pos: [0, 5.85, 7.9], mat: 'accent' });
+
+      k.entrance({ z: 7.0 });
+      k.sign({ pos: [0, 4.5, 7.45], rotY: 0, width: 5.0 });
+    });
+
+    // Crates and barrels outside on the loading apron (kept clear of the central door ring)
+    k.group('yard_crates_and_barrels', () => {
+      k.box({ size: [6.4, 0.1, 4.0], pos: [0, 0.05, 9.0], mat: 'plaza_stone' });
+      // West loading stack
+      k.prop({ kind: 'crate', pos: [-5.2, 0, 8.2], rotY: 0.15, collide: true });
+      k.prop({ kind: 'crate', pos: [-4.4, 0, 8.3], rotY: -0.1, collide: true });
+      k.prop({ kind: 'crate', pos: [-4.8, 0.6, 8.25], rotY: 0.4 });
+      k.prop({ kind: 'barrel', pos: [-6.2, 0, 8.1], collide: true });
+      // East loading stack
+      k.prop({ kind: 'barrel', pos: [4.8, 0, 8.2], collide: true });
+      k.prop({ kind: 'barrel', pos: [5.6, 0, 8.4], collide: true });
+      k.prop({ kind: 'crate', pos: [6.5, 0, 8.2], rotY: -0.2, collide: true });
+    });
+
+    k.light({ kind: 'point', pos: [0, 4.0, 8.2], color: '#FFD9B0', intensity: 1.4, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Industrial windows on north, east, and west walls
+    k.window({ wall: 'north', center: -3.2, width: 2.8, height: 1.9, sill: 1.0 });
+    k.window({ wall: 'north', center: 3.2, width: 2.8, height: 1.9, sill: 1.0 });
+    k.window({ wall: 'west', center: -1.0, width: 2.8, height: 1.9, sill: 1.0 });
+
+    // Heavy-duty workshop floor mat & snaking floor cable runs (like the reference image)
+    k.group('floor_mat_and_cables', () => {
+      k.plane({ size: [6.4, 4.6], pos: [0, 0.01, -0.8], rot: [-Math.PI / 2, 0, 0], mat: 'metal_dark' });
+      k.plane({ size: [6.0, 4.2], pos: [0, 0.015, -0.8], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_coral_dark' });
+
+      // Prominent rubberized cable runs snaking across the floor from server racks to workbenches
+      k.tube({
+        points: [
+          [6.8, 0.025, -4.2],
+          [4.2, 0.025, -4.4],
+          [1.6, 0.025, -4.2],
+          [0.2, 0.025, -4.5],
+        ],
+        radius: 0.025,
+        mat: 'cable',
+      });
+      k.tube({
+        points: [
+          [6.8, 0.025, -2.2],
+          [4.5, 0.025, -1.8],
+          [2.0, 0.025, -0.4],
+          [-2.5, 0.025, 0.2],
+          [-5.8, 0.025, -1.2],
+        ],
+        radius: 0.024,
+        mat: 'cable',
+      });
+      k.tube({
+        points: [
+          [-5.8, 0.022, -3.8],
+          [-3.2, 0.022, -4.2],
+          [-0.8, 0.022, -4.4],
+        ],
+        radius: 0.02,
+        mat: 'accent',
+      });
+    });
+
+    // Workbenches with monitors (`workbench`, `screen_stand`)
+    k.group('workbenches', () => {
+      // Lead engineering workbench at north center
+      k.prop({ kind: 'workbench', pos: [0, 0, -4.6], rotY: 0, collide: true });
+      k.prop({ kind: 'screen_stand', pos: [-0.45, 0.9, -4.65], rotY: 0.15 });
+      k.prop({ kind: 'screen_stand', pos: [0.45, 0.9, -4.65], rotY: -0.15 });
+      k.prop({ kind: 'lamp_desk', pos: [0.75, 0.9, -4.7] });
+      k.prop({ kind: 'mug', pos: [-0.05, 0.9, -4.4] });
+
+      // West workbench 1
+      k.prop({ kind: 'workbench', pos: [-6.4, 0, -3.8], rotY: 0, collide: true });
+      k.prop({ kind: 'screen_stand', pos: [-6.4, 0.9, -3.85], rotY: 0 });
+      k.prop({ kind: 'books', pos: [-5.8, 0.9, -3.75], rotY: 0.2 });
+
+      // West workbench 2
+      k.prop({ kind: 'workbench', pos: [-6.4, 0, -0.8], rotY: 0, collide: true });
+      k.prop({ kind: 'screen_stand', pos: [-6.6, 0.9, -0.85], rotY: 0.1 });
+      k.prop({ kind: 'lamp_desk', pos: [-5.8, 0.9, -0.85] });
+    });
+
+    // Server rack row on the east wall with blinking/emissive LED dots (`sphere`)
+    k.group('server_rack_row', () => {
+      const rackZs = [-4.4, -3.0, -1.6, -0.2];
+      for (const rz of rackZs) {
+        k.prop({ kind: 'server_rack', pos: [7.6, 0, rz], rotY: -Math.PI / 2, collide: true });
+        // Emissive LED status spheres along the front face of each rack
+        for (const ly of [0.6, 1.0, 1.4, 1.75]) {
+          k.sphere({
+            radius: 0.025,
+            pos: [7.08, ly, rz - 0.18],
+            mat: ly === 1.4 ? 'accent' : 'window_glow',
+          });
+          k.sphere({
+            radius: 0.022,
+            pos: [7.08, ly, rz + 0.12],
+            mat: 'window_glow',
+          });
+        }
+      }
+    });
+
+    // 3D printer-ish gantry box on a heavy stand + architecture diagram whiteboard
+    k.group('3d_printer_and_diagram', () => {
+      // 3D printer station in the south-west corner (x = -6.6, z = 2.8)
+      k.box({ size: [1.4, 0.85, 1.2], pos: [-6.6, 0.425, 2.8], mat: 'metal_dark', collide: true });
+      // Enclosure frame & glass panels
+      k.box({ size: [1.1, 1.05, 0.95], pos: [-6.6, 1.38, 2.8], mat: 'glass' });
+      for (const px of [-7.12, -6.08]) {
+        for (const pz of [2.35, 3.25]) {
+          k.box({ size: [0.07, 1.1, 0.07], pos: [px, 1.38, pz], mat: 'metal_light' });
+        }
+      }
+      k.box({ size: [1.18, 0.08, 1.02], pos: [-6.6, 1.92, 2.8], mat: 'accent' });
+      // Heated print bed, X/Y gantry rails, extruder head, and half-printed prototype part
+      k.box({ size: [0.75, 0.05, 0.65], pos: [-6.6, 1.02, 2.8], mat: 'metal_light' });
+      k.cylinder({ radiusTop: 0.02, radiusBottom: 0.02, height: 0.95, pos: [-6.6, 1.55, 2.8], rotZ: Math.PI / 2, mat: 'metal_light' });
+      k.box({ size: [0.16, 0.18, 0.16], pos: [-6.55, 1.52, 2.8], mat: 'accent_dark' });
+      k.torus({ radius: 0.16, tube: 0.04, pos: [-6.6, 1.12, 2.8], rotX: Math.PI / 2, mat: 'accent' });
+
+      // Whiteboard with system architecture diagram (boxes + connector tubes) at north-west
+      k.prop({ kind: 'whiteboard', pos: [-3.4, 0, -6.1], rotY: 0.15 });
+      k.box({ size: [0.32, 0.2, 0.03], pos: [-3.75, 1.45, -6.02], rotY: 0.15, mat: 'fabric_blue' });
+      k.box({ size: [0.32, 0.2, 0.03], pos: [-3.1, 1.45, -6.12], rotY: 0.15, mat: 'accent' });
+      k.box({ size: [0.36, 0.2, 0.03], pos: [-3.4, 1.1, -6.07], rotY: 0.15, mat: 'fabric_lavender' });
+
+      k.prop({ kind: 'crate', pos: [7.6, 0, 3.6], rotY: 0.2 });
+      k.prop({ kind: 'plant_tall', pos: [7.6, 0, 5.4] });
+    });
+
+    // Interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -2.0], color: '#FFE3B8', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-5.5, 3.2, -1.0], color: '#FFDAB0', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.5, 3.2, -2.0], color: '#D8ECFF', intensity: 1.1, distance: 10 });
+
+    // 6 NPC slots in the open workshop floor
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.8], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.4, 0, -2.6], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.6, 0, -2.6], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.4, 0, 0.6], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.6, 0, 0.6], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.2], facingY: 0 });
+  },
+};
+
+export default engineeringBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/growth.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const growthBuilding: BuildingModule = {
+  id: 'growth',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders: lighthouse tower on the west side, keeper's cottage holding the door
+    k.group('colliders', () => {
+      k.box({ size: [6.4, 16.0, 6.4], pos: [-7.0, 8.0, 1.2], mat: 'stucco', collide: true, name: 'lighthouse_col' });
+      k.box({ size: [5.4, 6.5, 11.2], pos: [5.6, 3.25, 0.6], mat: 'brick', collide: true, name: 'cottage_east_col' });
+      k.box({ size: [5.8, 6.5, 9.6], pos: [-0.4, 3.25, -0.2], mat: 'brick', collide: true, name: 'cottage_center_col' });
+    });
+
+    // Tapered lighthouse tower (r 3.2 -> 2.2, 16m shaft + lantern room) in white stucco & yellow accent stripes
+    k.group('lighthouse_tower', () => {
+      const lx = -7.0;
+      const lz = 1.2;
+      // Octagonal/round granite foundation base
+      k.cylinder({
+        radiusTop: 3.5,
+        radiusBottom: 3.8,
+        height: 1.8,
+        pos: [lx, 0.9, lz],
+        mat: 'plaza_stone',
+        segments: 24,
+      });
+
+      // 5 stacked tapered segments alternating white (`stucco`) and growth yellow (`accent`)
+      const bands: [number, number, number, number, 'stucco' | 'accent'][] = [
+        [3.2, 3.0, 3.2, 3.4, 'stucco'],
+        [3.0, 2.8, 3.2, 6.6, 'accent'],
+        [2.8, 2.6, 3.2, 9.8, 'stucco'],
+        [2.6, 2.4, 3.2, 13.0, 'accent'],
+        [2.4, 2.2, 3.2, 16.2, 'stucco'],
+      ];
+      for (const [rBot, rTop, h, yCenter, mat] of bands) {
+        k.cylinder({
+          radiusTop: rTop,
+          radiusBottom: rBot,
+          height: h,
+          pos: [lx, yCenter, lz],
+          mat,
+          segments: 28,
+        });
+      }
+
+      // Narrow vertical slit windows up the lighthouse shaft
+      for (const wy of [4.2, 8.2, 12.2, 15.8]) {
+        k.box({ size: [0.65, 1.3, 0.25], pos: [lx, wy, lz + 2.65], mat: 'window_glow' });
+        k.box({ size: [0.85, 1.5, 0.2], pos: [lx, wy, lz + 2.6], mat: 'trim' });
+      }
+
+      // Observation gallery deck with corbels & dark metal railing at y = 18.0
+      k.cylinder({
+        radiusTop: 2.95,
+        radiusBottom: 2.3,
+        height: 0.55,
+        pos: [lx, 18.05, lz],
+        mat: 'trim',
+        segments: 28,
+      });
+      k.torus({
+        radius: 2.8,
+        tube: 0.06,
+        pos: [lx, 19.1, lz],
+        rotX: Math.PI / 2,
+        mat: 'metal_dark',
+      });
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2;
+        k.cylinder({
+          radiusTop: 0.04,
+          radiusBottom: 0.04,
+          height: 0.85,
+          pos: [lx + Math.sin(a) * 2.8, 18.7, lz + Math.cos(a) * 2.8],
+          mat: 'metal_dark',
+        });
+      }
+
+      // Lantern room with emissive glass (`window_glow`) & conical cap
+      k.cylinder({
+        radiusTop: 1.95,
+        radiusBottom: 1.95,
+        height: 2.4,
+        pos: [lx, 19.5, lz],
+        mat: 'window_glow',
+        segments: 20,
+      });
+      // Vertical storm bars around lantern glass
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        k.box({
+          size: [0.1, 2.4, 0.1],
+          pos: [lx + Math.sin(a) * 1.98, 19.5, lz + Math.cos(a) * 1.98],
+          rotY: a,
+          mat: 'metal_dark',
+        });
+      }
+      k.cone({ radius: 2.35, height: 2.0, pos: [lx, 21.7, lz], mat: 'roof_red', segments: 24 });
+      k.sphere({ radius: 0.26, pos: [lx, 22.8, lz], mat: 'accent' });
+    });
+
+    // Keeper's cottage beside the lighthouse holding the front door at x = 0, z = 7.0
+    k.group('keepers_cottage', () => {
+      // Stone foundation & warm plaster/brick walls
+      k.box({ size: [13.2, 1.1, 12.2], pos: [2.2, 0.55, 0.8], mat: 'plaza_stone' });
+      k.box({ size: [12.8, 6.2, 11.8], pos: [2.2, 4.2, 0.8], mat: 'plaster_warm', name: 'cottage_walls' });
+      k.box({ size: [13.2, 0.35, 12.2], pos: [2.2, 7.35, 0.8], mat: 'trim' });
+      k.box({ size: [13.0, 0.3, 12.0], pos: [2.2, 7.65, 0.8], mat: 'accent' });
+
+      // Pitched red-tile keeper's roof & brick chimney
+      k.box({ size: [12.4, 1.3, 11.0], pos: [2.2, 8.4, 0.8], mat: 'roof_red' });
+      k.box({ size: [10.6, 1.1, 9.0], pos: [2.2, 9.5, 0.8], mat: 'roof_red' });
+      k.box({ size: [1.2, 3.2, 1.2], pos: [6.8, 10.2, -2.5], mat: 'brick' });
+
+      // Front cottage windows (4 glowing windows across 2 levels)
+      for (const wx of [3.2, 6.4]) {
+        for (const wy of [2.6, 5.5]) {
+          k.box({ size: [1.5, 1.9, 0.2], pos: [wx, wy, 6.72], mat: 'trim' });
+          k.box({ size: [1.2, 1.6, 0.24], pos: [wx, wy, 6.75], mat: 'window_glow' });
+          k.box({ size: [0.06, 1.6, 0.28], pos: [wx, wy, 6.78], mat: 'metal_dark' });
+          k.box({ size: [1.2, 0.06, 0.28], pos: [wx, wy + 0.1, 6.78], mat: 'metal_dark' });
+          k.box({ size: [1.7, 0.16, 0.36], pos: [wx, wy - 0.98, 6.84], mat: 'plaza_stone' });
+        }
+      }
+
+      // Entrance gable at x = 0, z = 7.0
+      k.box({ size: [4.2, 5.6, 1.2], pos: [0, 2.8, 6.5], mat: 'plaster_warm' });
+      k.box({ size: [4.5, 0.35, 1.5], pos: [0, 5.65, 6.5], mat: 'accent' });
+      k.entrance({ z: 7.1 });
+      k.sign({ pos: [0, 4.35, 7.25], rotY: 0, width: 4.6 });
+    });
+
+    // Coastal forecourt details: barrels, bollards, flowerbeds
+    k.group('coastal_forecourt', () => {
+      k.box({ size: [4.2, 0.08, 4.0], pos: [0, 0.04, 9.2], mat: 'plaza_stone' });
+      k.prop({ kind: 'barrel', pos: [-3.8, 0, 7.8], collide: true });
+      k.prop({ kind: 'barrel', pos: [-3.1, 0, 8.1], collide: true });
+      k.prop({ kind: 'flowerbed', pos: [5.0, 0, 8.8] });
+      k.prop({ kind: 'bench', pos: [5.2, 0, 10.6], rotY: 0, collide: true });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.8, 7.9], color: '#FFF0B8', intensity: 1.4, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Cottage windows
+    k.window({ wall: 'north', center: -3.2, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'east', center: -1.2, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'west', center: 0, width: 2.6, height: 1.8, sill: 1.0 });
+
+    // Nautical chart rug in the center of the cottage
+    k.plane({ size: [6.4, 4.4], pos: [0, 0.01, -0.8], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_blue' });
+    k.plane({ size: [5.8, 3.8], pos: [0, 0.015, -0.8], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_cream' });
+
+    // Central map table with launch route lines (`tube`) and miniature lighthouse model on top
+    k.group('map_table_and_model', () => {
+      // Long chart table at [0, 0, -1.2] (`collide: true`)
+      k.prop({ kind: 'table_long', pos: [0, 0, -1.2], rotY: 0, collide: true });
+      // Large sea & market chart plane on the table surface (y = 0.77)
+      k.plane({ size: [2.6, 0.9], pos: [0, 0.768, -1.2], rot: [-Math.PI / 2, 0, 0], mat: 'paper' });
+
+      // Plotted launch route lines (`tube`) across the map table
+      k.tube({
+        points: [
+          [-1.1, 0.775, -1.45],
+          [-0.5, 0.775, -1.1],
+          [0.1, 0.775, -1.35],
+          [0.7, 0.775, -0.95],
+          [1.15, 0.775, -1.15],
+        ],
+        radius: 0.014,
+        mat: 'accent',
+      });
+      k.tube({
+        points: [
+          [-1.0, 0.775, -0.95],
+          [-0.2, 0.775, -1.3],
+          [0.5, 0.775, -1.2],
+          [1.1, 0.775, -1.4],
+        ],
+        radius: 0.012,
+        mat: 'fabric_coral',
+      });
+
+      // Miniature lighthouse model standing on the west end of the map table
+      const mx = -0.95;
+      const mz = -1.35;
+      k.cylinder({ radiusTop: 0.14, radiusBottom: 0.16, height: 0.04, pos: [mx, 0.78, mz], mat: 'plaza_stone' });
+      k.cylinder({ radiusTop: 0.08, radiusBottom: 0.12, height: 0.22, pos: [mx, 0.91, mz], mat: 'stucco' });
+      k.cylinder({ radiusTop: 0.07, radiusBottom: 0.08, height: 0.14, pos: [mx, 1.09, mz], mat: 'accent' });
+      k.cylinder({ radiusTop: 0.06, radiusBottom: 0.06, height: 0.1, pos: [mx, 1.21, mz], mat: 'window_glow' });
+      k.cone({ radius: 0.08, height: 0.09, pos: [mx, 1.3, mz], mat: 'roof_red' });
+
+      k.prop({ kind: 'books', pos: [0.85, 0.76, -0.95], rotY: 0.3 });
+      k.prop({ kind: 'mug', pos: [0.35, 0.76, -0.88] });
+    });
+
+    // Big growth chart on the north wall (rising 3D bars from boxes)
+    k.group('wall_growth_chart', () => {
+      k.box({ size: [4.2, 2.1, 0.08], pos: [1.8, 2.3, -6.9], mat: 'wood_dark' });
+      k.box({ size: [3.95, 1.85, 0.1], pos: [1.8, 2.3, -6.88], mat: 'plaster_wall' });
+      // 7 rising 3D bars showing exponential launch traction
+      const barHeights = [0.28, 0.42, 0.58, 0.76, 1.0, 1.28, 1.56];
+      for (let i = 0; i < barHeights.length; i++) {
+        const bh = barHeights[i];
+        const bx = 0.3 + i * 0.5;
+        k.box({
+          size: [0.32, bh, 0.14],
+          pos: [bx, 1.45 + bh / 2, -6.82],
+          mat: i >= 5 ? 'accent' : i >= 3 ? 'fabric_blue' : 'fabric_lavender',
+        });
+      }
+    });
+
+    // Nautical props (barrels, rope coil = torus) & strategy workstations
+    k.group('nautical_props_and_desks', () => {
+      // Barrels and coiled rope (`torus` stack) in the north-west corner
+      k.prop({ kind: 'barrel', pos: [-7.6, 0, -5.6], collide: true });
+      k.prop({ kind: 'barrel', pos: [-6.8, 0, -5.8], collide: true });
+      for (let ry = 0.04; ry <= 0.2; ry += 0.05) {
+        k.torus({
+          radius: 0.28,
+          tube: 0.032,
+          pos: [-7.4, ry, -4.5],
+          rotX: Math.PI / 2,
+          mat: 'wood_light',
+        });
+      }
+
+      // Strategy desks on west and east walls
+      k.prop({ kind: 'desk', pos: [-6.6, 0, -2.2], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'chair', pos: [-7.5, 0, -2.2], rotY: Math.PI / 2 });
+      k.prop({ kind: 'screen_stand', pos: [-6.55, 0.75, -2.2], rotY: Math.PI / 2 });
+
+      k.prop({ kind: 'desk', pos: [6.6, 0, -3.6], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'chair', pos: [7.5, 0, -3.6], rotY: -Math.PI / 2 });
+      k.prop({ kind: 'lamp_desk', pos: [6.55, 0.75, -3.9] });
+      k.prop({ kind: 'books', pos: [6.55, 0.75, -3.3], rotY: -0.2 });
+
+      k.prop({ kind: 'telescope', pos: [-3.2, 0, -5.6], rotY: Math.PI + 0.2 });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, 2.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, 5.0] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.0] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -1.2], color: '#FFF0C2', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-5.0, 3.2, -2.0], color: '#FFE3B0', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.0, 3.2, -2.0], color: '#FFE3B0', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots around the central map table (clear of table at x∈[-1.5,1.5], z∈[-1.75,-0.65])
+    k.npcSlot({ id: 's1', pos: [0, 0, -3.2], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [3.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.4, 0, 1.4], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.4, 0, 1.4], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 1.8], facingY: 0 });
+  },
+};
+
+export default growthBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/lead-intel.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const leadIntelBuilding: BuildingModule = {
+  id: 'lead-intel',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the Beaux-Arts Archive library
+    k.group('colliders', () => {
+      k.box({ size: [7.6, 9.0, 13.6], pos: [-6.4, 4.5, -0.4], mat: 'stucco', collide: true, name: 'lib_west_col' });
+      k.box({ size: [7.6, 9.0, 13.6], pos: [6.4, 4.5, -0.4], mat: 'stucco', collide: true, name: 'lib_east_col' });
+      k.box({ size: [4.6, 9.0, 11.4], pos: [0, 4.5, -1.5], mat: 'stucco', collide: true, name: 'lib_center_col' });
+    });
+
+    // Library-like facade: stucco with tall arched windows, wide steps, two lamps, slate-blue door, roof balustrade
+    k.group('archive_facade', () => {
+      // Heavy rusticated limestone base course
+      k.box({ size: [21.2, 1.6, 14.4], pos: [0, 0.8, -0.4], mat: 'plaza_stone', name: 'rusticated_base' });
+      // Main monumental stucco hall
+      k.box({ size: [20.6, 7.8, 13.8], pos: [0, 5.5, -0.4], mat: 'stucco', name: 'stucco_walls' });
+
+      // Classical pilasters dividing the front into 5 grand bays
+      for (const px of [-9.8, -5.8, -2.2, 2.2, 5.8, 9.8]) {
+        k.box({ size: [0.65, 7.8, 0.45], pos: [px, 5.5, 6.55], mat: 'trim' });
+        k.box({ size: [0.8, 0.4, 0.55], pos: [px, 9.2, 6.58], mat: 'trim' });
+      }
+
+      // Slate-blue (`accent`) frieze band and classical projecting cornice
+      k.box({ size: [21.0, 0.55, 14.2], pos: [0, 9.65, -0.4], mat: 'accent', name: 'slate_frieze' });
+      k.box({ size: [21.6, 0.45, 14.8], pos: [0, 10.15, -0.4], mat: 'trim', name: 'main_cornice' });
+
+      // Classical roof balustrade (corner pedestals + row of stone balusters + top rail)
+      k.box({ size: [20.8, 0.25, 14.0], pos: [0, 10.5, -0.4], mat: 'plaza_stone' });
+      k.box({ size: [20.8, 0.22, 0.45], pos: [0, 11.55, 6.45], mat: 'trim', name: 'balustrade_rail' });
+      for (let bx = -9.6; bx <= 9.6; bx += 0.8) {
+        const isPier = Math.abs(bx) > 9.4 || Math.abs(Math.abs(bx) - 5.8) < 0.3 || Math.abs(Math.abs(bx) - 2.2) < 0.3;
+        if (isPier) {
+          k.box({ size: [0.55, 1.0, 0.55], pos: [bx, 11.0, 6.45], mat: 'trim' });
+        } else {
+          k.cylinder({ radiusTop: 0.1, radiusBottom: 0.13, height: 0.85, pos: [bx, 11.0, 6.45], mat: 'plaza_stone' });
+        }
+      }
+      // Low copper/slate hipped roof behind the balustrade
+      k.box({ size: [18.4, 1.2, 11.6], pos: [0, 11.0, -0.6], mat: 'roof' });
+    });
+
+    // 4 Tall arched reading-room windows on the front facade
+    k.group('arched_windows', () => {
+      for (const wx of [-7.8, -4.0, 4.0, 7.8]) {
+        // Rectangular window shaft
+        k.box({ size: [2.2, 4.4, 0.22], pos: [wx, 5.0, 6.48], mat: 'trim' });
+        k.box({ size: [1.85, 4.2, 0.26], pos: [wx, 5.0, 6.51], mat: 'window_glow' });
+        // Arched semicircular head
+        k.cylinder({
+          radiusTop: 1.1,
+          radiusBottom: 1.1,
+          height: 0.22,
+          pos: [wx, 7.2, 6.48],
+          rotX: Math.PI / 2,
+          mat: 'trim',
+        });
+        k.cylinder({
+          radiusTop: 0.92,
+          radiusBottom: 0.92,
+          height: 0.26,
+          pos: [wx, 7.2, 6.51],
+          rotX: Math.PI / 2,
+          mat: 'window_glow',
+        });
+        // Mullions & stone sill
+        k.box({ size: [0.07, 5.0, 0.3], pos: [wx, 5.3, 6.55], mat: 'metal_dark' });
+        k.box({ size: [1.85, 0.07, 0.3], pos: [wx, 4.6, 6.55], mat: 'metal_dark' });
+        k.box({ size: [1.85, 0.07, 0.3], pos: [wx, 6.2, 6.55], mat: 'metal_dark' });
+        k.box({ size: [2.5, 0.22, 0.45], pos: [wx, 2.75, 6.62], mat: 'plaza_stone' });
+      }
+    });
+
+    // Slate-blue (`accent`) monumental door surround, wide steps, two lamps, sign
+    k.group('entrance_and_steps', () => {
+      // Accent slate-blue portal surround framing the entrance
+      k.box({ size: [3.6, 4.6, 0.45], pos: [0, 2.9, 6.65], mat: 'accent', name: 'slate_blue_portal' });
+      k.box({ size: [4.0, 0.4, 0.65], pos: [0, 5.3, 6.72], mat: 'trim' });
+
+      // Wide civic steps leading to the door (collide: false default)
+      k.box({ size: [7.6, 0.28, 2.8], pos: [0, 0.14, 8.0], mat: 'plaza_stone' });
+      k.box({ size: [6.8, 0.28, 2.0], pos: [0, 0.42, 7.6], mat: 'plaza_stone' });
+
+      // Two classical bronze/dark-metal pedestal lamps flanking the steps
+      for (const lx of [-3.4, 3.4]) {
+        k.box({ size: [0.75, 0.9, 0.75], pos: [lx, 0.45, 8.8], mat: 'plaza_stone', collide: true });
+        k.cylinder({ radiusTop: 0.08, radiusBottom: 0.12, height: 2.1, pos: [lx, 1.95, 8.8], mat: 'metal_dark' });
+        k.sphere({ radius: 0.28, pos: [lx, 3.15, 8.8], mat: 'window_glow' });
+      }
+
+      k.entrance({ z: 6.8 });
+      k.sign({ pos: [0, 4.85, 7.05], rotY: 0, width: 4.8 });
+
+      k.prop({ kind: 'flowerbed', pos: [-6.8, 0, 8.8] });
+      k.prop({ kind: 'flowerbed', pos: [6.8, 0, 8.8] });
+    });
+
+    k.light({ kind: 'point', pos: [0, 4.0, 7.8], color: '#FFE8C5', intensity: 1.3, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Tall library windows on north, east, and west walls
+    k.window({ wall: 'north', center: -3.5, width: 2.6, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'north', center: 3.5, width: 2.6, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'east', center: 0, width: 2.8, height: 2.0, sill: 0.9 });
+
+    // Classic library runner rug in the center
+    k.plane({ size: [5.8, 4.8], pos: [0, 0.01, -0.6], rot: [-Math.PI / 2, 0, 0], mat: 'accent_dark' });
+    k.plane({ size: [5.3, 4.3], pos: [0, 0.015, -0.6], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_blue' });
+
+    // Big network-graph board (spheres + tubes on a wall) centered on the north wall
+    k.group('network_graph_board', () => {
+      k.box({ size: [4.2, 2.2, 0.1], pos: [0, 2.3, -6.9], mat: 'wood_dark' });
+      k.box({ size: [3.96, 1.96, 0.12], pos: [0, 2.3, -6.88], mat: 'metal_dark' });
+
+      // ICP & company-level lead evidence nodes (`sphere`) and relationship edges (`tube`)
+      const nodes: [number, number, 'accent' | 'fabric_coral' | 'fabric_blue' | 'window_glow'][] = [
+        [0, 2.35, 'window_glow'],
+        [-1.3, 2.8, 'accent'],
+        [-1.4, 1.8, 'fabric_coral'],
+        [-0.5, 1.65, 'fabric_blue'],
+        [0.6, 2.9, 'fabric_blue'],
+        [1.35, 2.55, 'accent'],
+        [1.2, 1.7, 'fabric_coral'],
+      ];
+      for (const [nx, ny, mat] of nodes) {
+        k.sphere({ radius: ny === 2.35 && nx === 0 ? 0.14 : 0.095, pos: [nx, ny, -6.78], mat });
+      }
+      const edges: [[number, number], [number, number]][] = [
+        [[0, 2.35], [-1.3, 2.8]],
+        [[0, 2.35], [-1.4, 1.8]],
+        [[0, 2.35], [-0.5, 1.65]],
+        [[0, 2.35], [0.6, 2.9]],
+        [[0, 2.35], [1.35, 2.55]],
+        [[0, 2.35], [1.2, 1.7]],
+        [[-1.3, 2.8], [-1.4, 1.8]],
+        [[0.6, 2.9], [1.35, 2.55]],
+        [[1.35, 2.55], [1.2, 1.7]],
+      ];
+      for (const [[x1, y1], [x2, y2]] of edges) {
+        k.tube({
+          points: [
+            [x1, y1, -6.79],
+            [x2, y2, -6.79],
+          ],
+          radius: 0.015,
+          mat: 'paper',
+        });
+      }
+    });
+
+    // Card-catalog cabinets (wooden box grid of drawers with brass pulls) on the west wall
+    k.group('card_catalog_cabinets', () => {
+      k.box({ size: [0.65, 1.8, 3.6], pos: [-8.45, 0.9, -2.2], mat: 'wood_dark', collide: true });
+      for (let cy = 0.35; cy <= 1.55; cy += 0.24) {
+        for (let cz = -3.7; cz <= -0.7; cz += 0.38) {
+          k.box({ size: [0.06, 0.19, 0.32], pos: [-8.11, cy, cz], mat: 'wood_light' });
+          k.box({ size: [0.08, 0.05, 0.1], pos: [-8.09, cy, cz], mat: 'accent' });
+        }
+      }
+    });
+
+    // Tall bookshelves in rows along the east wall & south-west (leaving wide walkable aisles)
+    k.group('bookshelf_rows', () => {
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, -4.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, -2.6], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, 1.8], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, 3.4], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [-8.3, 0, 2.6], rotY: Math.PI / 2, collide: true });
+    });
+
+    // Reading tables with green/banker desk lamps & lead dossiers
+    k.group('reading_tables', () => {
+      // Lead intelligence desk at north center
+      k.prop({ kind: 'desk', pos: [0, 0, -4.4], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [0, 0, -5.3], rotY: 0 });
+      k.prop({ kind: 'lamp_desk', pos: [-0.45, 0.75, -4.45] });
+      k.prop({ kind: 'screen_stand', pos: [0.35, 0.75, -4.45], rotY: -0.1 });
+      k.prop({ kind: 'books', pos: [-0.1, 0.75, -4.25], rotY: 0.2 });
+
+      // West reading table
+      k.prop({ kind: 'desk', pos: [-5.6, 0, -2.2], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [-5.6, 0, -1.3], rotY: Math.PI });
+      k.prop({ kind: 'lamp_desk', pos: [-5.95, 0.75, -2.25] });
+      k.prop({ kind: 'books', pos: [-5.3, 0.75, -2.15], rotY: -0.25 });
+
+      // East reading table
+      k.prop({ kind: 'desk', pos: [5.4, 0, -2.2], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [5.4, 0, -1.3], rotY: Math.PI });
+      k.prop({ kind: 'lamp_desk', pos: [5.75, 0.75, -2.25] });
+      k.prop({ kind: 'books', pos: [5.1, 0.75, -2.15], rotY: 0.15 });
+      k.prop({ kind: 'mug', pos: [5.45, 0.75, -2.0] });
+
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, -5.8] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.4] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -2.0], color: '#FFE5BD', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-5.2, 3.0, -2.0], color: '#D8F5E0', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.2, 3.0, -2.0], color: '#D8F5E0', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the wide central reading room
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.6], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-2.8, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [2.8, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.2, 0, 1.2], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [3.2, 0, 1.2], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.2], facingY: 0 });
+  },
+};
+
+export default leadIntelBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/sales.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const salesBuilding: BuildingModule = {
+  id: 'sales',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the enclosed back hall (leaving the open market colonnade & entrance at z=6.8 clear)
+    k.group('colliders', () => {
+      k.box({ size: [7.6, 7.5, 11.2], pos: [-6.4, 3.75, -1.6], mat: 'brick', collide: true, name: 'mkt_west_col' });
+      k.box({ size: [7.6, 7.5, 11.2], pos: [6.4, 3.75, -1.6], mat: 'brick', collide: true, name: 'mkt_east_col' });
+      k.box({ size: [4.6, 7.5, 10.0], pos: [0, 3.75, -2.2], mat: 'brick', collide: true, name: 'mkt_center_col' });
+    });
+
+    // Enclosed back showroom hall + big pitched market roof extending over the open front colonnade
+    k.group('market_hall_structure', () => {
+      // Stone market platform covering both the enclosed hall and open front arcade
+      k.box({ size: [21.6, 0.35, 16.8], pos: [0, 0.175, 0.8], mat: 'plaza_stone', name: 'market_platform' });
+
+      // Enclosed back hall (z = -7.2 to +4.2, with central entrance bay reaching z = 6.8)
+      k.box({ size: [20.4, 7.2, 11.4], pos: [0, 3.8, -1.5], mat: 'plaster_warm', name: 'back_hall' });
+      k.box({ size: [5.0, 7.2, 2.8], pos: [0, 3.8, 5.4], mat: 'plaster_warm', name: 'entrance_vestibule' });
+
+      // Glowing display windows along the front wall of the enclosed hall
+      for (const wx of [-7.8, -4.6, 4.6, 7.8]) {
+        k.box({ size: [2.2, 3.2, 0.22], pos: [wx, 3.0, 4.22], mat: 'metal_dark' });
+        k.box({ size: [1.95, 2.9, 0.26], pos: [wx, 3.0, 4.25], mat: 'window_glow' });
+      }
+      for (const wx of [-1.7, 1.7]) {
+        k.box({ size: [0.85, 2.8, 0.22], pos: [wx, 3.0, 6.82], mat: 'window_glow' });
+      }
+
+      // Open-fronted market colonnade: dark cast-iron columns supporting the big pitched roof at z = 8.6
+      for (const cx of [-9.8, -6.4, -3.2, 3.2, 6.4, 9.8]) {
+        k.cylinder({ radiusTop: 0.22, radiusBottom: 0.26, height: 6.8, pos: [cx, 3.6, 8.6], mat: 'metal_dark' });
+        k.box({ size: [0.65, 0.45, 0.65], pos: [cx, 0.5, 8.6], mat: 'plaza_stone' });
+        // Arched metal spandrel brackets
+        k.box({ size: [1.4, 0.35, 0.25], pos: [cx, 6.7, 8.6], mat: 'metal_dark' });
+      }
+
+      // Big pitched market hall roof + glazed clerestory monitor spanning the entire hall & front arcade
+      k.box({ size: [21.6, 0.55, 16.6], pos: [0, 7.25, 0.8], mat: 'metal_dark', name: 'roof_truss_beam' });
+      k.box({ size: [21.2, 1.3, 16.0], pos: [0, 8.1, 0.8], mat: 'roof_red', name: 'market_roof_lower' });
+      k.box({ size: [18.4, 1.1, 13.6], pos: [0, 9.2, 0.8], mat: 'roof_red', name: 'market_roof_upper' });
+      k.box({ size: [14.0, 1.2, 9.6], pos: [0, 10.3, 0.8], mat: 'window_glow', name: 'market_clerestory' });
+      k.box({ size: [14.6, 0.45, 10.2], pos: [0, 11.1, 0.8], mat: 'accent', name: 'clerestory_cap' });
+    });
+
+    // Striped awnings in `accent` magenta & `fabric_cream` + market stalls (`counter`) under the roof
+    k.group('awnings_and_stalls', () => {
+      // Striped awnings across the front bays (`x = -9.6..-3.4`, `x = -2.8..2.8`, `x = 3.4..9.6`)
+      const bayRanges: [number, number][] = [
+        [-9.5, -3.5],
+        [-2.6, 2.6],
+        [3.5, 9.5],
+      ];
+      for (const [xStart, xEnd] of bayRanges) {
+        const stripeWidth = 0.6;
+        let idx = 0;
+        for (let sx = xStart; sx <= xEnd; sx += stripeWidth) {
+          k.roundedBox({
+            size: [stripeWidth + 0.02, 0.28, 2.2],
+            pos: [sx, 5.5, 9.2],
+            radius: 0.05,
+            mat: idx % 2 === 0 ? 'accent' : 'fabric_cream',
+          });
+          idx++;
+        }
+      }
+
+      // Market stalls (`counter` with merchandise displays) under the open roof on left & right sides
+      for (const sx of [-7.6, -4.8, 4.8, 7.6]) {
+        k.prop({ kind: 'counter', pos: [sx, 0.35, 6.8], rotY: 0, collide: true });
+        // Tiered product display boxes on each stall counter
+        k.roundedBox({ size: [0.55, 0.24, 0.35], pos: [sx - 0.45, 1.52, 6.8], radius: 0.04, mat: 'accent' });
+        k.roundedBox({ size: [0.55, 0.24, 0.35], pos: [sx + 0.45, 1.52, 6.8], radius: 0.04, mat: 'fabric_blue' });
+        k.box({ size: [0.35, 0.14, 0.28], pos: [sx, 1.47, 6.85], mat: 'paper' });
+      }
+
+      // Central entrance into the enclosed showroom at z = 6.8 & unoccluded sign
+      k.entrance({ z: 6.8 });
+      k.sign({ pos: [0, 4.5, 9.8], rotY: 0, width: 5.0 });
+    });
+
+    k.light({ kind: 'point', pos: [0, 4.2, 8.2], color: '#FFE3EC', intensity: 1.4, distance: 11 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Bright showroom windows
+    k.window({ wall: 'north', center: 0, width: 3.4, height: 1.9, sill: 1.0 });
+    k.window({ wall: 'east', center: 0, width: 2.8, height: 1.9, sill: 1.0 });
+    k.window({ wall: 'west', center: 1.5, width: 2.6, height: 1.9, sill: 1.0 });
+
+    // Magenta-bordered showroom rug
+    k.plane({ size: [6.4, 4.4], pos: [0, 0.01, -0.5], rot: [-Math.PI / 2, 0, 0], mat: 'accent' });
+    k.plane({ size: [5.9, 3.9], pos: [0, 0.015, -0.5], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_pink' });
+
+    // Stage-like demo counter with a large presentation `screen` and deal bell on the counter
+    k.group('demo_stage_counter', () => {
+      // Raised stage platform at north center (collide: false so counter holds the single collider)
+      k.roundedBox({ size: [4.8, 0.18, 2.4], pos: [0, 0.09, -4.8], radius: 0.05, mat: 'wood_dark' });
+      k.box({ size: [4.85, 0.06, 2.45], pos: [0, 0.16, -4.8], mat: 'accent' });
+
+      // Demo counter on the stage (`collide: true`)
+      k.prop({ kind: 'counter', pos: [0, 0.18, -4.3], rotY: 0, collide: true });
+
+      // Large pitch & pricing demo screen behind the counter + desk screen
+      k.box({ size: [3.2, 1.7, 0.1], pos: [0, 2.4, -6.85], mat: 'metal_dark' });
+      k.box({ size: [3.0, 1.5, 0.12], pos: [0, 2.4, -6.83], mat: 'screen' });
+      k.prop({ kind: 'screen_stand', pos: [-0.45, 1.23, -4.35], rotY: 0.15 });
+
+      // Golden "Deal Bell" on the counter (base + dome cone + top button sphere)
+      k.cylinder({ radiusTop: 0.12, radiusBottom: 0.14, height: 0.04, pos: [0.55, 1.25, -4.2], mat: 'metal_dark' });
+      k.cone({ radius: 0.11, height: 0.1, pos: [0.55, 1.32, -4.2], mat: 'accent' });
+      k.sphere({ radius: 0.03, pos: [0.55, 1.38, -4.2], mat: 'metal_light' });
+
+      // Pricing page copy sheets on counter
+      k.box({ size: [0.3, 0.06, 0.22], pos: [0.05, 1.26, -4.18], rotY: 0.1, mat: 'paper' });
+    });
+
+    // Pipeline wall on the west wall: 5 columns of colored deal cards representing pipeline stages
+    k.group('pipeline_wall', () => {
+      k.box({ size: [0.1, 1.9, 4.2], pos: [-8.88, 2.1, -1.8], mat: 'wood_dark' });
+      k.box({ size: [0.12, 1.76, 4.04], pos: [-8.86, 2.1, -1.8], mat: 'plaster_wall' });
+
+      const stages: { z: number; headerMat: 'fabric_blue' | 'fabric_lavender' | 'fabric_coral' | 'accent'; count: number }[] = [
+        { z: -3.4, headerMat: 'fabric_blue', count: 4 },
+        { z: -2.6, headerMat: 'fabric_lavender', count: 4 },
+        { z: -1.8, headerMat: 'fabric_coral', count: 3 },
+        { z: -1.0, headerMat: 'accent', count: 3 },
+        { z: -0.2, headerMat: 'accent', count: 2 },
+      ];
+      for (const st of stages) {
+        // Column divider & stage header
+        k.box({ size: [0.03, 0.18, 0.62], pos: [-8.78, 2.8, st.z], mat: st.headerMat });
+        // Stack of deal cards in this stage column
+        for (let c = 0; c < st.count; c++) {
+          k.box({
+            size: [0.03, 0.24, 0.56],
+            pos: [-8.78, 2.42 - c * 0.32, st.z],
+            mat: c === 0 ? st.headerMat : 'paper',
+          });
+        }
+      }
+    });
+
+    // Customer lounge chairs & pitch desks on the east and south-west sides
+    k.group('customer_lounge', () => {
+      // Customer seating lounge on the east side
+      k.prop({ kind: 'sofa', pos: [6.8, 0, -2.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'armchair', pos: [5.4, 0, -3.8], rotY: -0.6 });
+      k.prop({ kind: 'armchair', pos: [5.4, 0, -0.6], rotY: -2.5 });
+      k.prop({ kind: 'table_round', pos: [5.4, 0, -2.2], collide: true });
+      k.prop({ kind: 'mug', pos: [5.3, 0.75, -2.1] });
+      k.prop({ kind: 'books', pos: [5.55, 0.75, -2.3], rotY: 0.4 });
+
+      // Sales rep desks
+      k.prop({ kind: 'desk', pos: [-6.4, 0, -4.4], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [-6.4, 0, -3.5], rotY: Math.PI });
+      k.prop({ kind: 'screen_stand', pos: [-6.4, 0.75, -4.45], rotY: 0 });
+
+      k.prop({ kind: 'desk', pos: [6.4, 0, 2.4], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [6.4, 0, 3.3], rotY: Math.PI });
+      k.prop({ kind: 'lamp_desk', pos: [6.85, 0.75, 2.35] });
+
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, 5.0] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.0] });
+      k.prop({ kind: 'lamp_floor', pos: [7.8, 0, -5.6] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -2.2], color: '#FFE4EE', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [5.2, 3.2, -2.0], color: '#FFE3B8', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [-5.2, 3.2, -1.5], color: '#FFE3B8', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the open showroom floor
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.4], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.4, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [2.6, 0, -2.2], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.6, 0, 1.0], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [2.6, 0, 1.0], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [0, 0, 2.4], facingY: 0 });
+  },
+};
+
+export default salesBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/finance-people.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const financePeopleBuilding: BuildingModule = {
+  id: 'finance-people',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the solid stone bank (leaving entrance at z=7.2 clear)
+    k.group('colliders', () => {
+      k.box({ size: [7.4, 9.0, 13.6], pos: [-6.3, 4.5, -0.4], mat: 'plaza_stone', collide: true, name: 'bank_west_col' });
+      k.box({ size: [7.4, 9.0, 13.6], pos: [6.3, 4.5, -0.4], mat: 'plaza_stone', collide: true, name: 'bank_east_col' });
+      k.box({ size: [4.6, 9.0, 11.4], pos: [0, 4.5, -1.5], mat: 'plaza_stone', collide: true, name: 'bank_center_col' });
+    });
+
+    // Solid stone bank: symmetrical facade, 4 pillars, triangular pediment, green doors, vault_door visible through front window
+    k.group('bank_temple_facade', () => {
+      // Heavy stepped granite base
+      k.box({ size: [21.0, 1.4, 14.6], pos: [0, 0.7, -0.2], mat: 'plaza_stone' });
+      // Main ashlar stone building mass
+      k.box({ size: [20.2, 8.2, 13.8], pos: [0, 5.5, -0.4], mat: 'plaza_stone', name: 'stone_walls' });
+      // Rusticated horizontal stone bands across the facade
+      for (const ry of [2.8, 4.8, 6.8, 8.8]) {
+        k.box({ size: [20.5, 0.22, 14.0], pos: [0, ry, -0.4], mat: 'trim' });
+      }
+
+      // Projecting portico platform & 4 monumental classical pillars across the front (z = 8.0)
+      k.box({ size: [12.4, 0.6, 2.6], pos: [0, 0.3, 7.6], mat: 'plaza_stone' });
+      for (const px of [-4.8, -1.9, 1.9, 4.8]) {
+        k.box({ size: [1.2, 0.55, 1.2], pos: [px, 0.85, 8.0], mat: 'trim' });
+        k.cylinder({
+          radiusTop: 0.46,
+          radiusBottom: 0.54,
+          height: 7.4,
+          pos: [px, 4.8, 8.0],
+          mat: 'trim',
+          segments: 24,
+        });
+        k.box({ size: [1.28, 0.55, 1.28], pos: [px, 8.75, 8.0], mat: 'trim' });
+      }
+
+      // Classical entablature with emerald-green (`accent`) frieze & triangular pediment
+      k.box({ size: [13.2, 0.65, 2.8], pos: [0, 9.35, 7.4], mat: 'trim' });
+      k.box({ size: [13.0, 0.55, 2.6], pos: [0, 9.95, 7.4], mat: 'accent', name: 'emerald_frieze' });
+      k.box({ size: [20.8, 0.5, 14.4], pos: [0, 10.0, -0.4], mat: 'trim' });
+
+      // Triangular pediment built from stepped tympanum boxes & raking cornice
+      k.box({ size: [13.4, 0.4, 3.0], pos: [0, 10.4, 7.4], mat: 'trim' });
+      const pedSteps = 6;
+      for (let i = 0; i < pedSteps; i++) {
+        const w = 11.8 - i * 1.9;
+        const y = 10.8 + i * 0.42;
+        k.box({ size: [w, 0.44, 2.4], pos: [0, y, 7.35], mat: 'plaza_stone' });
+        k.box({ size: [w + 0.5, 0.18, 2.7], pos: [0, y + 0.18, 7.42], mat: 'trim' });
+      }
+      // Central gold/emerald medallion crest inside the pediment tympanum
+      k.cylinder({
+        radiusTop: 0.75,
+        radiusBottom: 0.75,
+        height: 0.25,
+        pos: [0, 11.6, 8.58],
+        rotX: Math.PI / 2,
+        mat: 'accent',
+      });
+      k.box({ size: [18.8, 1.2, 12.2], pos: [0, 10.8, -0.6], mat: 'roof' });
+    });
+
+    // Front windows + round `vault_door` prop visibly gleaming through the west front showcase window
+    k.group('front_windows_and_vault_showcase', () => {
+      // West front window: clear `glass` framing a round `vault_door` prop right behind it!
+      k.box({ size: [3.2, 3.6, 0.3], pos: [-7.2, 3.4, 6.45], mat: 'trim' });
+      k.box({ size: [2.8, 3.2, 0.12], pos: [-7.2, 3.4, 6.55], mat: 'glass', name: 'vault_display_glass' });
+      k.prop({ kind: 'vault_door', pos: [-7.2, 1.8, 6.1], rotY: 0 });
+
+      // Other front windows (`window_glow`) with security mullions
+      for (const wx of [-3.4, 3.4, 7.2]) {
+        k.box({ size: [2.4, 3.6, 0.24], pos: [wx, 3.4, 6.48], mat: 'trim' });
+        k.box({ size: [2.0, 3.2, 0.28], pos: [wx, 3.4, 6.51], mat: 'window_glow' });
+        for (const mx of [-0.5, 0, 0.5]) {
+          k.box({ size: [0.06, 3.2, 0.32], pos: [wx + mx, 3.4, 6.55], mat: 'metal_dark' });
+        }
+        k.box({ size: [2.6, 0.22, 0.42], pos: [wx, 1.55, 6.6], mat: 'plaza_stone' });
+      }
+      // Upper storey windows
+      for (const wx of [-7.2, -3.4, 3.4, 7.2]) {
+        k.box({ size: [2.0, 2.2, 0.22], pos: [wx, 7.4, 6.48], mat: 'trim' });
+        k.box({ size: [1.7, 1.9, 0.26], pos: [wx, 7.4, 6.51], mat: 'window_glow' });
+      }
+    });
+
+    // Emerald green (`accent`) bank doors, entrance, sign, and forecourt planters
+    k.group('entrance_and_forecourt', () => {
+      k.box({ size: [3.2, 4.2, 0.6], pos: [0, 2.4, 6.6], mat: 'accent', name: 'emerald_door_frame' });
+      k.entrance({ z: 6.9 });
+      k.sign({ pos: [0, 5.2, 8.65], rotY: 0, width: 5.2 });
+
+      k.prop({ kind: 'flowerbed', pos: [-7.2, 0, 9.2] });
+      k.prop({ kind: 'flowerbed', pos: [7.2, 0, 9.2] });
+      k.prop({ kind: 'bench', pos: [-7.5, 0, 11.0], rotY: 0, collide: true });
+      k.prop({ kind: 'bench', pos: [7.5, 0, 11.0], rotY: 0, collide: true });
+    });
+
+    k.light({ kind: 'point', pos: [0, 4.2, 8.2], color: '#FFEBC8', intensity: 1.3, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Bank hall windows
+    k.window({ wall: 'north', center: -4.2, width: 2.6, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'north', center: 4.2, width: 2.6, height: 2.0, sill: 0.9 });
+    k.window({ wall: 'east', center: -1.5, width: 2.6, height: 2.0, sill: 0.9 });
+
+    // Emerald-bordered bank hall rug
+    k.plane({ size: [6.2, 4.4], pos: [0, 0.01, -0.4], rot: [-Math.PI / 2, 0, 0], mat: 'accent_dark' });
+    k.plane({ size: [5.7, 3.9], pos: [0, 0.015, -0.4], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_cream' });
+
+    // Massive `vault_door` centered on the north wall framed by heavy steel/stone piers
+    k.group('north_vault_feature', () => {
+      k.box({ size: [3.4, 3.4, 0.45], pos: [0, 1.7, -6.75], mat: 'plaza_stone' });
+      k.box({ size: [3.6, 0.3, 0.55], pos: [0, 3.45, -6.72], mat: 'trim' });
+      k.prop({ kind: 'vault_door', pos: [0, 0, -6.55], rotY: 0 });
+    });
+
+    // Teller counter with glass partitions and brass mullions on the west side
+    k.group('teller_counter', () => {
+      k.prop({ kind: 'counter', pos: [-5.8, 0, -3.2], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'counter', pos: [-5.8, 0, -0.8], rotY: Math.PI / 2, collide: true });
+
+      // Glass security partitions + brass (`accent`) wickets on top of teller counters (y = 1.05..1.85)
+      for (const tz of [-3.2, -0.8]) {
+        k.box({ size: [0.06, 0.75, 1.85], pos: [-5.55, 1.42, tz], mat: 'glass' });
+        k.box({ size: [0.1, 0.06, 1.95], pos: [-5.55, 1.82, tz], mat: 'metal_dark' });
+        for (const bz of [-0.9, 0, 0.9]) {
+          k.box({ size: [0.1, 0.78, 0.08], pos: [-5.55, 1.42, tz + bz], mat: 'accent' });
+        }
+      }
+      // Teller chairs & filing cabinets behind the counter
+      k.prop({ kind: 'chair', pos: [-6.8, 0, -3.2], rotY: Math.PI / 2 });
+      k.prop({ kind: 'chair', pos: [-6.8, 0, -0.8], rotY: Math.PI / 2 });
+      k.prop({ kind: 'filing_cabinet', pos: [-8.2, 0, -4.5], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'filing_cabinet', pos: [-8.2, 0, -3.6], rotY: Math.PI / 2, collide: true });
+    });
+
+    // Ledger desks (east north side)
+    k.group('ledger_desks', () => {
+      k.prop({ kind: 'desk', pos: [5.8, 0, -4.0], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [5.8, 0, -3.1], rotY: Math.PI });
+      k.prop({ kind: 'lamp_desk', pos: [6.25, 0.75, -4.05] });
+      k.prop({ kind: 'books', pos: [5.45, 0.75, -3.95], rotY: 0.15 });
+      k.prop({ kind: 'screen_stand', pos: [5.85, 0.75, -4.05], rotY: 0 });
+    });
+
+    // Corner "Guild" lounge (south-east corner: org-chart board with portrait frames, sofa, plant)
+    k.group('guild_lounge', () => {
+      // Wall-mounted Guild Org-Chart & Capability Hiring Board on east wall (`z = 2.2`)
+      k.box({ size: [0.1, 1.8, 3.2], pos: [8.88, 2.2, 2.2], mat: 'wood_dark' });
+      k.box({ size: [0.12, 1.64, 3.04], pos: [8.86, 2.2, 2.2], mat: 'plaster_warm' });
+
+      // Top capability portrait frame + 4 role portrait frames connected by hierarchy lines
+      k.box({ size: [0.04, 0.36, 0.42], pos: [8.79, 2.68, 2.2], mat: 'accent' });
+      k.box({ size: [0.05, 0.28, 0.34], pos: [8.78, 2.68, 2.2], mat: 'paper' });
+      for (const rz of [1.1, 1.83, 2.57, 3.3]) {
+        k.box({ size: [0.04, 0.34, 0.38], pos: [8.79, 1.82, rz], mat: 'wood_dark' });
+        k.box({ size: [0.05, 0.26, 0.3], pos: [8.78, 1.82, rz], mat: 'fabric_blue' });
+        k.tube({
+          points: [
+            [8.78, 2.48, 2.2],
+            [8.78, 2.25, rz],
+            [8.78, 2.0, rz],
+          ],
+          radius: 0.012,
+          mat: 'metal_dark',
+        });
+      }
+
+      k.prop({ kind: 'sofa', pos: [6.4, 0, 2.2], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'table_round', pos: [4.8, 0, 2.2], scale: 0.85, collide: true });
+      k.prop({ kind: 'mug', pos: [4.8, 0.64, 2.15] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.2] });
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, 5.2] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -2.2], color: '#FFE8C2', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-4.5, 3.2, -2.0], color: '#E2FFE9', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [5.0, 3.2, 1.5], color: '#FFE4B8', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the open central bank hall
+    k.npcSlot({ id: 's1', pos: [0, 0, -3.4], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-3.2, 0, -2.4], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [2.8, 0, -2.4], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.2, 0, 0.8], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [2.2, 0, 0.8], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [-0.4, 0, 2.4], facingY: 0 });
+  },
+};
+
+export default financePeopleBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/support.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const supportBuilding: BuildingModule = {
+  id: 'support',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the Harbor House (leaving the wooden pier & entrance at z=6.6 clear)
+    k.group('colliders', () => {
+      k.box({ size: [6.8, 7.5, 11.2], pos: [-5.6, 3.75, -0.8], mat: 'wood_light', collide: true, name: 'harbor_west_col' });
+      k.box({ size: [6.8, 7.5, 11.2], pos: [5.6, 3.75, -0.8], mat: 'wood_light', collide: true, name: 'harbor_east_col' });
+      k.box({ size: [4.2, 7.5, 9.6], pos: [0, 3.75, -1.6], mat: 'wood_light', collide: true, name: 'harbor_center_col' });
+    });
+
+    // Wooden pier deck planks extending to the front on timber pilings
+    k.group('wooden_pier', () => {
+      // Heavy dark-wood pier pilings along the front and sides
+      for (const px of [-9.4, -5.8, -2.6, 2.6, 5.8, 9.4]) {
+        for (const pz of [5.5, 8.2, 10.8]) {
+          k.cylinder({ radiusTop: 0.24, radiusBottom: 0.24, height: 1.1, pos: [px, 0.55, pz], mat: 'wood_dark' });
+        }
+      }
+      // Sub-deck stringer beams
+      k.box({ size: [19.4, 0.22, 6.2], pos: [0, 0.16, 8.2], mat: 'wood_dark' });
+      // Individual wooden deck planks extending across the front forecourt (collide: false default)
+      for (let pz = 5.4; pz <= 11.0; pz += 0.48) {
+        k.box({
+          size: [19.2, 0.1, 0.42],
+          pos: [0, 0.3, pz],
+          mat: Math.round(pz * 10) % 2 === 0 ? 'wood_floor' : 'wood_light',
+        });
+      }
+      // Pier mooring bollards & rope railings on left and right sides (`|x| >= 3.2`)
+      for (const side of [-1, 1]) {
+        for (const bz of [6.8, 10.6]) {
+          k.cylinder({
+            radiusTop: 0.2,
+            radiusBottom: 0.22,
+            height: 0.95,
+            pos: [side * 8.8, 0.78, bz],
+            mat: 'wood_dark',
+            collide: true,
+          });
+          k.cylinder({
+            radiusTop: 0.2,
+            radiusBottom: 0.22,
+            height: 0.95,
+            pos: [side * 3.8, 0.78, bz],
+            mat: 'wood_dark',
+          });
+        }
+        k.tube({
+          points: [
+            [side * 3.8, 1.05, 10.6],
+            [side * 6.3, 0.85, 10.6],
+            [side * 8.8, 1.05, 10.6],
+          ],
+          radius: 0.035,
+          mat: 'wood_light',
+        });
+      }
+    });
+
+    // Harbor-master house with sky-blue (`accent`) shutters, widow's walk lookout, life rings, and mast with flags
+    k.group('harbor_house_body', () => {
+      // Main two-storey coastal house body
+      k.box({ size: [18.0, 0.9, 11.6], pos: [0, 0.45, -0.6], mat: 'plaza_stone' });
+      k.box({ size: [17.6, 6.8, 11.2], pos: [0, 4.3, -0.6], mat: 'stucco', name: 'house_walls' });
+      // Horizontal clapboard trim courses
+      for (const cy of [2.6, 4.3, 6.0, 7.6]) {
+        k.box({ size: [17.9, 0.16, 11.4], pos: [0, cy, -0.6], mat: 'trim' });
+      }
+      k.box({ size: [18.2, 0.35, 11.8], pos: [0, 7.8, -0.6], mat: 'accent' });
+
+      // Pitched slate roof + rooftop widow's walk harbor lookout cupola
+      k.box({ size: [17.2, 1.3, 10.6], pos: [0, 8.6, -0.6], mat: 'roof' });
+      k.box({ size: [15.0, 1.1, 8.6], pos: [0, 9.7, -0.6], mat: 'roof' });
+      k.box({ size: [5.4, 2.2, 4.8], pos: [0, 11.3, -0.6], mat: 'window_glow', name: 'lookout_cupola' });
+      k.box({ size: [5.8, 0.35, 5.2], pos: [0, 12.5, -0.6], mat: 'accent' });
+      k.cone({ radius: 3.8, height: 1.8, pos: [0, 13.5, -0.6], rotY: Math.PI / 4, mat: 'roof', segments: 4 });
+
+      // Front windows with sky-blue (`accent`) shutters on both storeys
+      for (const wx of [-6.4, -3.4, 3.4, 6.4]) {
+        for (const wy of [2.6, 5.8]) {
+          k.box({ size: [1.4, 1.9, 0.2], pos: [wx, wy, 5.02], mat: 'trim' });
+          k.box({ size: [1.15, 1.65, 0.24], pos: [wx, wy, 5.05], mat: 'window_glow' });
+          // Sky-blue (`accent`) louvered shutters flanking each window
+          k.box({ size: [0.42, 1.85, 0.16], pos: [wx - 0.88, wy, 5.08], mat: 'accent' });
+          k.box({ size: [0.42, 1.85, 0.16], pos: [wx + 0.88, wy, 5.08], mat: 'accent' });
+        }
+      }
+
+      // Life rings (`torus`) mounted on the front wall beside the porch
+      for (const lx of [-4.9, 4.9]) {
+        k.torus({
+          radius: 0.42,
+          tube: 0.12,
+          pos: [lx, 2.6, 5.12],
+          mat: 'fabric_coral',
+        });
+        // White quarter bands on the life ring
+        k.box({ size: [0.22, 0.92, 0.28], pos: [lx, 2.6, 5.12], mat: 'plaster_wall' });
+        k.box({ size: [0.92, 0.22, 0.28], pos: [lx, 2.6, 5.12], mat: 'plaster_wall' });
+      }
+
+      // Tall nautical signal mast on the east side of the pier with yardarm & flags
+      const mx = 7.6;
+      const mz = 7.4;
+      k.cylinder({ radiusTop: 0.1, radiusBottom: 0.18, height: 11.0, pos: [mx, 5.8, mz], mat: 'trim' });
+      k.box({ size: [3.2, 0.12, 0.12], pos: [mx, 9.2, mz], mat: 'trim' });
+      k.prop({ kind: 'flag', pos: [mx, 9.2, mz] });
+      k.box({ size: [0.9, 0.55, 0.06], pos: [mx - 0.9, 8.8, mz], mat: 'accent' });
+      k.box({ size: [0.8, 0.5, 0.06], pos: [mx - 0.85, 8.1, mz], mat: 'fabric_coral' });
+
+      // Projecting harbor entrance cabin at x = 0, z = 6.6
+      k.box({ size: [4.2, 5.2, 1.8], pos: [0, 2.8, 5.8], mat: 'stucco' });
+      k.box({ size: [4.6, 0.35, 2.1], pos: [0, 5.45, 5.8], mat: 'accent' });
+      k.entrance({ z: 6.7 });
+      k.sign({ pos: [0, 4.35, 6.85], rotY: 0, width: 4.8 });
+    });
+
+    k.light({ kind: 'point', pos: [0, 3.8, 7.6], color: '#E0F6FF', intensity: 1.4, distance: 10 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Harbor house windows
+    k.window({ wall: 'north', center: -3.2, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'north', center: 3.2, width: 2.6, height: 1.8, sill: 1.0 });
+    k.window({ wall: 'east', center: -1.5, width: 2.6, height: 1.8, sill: 1.0 });
+
+    // Cozy sky-blue and cream rug in the central area
+    k.plane({ size: [6.2, 4.4], pos: [0, 0.01, -0.4], rot: [-Math.PI / 2, 0, 0], mat: 'accent' });
+    k.plane({ size: [5.7, 3.9], pos: [0, 0.015, -0.4], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_cream' });
+
+    // Ship's wheel decor (`torus` + cylinder spokes) mounted on the center of the north wall
+    k.group('ships_wheel_decor', () => {
+      const wy = 2.55;
+      const wz = -6.85;
+      // Outer and inner wooden wheel rings
+      k.torus({ radius: 0.68, tube: 0.065, pos: [0, wy, wz], mat: 'wood_dark' });
+      k.cylinder({ radiusTop: 0.16, radiusBottom: 0.16, height: 0.14, pos: [0, wy, wz], rotX: Math.PI / 2, mat: 'accent' });
+      // 8 turned wooden spokes projecting past the rim as handles
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2;
+        k.box({
+          size: [0.06, 1.75, 0.06],
+          pos: [0, wy, wz],
+          rotY: 0,
+          mat: 'wood_light',
+        });
+        const hx = Math.sin(a) * 0.86;
+        const hy = wy + Math.cos(a) * 0.86;
+        k.sphere({ radius: 0.055, pos: [hx, hy, wz], mat: 'wood_dark' });
+      }
+    });
+
+    // Help desk with two stations and custom headset props (`torus` headband + earcups + mic boom)
+    k.group('help_desk_stations', () => {
+      // Station 1 (North-West help desk)
+      k.prop({ kind: 'desk', pos: [-2.8, 0, -4.3], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [-2.8, 0, -5.2], rotY: 0 });
+      k.prop({ kind: 'screen_stand', pos: [-3.0, 0.75, -4.35], rotY: 0.1 });
+
+      // Station 2 (North-East help desk)
+      k.prop({ kind: 'desk', pos: [2.8, 0, -4.3], rotY: 0, collide: true });
+      k.prop({ kind: 'chair', pos: [2.8, 0, -5.2], rotY: 0 });
+      k.prop({ kind: 'screen_stand', pos: [2.6, 0.75, -4.35], rotY: -0.1 });
+
+      // Custom Headset Props resting on stands on both stations (y = 0.75)
+      for (const hx of [-2.4, 3.2]) {
+        // Headset stand
+        k.cylinder({ radiusTop: 0.07, radiusBottom: 0.09, height: 0.03, pos: [hx, 0.765, -4.2], mat: 'metal_dark' });
+        k.cylinder({ radiusTop: 0.015, radiusBottom: 0.015, height: 0.24, pos: [hx, 0.89, -4.2], mat: 'metal_light' });
+        // Headband arc (`torus`) + cushioned earcups + boom mic
+        k.torus({ radius: 0.09, tube: 0.018, pos: [hx, 0.96, -4.2], arc: Math.PI, mat: 'metal_dark' });
+        k.sphere({ radius: 0.038, pos: [hx - 0.09, 0.92, -4.2], mat: 'accent' });
+        k.sphere({ radius: 0.038, pos: [hx + 0.09, 0.92, -4.2], mat: 'accent' });
+        k.tube({
+          points: [
+            [hx - 0.09, 0.91, -4.2],
+            [hx - 0.06, 0.86, -4.1],
+          ],
+          radius: 0.008,
+          mat: 'metal_dark',
+        });
+      }
+      k.prop({ kind: 'mug', pos: [-3.3, 0.75, -4.15] });
+      k.prop({ kind: 'mug', pos: [2.25, 0.75, -4.15] });
+    });
+
+    // Ticket triage board (pinboard with cards for Triage / In Progress / Routed to Eng) on west wall
+    k.group('ticket_triage_board', () => {
+      k.box({ size: [0.1, 1.7, 3.6], pos: [-8.88, 2.1, -1.2], mat: 'wood_dark' });
+      k.box({ size: [0.12, 1.54, 3.44], pos: [-8.86, 2.1, -1.2], mat: 'plaster_wall' });
+
+      const ticketMats = ['fabric_coral', 'accent', 'fabric_blue', 'paper', 'fabric_lavender'] as const;
+      let idx = 0;
+      for (const tz of [-2.5, -1.85, -1.2, -0.55, 0.1]) {
+        for (const ty of [1.65, 2.1, 2.55]) {
+          k.box({
+            size: [0.03, 0.3, 0.48],
+            pos: [-8.79, ty, tz],
+            mat: ticketMats[idx % ticketMats.length],
+          });
+          idx++;
+        }
+      }
+    });
+
+    // Cozy waiting area (sofa, cushions, round table, plants) on the east and south-west sides
+    k.group('waiting_lounge', () => {
+      k.prop({ kind: 'sofa', pos: [6.6, 0, 1.2], rotY: -Math.PI / 2, collide: true });
+      // Plush cushions on and around the sofa
+      k.roundedBox({ size: [0.38, 0.32, 0.16], pos: [6.4, 0.62, 0.65], radius: 0.05, rotY: 0.3, mat: 'accent' });
+      k.roundedBox({ size: [0.38, 0.32, 0.16], pos: [6.4, 0.62, 1.75], radius: 0.05, rotY: -0.3, mat: 'fabric_coral' });
+      k.roundedBox({ size: [0.55, 0.14, 0.55], pos: [5.0, 0.07, 2.6], radius: 0.06, mat: 'fabric_blue' });
+
+      k.prop({ kind: 'table_round', pos: [5.0, 0, 1.2], scale: 0.85, collide: true });
+      k.prop({ kind: 'mug', pos: [4.95, 0.64, 1.15] });
+      k.prop({ kind: 'books', pos: [5.15, 0.64, 1.3], rotY: 0.25 });
+
+      k.prop({ kind: 'bookshelf', pos: [-8.3, 0, 2.8], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, -5.6] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, -5.6] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.0] });
+      k.prop({ kind: 'lamp_floor', pos: [7.8, 0, -0.6] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -2.0], color: '#E6F7FF', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [5.2, 3.2, 1.2], color: '#FFE5BD', intensity: 1.1, distance: 10 });
+    k.light({ kind: 'point', pos: [-5.2, 3.2, -1.5], color: '#FFE5BD', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots in the open central floor
+    k.npcSlot({ id: 's1', pos: [0, 0, -2.6], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [-2.8, 0, -2.4], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [2.8, 0, -2.4], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [-3.4, 0, 1.0], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [2.2, 0, 1.0], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [-0.6, 0, 2.4], facingY: 0 });
+  },
+};
+
+export default supportBuilding;
+<<<END FILE>>>
+
+<<<FILE path="web/src/world/buildings/generated/chief-of-staff.ts">>>
+import type { BuildingModule, KitApi } from '../../kit/types';
+
+const chiefOfStaffBuilding: BuildingModule = {
+  id: 'chief-of-staff',
+  interiorShell: { floor: 'wood_floor', walls: 'plaster_warm' },
+
+  buildExterior(k: KitApi) {
+    // Disjoint colliders for the grand symmetrical Town Hall
+    k.group('colliders', () => {
+      k.box({ size: [8.0, 11.0, 14.0], pos: [-6.8, 5.5, -0.4], mat: 'plaster_warm', collide: true, name: 'th_west_col' });
+      k.box({ size: [8.0, 11.0, 14.0], pos: [6.8, 5.5, -0.4], mat: 'plaster_warm', collide: true, name: 'th_east_col' });
+      k.box({ size: [5.0, 16.0, 11.6], pos: [0, 8.0, -1.6], mat: 'plaster_warm', collide: true, name: 'th_center_col' });
+    });
+
+    // Largest building: symmetrical palazzo, central tower with clock face & flag, wide steps, 6 columns, slate trim
+    k.group('town_hall_palazzo', () => {
+      // Monumental rusticated limestone plinth
+      k.box({ size: [22.4, 1.6, 14.8], pos: [0, 0.8, -0.4], mat: 'plaza_stone', name: 'civic_plinth' });
+      // Main 3-storey symmetrical wings & central block
+      k.box({ size: [21.8, 9.6, 14.2], pos: [0, 6.4, -0.4], mat: 'plaster_warm', name: 'main_palazzo' });
+
+      // Projecting side pavilions for deep Union Square civic articulation
+      k.box({ size: [5.6, 10.0, 14.8], pos: [-8.2, 6.6, -0.4], mat: 'stucco' });
+      k.box({ size: [5.6, 10.0, 14.8], pos: [8.2, 6.6, -0.4], mat: 'stucco' });
+
+      // Horizontal string courses and slate (`accent`) cornice band across the main facade
+      for (const sy of [4.6, 7.8]) {
+        k.box({ size: [22.4, 0.28, 15.0], pos: [0, sy, -0.4], mat: 'trim' });
+      }
+      k.box({ size: [22.2, 0.6, 14.8], pos: [0, 11.3, -0.4], mat: 'accent', name: 'slate_frieze' });
+      k.box({ size: [22.8, 0.5, 15.4], pos: [0, 11.85, -0.4], mat: 'trim', name: 'grand_cornice' });
+      k.box({ size: [20.6, 1.4, 13.0], pos: [0, 12.8, -0.6], mat: 'roof' });
+    });
+
+    // Central civic tower rising above the Town Hall with clock face, lantern belfry, and flag
+    k.group('central_civic_tower', () => {
+      // Lower tower drum (y = 12.0 to 18.8)
+      k.box({ size: [6.8, 6.8, 6.8], pos: [0, 15.4, -0.6], mat: 'plaster_warm', name: 'tower_shaft' });
+      k.box({ size: [7.2, 0.45, 7.2], pos: [0, 18.9, -0.6], mat: 'accent' });
+      k.box({ size: [7.6, 0.4, 7.6], pos: [0, 19.3, -0.6], mat: 'trim' });
+
+      // Clock face mounted on the front of the central tower facing the plaza
+      k.cylinder({
+        radiusTop: 1.5,
+        radiusBottom: 1.5,
+        height: 0.24,
+        pos: [0, 15.6, 2.85],
+        rotX: Math.PI / 2,
+        mat: 'accent_dark',
+      });
+      k.prop({ kind: 'clock', pos: [0, 15.6, 3.0], rotY: 0, scale: 2.8 });
+
+      // Upper octagonal/square lantern cupola + dome + rooftop flagpole (`flag`)
+      k.box({ size: [4.8, 3.4, 4.8], pos: [0, 21.2, -0.6], mat: 'window_glow' });
+      for (const tx of [-2.35, 2.35]) {
+        for (const tz of [-2.95, 1.75]) {
+          k.box({ size: [0.45, 3.6, 0.45], pos: [tx, 21.2, tz], mat: 'trim' });
+        }
+      }
+      k.box({ size: [5.4, 0.4, 5.4], pos: [0, 23.1, -0.6], mat: 'accent' });
+      k.cone({ radius: 3.6, height: 2.2, pos: [0, 24.4, -0.6], rotY: Math.PI / 4, mat: 'roof', segments: 4 });
+      // Flag atop the central tower (top at y = 24.5 + 4.0 = 28.5 <= 30.0)
+      k.prop({ kind: 'flag', pos: [0, 24.5, -0.6] });
+    });
+
+    // Multi-storey grid of recessed windows across the grand facade
+    k.group('facade_windows', () => {
+      for (const wx of [-9.4, -7.0, -4.4, 4.4, 7.0, 9.4]) {
+        for (const wy of [3.0, 6.2, 9.4]) {
+          const zFace = Math.abs(wx) > 5.5 ? 7.02 : 6.72;
+          k.box({ size: [1.5, 2.1, 0.2], pos: [wx, wy, zFace], mat: 'trim' });
+          k.box({ size: [1.2, 1.8, 0.24], pos: [wx, wy, zFace + 0.03], mat: 'window_glow' });
+          k.box({ size: [0.06, 1.8, 0.28], pos: [wx, wy, zFace + 0.06], mat: 'metal_dark' });
+          k.box({ size: [1.2, 0.06, 0.28], pos: [wx, wy + 0.15, zFace + 0.06], mat: 'metal_dark' });
+          k.box({ size: [1.7, 0.16, 0.36], pos: [wx, wy - 1.08, zFace + 0.08], mat: 'plaza_stone' });
+        }
+      }
+    });
+
+    // Monumental 6-column portico, wide terraced steps, entrance, sign, and flowerbeds
+    k.group('portico_and_steps', () => {
+      // Wide terraced steps leading up to the portico (collide: false default)
+      k.box({ size: [12.8, 0.28, 3.6], pos: [0, 0.14, 8.6], mat: 'plaza_stone' });
+      k.box({ size: [11.8, 0.28, 2.8], pos: [0, 0.42, 8.1], mat: 'plaza_stone' });
+
+      // 6 classical columns across the central portico at z = 8.2
+      for (const cx of [-5.2, -3.4, -1.8, 1.8, 3.4, 5.2]) {
+        k.box({ size: [0.95, 0.5, 0.95], pos: [cx, 0.8, 8.2], mat: 'plaza_stone' });
+        k.cylinder({
+          radiusTop: 0.36,
+          radiusBottom: 0.44,
+          height: 7.4,
+          pos: [cx, 4.75, 8.2],
+          mat: 'trim',
+          segments: 20,
+        });
+        k.box({ size: [1.05, 0.45, 1.05], pos: [cx, 8.65, 8.2], mat: 'trim' });
+      }
+      // Portico entablature & slate crown
+      k.box({ size: [12.2, 0.65, 2.2], pos: [0, 9.2, 7.6], mat: 'trim' });
+      k.box({ size: [12.0, 0.5, 2.1], pos: [0, 9.75, 7.6], mat: 'accent' });
+      k.box({ size: [12.4, 0.4, 2.4], pos: [0, 10.15, 7.6], mat: 'trim' });
+
+      k.entrance({ z: 6.8 });
+      k.sign({ pos: [0, 5.2, 8.75], rotY: 0, width: 5.4 });
+
+      // Symmetrical flowerbeds and benches on the civic forecourt
+      k.prop({ kind: 'flowerbed', pos: [-8.2, 0, 9.2] });
+      k.prop({ kind: 'flowerbed', pos: [8.2, 0, 9.2] });
+      k.prop({ kind: 'flowerbed', pos: [-8.2, 0, 11.2] });
+      k.prop({ kind: 'flowerbed', pos: [8.2, 0, 11.2] });
+      k.prop({ kind: 'bench', pos: [-5.0, 0, 10.8], rotY: 0, collide: true });
+      k.prop({ kind: 'bench', pos: [5.0, 0, 10.8], rotY: 0, collide: true });
+    });
+
+    k.light({ kind: 'point', pos: [0, 4.5, 8.0], color: '#FFEAC4', intensity: 1.4, distance: 11 });
+  },
+
+  buildInterior(k: KitApi) {
+    // Tall civic windows on north, east, and west walls
+    k.window({ wall: 'north', center: -4.2, width: 2.6, height: 2.2, sill: 0.8 });
+    k.window({ wall: 'north', center: 4.2, width: 2.6, height: 2.2, sill: 0.8 });
+    k.window({ wall: 'east', center: 0, width: 3.0, height: 2.2, sill: 0.8 });
+
+    // Grand council chamber runner rug
+    k.plane({ size: [5.6, 6.4], pos: [0, 0.01, -0.6], rot: [-Math.PI / 2, 0, 0], mat: 'accent_dark' });
+    k.plane({ size: [5.0, 5.8], pos: [0, 0.015, -0.6], rot: [-Math.PI / 2, 0, 0], mat: 'fabric_lavender' });
+
+    // Big wall-mounted "Foundry Org Map" (13 colored tiles in a grid = the 13 departments) on the north wall
+    k.group('foundry_org_map', () => {
+      // Framed dark slate board on the center of the north wall
+      k.box({ size: [4.8, 2.3, 0.1], pos: [0, 2.45, -6.9], mat: 'wood_dark' });
+      k.box({ size: [4.56, 2.06, 0.12], pos: [0, 2.45, -6.88], mat: 'metal_dark' });
+
+      // Top apex tile: D13 Chief of Staff (`accent`)
+      k.box({ size: [0.68, 0.34, 0.05], pos: [0, 3.12, -6.8], mat: 'accent' });
+
+      // 2 rows x 6 columns = 12 department tiles below D13 (total 13 colored department tiles!)
+      const deptMats = [
+        'fabric_coral',
+        'accent',
+        'fabric_blue',
+        'fabric_lavender',
+        'fabric_pink',
+        'fabric_coral_dark',
+        'fabric_blue',
+        'accent',
+        'fabric_lavender',
+        'fabric_coral',
+        'fabric_pink',
+        'window_glow',
+      ] as const;
+
+      for (let row = 0; row < 2; row++) {
+        for (let col = 0; col < 6; col++) {
+          const tx = -1.75 + col * 0.7;
+          const ty = 2.42 - row * 0.56;
+          const mat = deptMats[row * 6 + col];
+          k.box({ size: [0.54, 0.34, 0.05], pos: [tx, ty, -6.8], mat });
+          // Coordination bus line connecting to the central trunk
+          k.box({ size: [0.03, 0.22, 0.03], pos: [tx, ty + 0.22, -6.81], mat: 'paper' });
+        }
+      }
+      // Horizontal coordination bus bars
+      k.box({ size: [3.6, 0.03, 0.03], pos: [0, 2.72, -6.81], mat: 'paper' });
+      k.box({ size: [3.6, 0.03, 0.03], pos: [0, 2.14, -6.81], mat: 'paper' });
+    });
+
+    // Speaker's lectern flanked by two flags at the north end of the chamber
+    k.group('lectern_and_flags', () => {
+      // Custom slanted speaker's lectern at [0, 0, -4.5] (`collide: true`)
+      k.box({ size: [0.75, 1.1, 0.55], pos: [0, 0.55, -4.5], mat: 'wood_dark', collide: true });
+      k.box({ size: [0.85, 0.08, 0.65], pos: [0, 1.12, -4.5], mat: 'wood_light' });
+      k.box({ size: [0.5, 0.45, 0.04], pos: [0, 0.75, -4.21], mat: 'accent' });
+      k.plane({ size: [0.42, 0.3], pos: [0, 1.17, -4.5], rot: [-Math.PI / 2, 0, 0], mat: 'paper' });
+
+      // Two ceremonial flags flanking the north wall (scaled to fit comfortably under 4.2m ceiling)
+      k.prop({ kind: 'flag', pos: [-2.8, 0, -6.1], scale: 0.9 });
+      k.prop({ kind: 'flag', pos: [2.8, 0, -6.1], scale: 0.9 });
+    });
+
+    // Long council table in the center with 8 chairs
+    k.group('council_table_and_chairs', () => {
+      // Long council table centered at [0, 0, -0.8] (`collide: true`, size 3.0 x 1.1, rotated along Z)
+      k.prop({ kind: 'table_long', pos: [0, 0, -0.8], rotY: Math.PI / 2, collide: true });
+
+      // 8 council chairs: 3 along the west side, 3 along the east side, 1 at north head, 1 at south head
+      for (const cz of [-1.8, -0.8, 0.2]) {
+        k.prop({ kind: 'chair', pos: [-1.05, 0, cz], rotY: Math.PI / 2 });
+        k.prop({ kind: 'chair', pos: [1.05, 0, cz], rotY: -Math.PI / 2 });
+        // Briefing dossiers on the table in front of each seat
+        k.plane({ size: [0.26, 0.34], pos: [-0.32, 0.77, cz], rot: [-Math.PI / 2, 0, 0], mat: 'paper' });
+        k.plane({ size: [0.26, 0.34], pos: [0.32, 0.77, cz], rot: [-Math.PI / 2, 0, 0], mat: 'paper' });
+      }
+      k.prop({ kind: 'chair', pos: [0, 0, -2.65], rotY: 0 });
+      k.prop({ kind: 'chair', pos: [0, 0, 1.05], rotY: Math.PI });
+
+      k.prop({ kind: 'books', pos: [0, 0.76, -1.2], rotY: 0.15 });
+      k.prop({ kind: 'mug', pos: [-0.25, 0.76, -0.3] });
+      k.prop({ kind: 'mug', pos: [0.28, 0.76, 0.1] });
+    });
+
+    // Perimeter reference bookshelves, executive side desks, and plants
+    k.group('perimeter_furnishings', () => {
+      k.prop({ kind: 'bookshelf', pos: [-8.3, 0, -2.8], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [-8.3, 0, 2.2], rotY: Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, -2.8], rotY: -Math.PI / 2, collide: true });
+      k.prop({ kind: 'bookshelf', pos: [8.3, 0, 2.2], rotY: -Math.PI / 2, collide: true });
+
+      k.prop({ kind: 'desk', pos: [-6.4, 0, -4.6], rotY: 0, collide: true });
+      k.prop({ kind: 'lamp_desk', pos: [-6.8, 0.75, -4.65] });
+      k.prop({ kind: 'screen_stand', pos: [-6.2, 0.75, -4.65], rotY: 0.1 });
+
+      k.prop({ kind: 'desk', pos: [6.4, 0, -4.6], rotY: 0, collide: true });
+      k.prop({ kind: 'lamp_desk', pos: [6.8, 0.75, -4.65] });
+      k.prop({ kind: 'books', pos: [6.1, 0.75, -4.55], rotY: -0.2 });
+
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, -5.8] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, -5.8] });
+      k.prop({ kind: 'plant_tall', pos: [-7.8, 0, 5.2] });
+      k.prop({ kind: 'plant_tall', pos: [7.8, 0, 5.2] });
+    });
+
+    // Warm interior lights (<= 3)
+    k.light({ kind: 'point', pos: [0, 3.6, -1.0], color: '#FFE8C2', intensity: 1.4, distance: 13 });
+    k.light({ kind: 'point', pos: [-4.8, 3.2, -1.0], color: '#FFE0B2', intensity: 1.0, distance: 10 });
+    k.light({ kind: 'point', pos: [4.8, 3.2, -1.0], color: '#FFE0B2', intensity: 1.0, distance: 10 });
+
+    // 6 NPC slots flanking the central council table (wide walkways at x = ±3.2 and south at z = 2.4)
+    k.npcSlot({ id: 's1', pos: [-2.4, 0, -3.2], facingY: 0 });
+    k.npcSlot({ id: 's2', pos: [2.4, 0, -3.2], facingY: 0 });
+    k.npcSlot({ id: 's3', pos: [-3.4, 0, -0.8], facingY: 0 });
+    k.npcSlot({ id: 's4', pos: [3.4, 0, -0.8], facingY: 0 });
+    k.npcSlot({ id: 's5', pos: [-2.8, 0, 2.2], facingY: 0 });
+    k.npcSlot({ id: 's6', pos: [2.8, 0, 2.2], facingY: 0 });
+  },
+};
+
+export default chiefOfStaffBuilding;
+<<<END FILE>>>

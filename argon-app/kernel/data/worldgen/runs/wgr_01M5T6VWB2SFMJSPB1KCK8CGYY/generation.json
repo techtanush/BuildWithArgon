@@ -1,0 +1,46 @@
+{
+  "job": "worldgen_buildings",
+  "interaction_id": "v1_ChdkRkhlYXYzcE1PQ3g5TW9Qal95bjJROBIXZEZIZWF2M3BNT0N4OU1vUGpfeW4yUTg",
+  "model": "gemini-4-argon",
+  "one_pass": [
+    "chief-of-staff",
+    "engineering",
+    "finance-people",
+    "growth",
+    "intake",
+    "lead-intel",
+    "market-research",
+    "office-hours",
+    "outreach",
+    "pivot",
+    "sales",
+    "support",
+    "synthetic-population"
+  ],
+  "truncated": [],
+  "stray_paths": [],
+  "static_errors_one_pass": {},
+  "regenerated": {},
+  "generated": [
+    "chief-of-staff",
+    "engineering",
+    "finance-people",
+    "growth",
+    "intake",
+    "lead-intel",
+    "market-research",
+    "office-hours",
+    "outreach",
+    "pivot",
+    "sales",
+    "support",
+    "synthetic-population"
+  ],
+  "missing": [],
+  "tokens": {
+    "in": 84058,
+    "out": 75050
+  },
+  "cost_usd": 0.9186,
+  "wall_seconds": 702.6
+}
