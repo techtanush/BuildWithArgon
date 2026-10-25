@@ -1,0 +1,23 @@
+[
+ {
+  "scores": {
+   "realism": 6,
+   "department_identity": 7,
+   "composition": 7,
+   "readability": 8,
+   "craft": 7
+  },
+  "issues": [
+   {
+    "severity": "medium",
+    "where": "exterior",
+    "camera": "ext-video",
+    "description": "Fake critique (LLM_MODE=fake): fa\u00e7ade lacks window frames.",
+    "fix": "Add trim boxes around each window_glow panel."
+   }
+  ],
+  "keep": [
+   "Fake critique: clear entrance and readable sign."
+  ]
+ }
+]
