@@ -107,7 +107,7 @@ response body" at 364 MB and 477 MB). No sandbox has booted yet → `CUA_MODE=of
 ## 2026-10-25 final hardening and real-render handoff
 
 - Genuine upstream publication: initial hardening commit `ed498af71d2821e2e6196c416294fce17e3a726c` pushed to **ayan**, preserving upstream history. Existing PR #1 is reused, not duplicated. No branch was merged to main.
-- Full verified suite: **269 kernel tests**, **22 web tests**, TypeScript and production build passed. Frozen seed tests retained. Ownership checker reports exactly four intentional computer-viewer UI exceptions under CR-A8; all other changed files are Ayan-owned. No false clean-ownership claim.
+- Full verified suite: **270 kernel tests**, **22 web tests**, TypeScript and production build passed. Frozen seed tests retained. Ownership checker reports exactly four intentional computer-viewer UI exceptions under CR-A8; all other changed files are Ayan-owned. No false clean-ownership claim.
 - Real renders: all 13 iteration-1 buildings pass all ten probes, with **78 exact1280x720 screenshots +26 actual walkthrough videos**. Seven iteration-2 repairs guided by actual Argon reviews additionally pass **70/70 real probes**, with **42 fresh screenshots**, source hashes and measured P9. Iteration2 has no new walkthrough videos and is explicitly labeled screenshot-only. Repaired modules are registered; original iterations remain intact.
 - Correct identity portraits: **29/29 actual768x768 PNGs**, exact generated FaceSpecs, zero failures. They remain procedural characters, not photorealistic assets.
 - Live adapter: structured JSON passed (`ok=true`, input7/output138); image input recognized the red test image (input1100/output49). Provider key stayed inside the integration owner's controlled process, never copied to this branch.
@@ -124,3 +124,5 @@ response body" at 364 MB and 477 MB). No sandbox has booted yet → `CUA_MODE=of
 4. Live Composio connected-account venture PR/support flow and actual Antigravity authenticated repository push remain unverified without that venture's credentials. No unrelated connection was used.
 
 Latest handoff: `docs/handoff/ayan.md`; machine-readable render/eval/live-budget evidence is committed under worldgen/evals. Do not call this branch fully end-to-end complete while these blockers remain.
+
+- Final G-04 fallback verification complete:13/13 departments,26 real mode results,78 screenshots,130/130 probes pass; videos omitted and AI scores null. Evidence: `kernel/data/worldgen/fallback/wgf_01K8G04ACTUAL20261025BROWSER/`. Final missing-promotion-evidence edge case now returns clean409, not500, with regression coverage.

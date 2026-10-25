@@ -419,6 +419,8 @@ async def promote(*, db: Any, round_id: str) -> LiveRound:
     if data.get("captured_source_sha256") != hashlib.sha256(source.encode()).hexdigest():
         raise ConflictError("patched module changed since capture; run a new live round")
     evidence = read_json(round_dir(round_id) / "probes" / "after" / f"{data["department_id"]}.json")
+    if not isinstance(evidence, dict):
+        evidence = {}
     passed = {p.get("id") for p in evidence.get("probes", []) if p.get("pass") is True}
     if not evidence.get("critical_pass") or not set(paths.CRITICAL_PROBES).issubset(passed):
         raise ConflictError("critical probe evidence is missing or failing; run a new live round")

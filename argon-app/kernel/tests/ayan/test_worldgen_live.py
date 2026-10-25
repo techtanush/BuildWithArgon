@@ -239,3 +239,15 @@ async def test_provider_timeout_names_failed_step(fake_env: FakeCapture, setting
     monkeypatch.setattr(live, "run_capture", timeout_capture)
     lr = await live.start_round(settings=settings, db=None, llm=FakeLLM(), department_id="engineering", fake_capture=True, wait=True)
     assert lr.status == "failed" and "capture_before timed out" in lr.error
+
+
+async def test_missing_capture_evidence_rejects_cleanly(fake_env: FakeCapture, settings: Any) -> None:
+    llm = FakeLLM()
+    llm.script("worldgen_critic", [critic_json(high=True), critic_json()])
+    llm.script("antigravity", [file_block("engineering", module("engineering"))])
+    lr = await live.start_round(settings=settings.model_copy(update={"llm_mode": "live"}), db=None, llm=llm,
+                                department_id="engineering", fake_capture=False, wait=True)
+    assert lr.status == "done", lr.error
+    (live.round_dir(lr.id) / "probes" / "after" / "engineering.json").unlink()
+    with pytest.raises(ConflictError, match="evidence is missing"):
+        await live.promote(db=None, round_id=lr.id)

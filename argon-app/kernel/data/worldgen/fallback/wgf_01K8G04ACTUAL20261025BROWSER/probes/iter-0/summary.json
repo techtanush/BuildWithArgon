@@ -1,0 +1,131 @@
+{
+  "source": "fallback",
+  "actualBrowser": true,
+  "departments": 13,
+  "completeDepartments": 13,
+  "modeResults": 26,
+  "screenshots": 78,
+  "freshVideos": 0,
+  "aiScores": null,
+  "fullVideoCriticRevalidated": false,
+  "registered": false,
+  "buildings": [
+    {
+      "building": "chief-of-staff",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "engineering",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "finance-people",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "growth",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "intake",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "lead-intel",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "market-research",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "office-hours",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "outreach",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "pivot",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "sales",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "support",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    },
+    {
+      "building": "synthetic-population",
+      "complete": true,
+      "modes": 2,
+      "screenshots": 6,
+      "probe_score": 1,
+      "critical_pass": true,
+      "failed": []
+    }
+  ]
+}
