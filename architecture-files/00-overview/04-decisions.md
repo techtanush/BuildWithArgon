@@ -168,3 +168,18 @@ there (format: ID, date, decision, why, consequence).
   page, `playPath()` on the capture page, video capture in `scripts/capture.ts`. Spec:
   [`../05-world/13-world-lab-and-live-round.md`](../05-world/13-world-lab-and-live-round.md).
 
+### ADR-021 — Live voice calls with any agent through ElevenLabs Agents
+
+- **Decision:** Besides push-to-talk, the founder can call any of the 29 agents (world: key C;
+  dashboard: Call button). ElevenLabs Agents runs the live, interruptible conversation with the
+  agent's own voice (one base agent + per-call overrides for persona, greeting, voice); every
+  factual answer comes from our grounded `talk`/`concierge` pipeline through the `ask_company`
+  client tool, so answers stay cited and checked. The API key stays in the kernel (short-lived
+  conversation tokens).
+- **Why:** Talking naturally to the company is the most memorable part of the demo; routing facts
+  through our pipeline keeps the agents honest.
+- **Consequence:** `voice/agents_setup.py`, `voice/sessions.py`, `POST /v1/voice/sessions` (Karthik),
+  `conversation/VoiceCall.ts` (Karthik; called by Mahin's world and Tanush's dashboard),
+  `LipSync` `level` driver, settings `ELEVENLABS_AGENT_ID`, `VOICE_AGENT_MODE`, `PUBLIC_KERNEL_URL`.
+  Spec: [`../02-models-and-integrations/12-elevenlabs-voice-agents.md`](../02-models-and-integrations/12-elevenlabs-voice-agents.md).
+

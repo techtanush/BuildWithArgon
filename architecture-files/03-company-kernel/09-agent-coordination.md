@@ -71,7 +71,7 @@ Payload:
  "deadline_minutes": 30}
 ```
 
-Handler (`departments/requests.py`, the lead's prompt + Flash `dept_artifact` job) returns one of:
+Handler (`departments/requests.py`, the lead's prompt + Flash `agent_request` job) returns one of:
 
 ```json
 {"decision": "answer", "text": "...", "citations": [...]}
