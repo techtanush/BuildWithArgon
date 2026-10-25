@@ -1,6 +1,6 @@
 # OWNER: tanush — seed version; replace/extend freely but keep the public signatures.
 """Concierge answers + route cards (05-world/08-concierge.md).
-Called by api/conversation.py (tanush) and by karthik's grounding eval — keep this signature."""
+Called by api/conversation.py (tanush) and by the grounding eval — keep this signature."""
 from __future__ import annotations
 
 from typing import Any

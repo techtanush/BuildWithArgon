@@ -10,23 +10,34 @@
     "test": "vitest run",
     "e2e": "playwright test",
     "gen:api": "openapi-typescript http://127.0.0.1:8787/openapi.json -o src/api/schema.d.ts",
-    "capture": "tsx scripts/capture.ts"
+    "capture": "tsx scripts/capture.ts",
+    "assets:fetch": "tsx assets-pipeline/fetch.ts",
+    "assets:build": "tsx assets-pipeline/build.ts",
+    "assets": "pnpm assets:fetch && pnpm assets:build"
   },
   "dependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "6.30.6",
-    "three": "0.186.1"
+    "three": "0.186.1",
+    "@dgreenheck/ez-tree": "1.1.0"
   },
   "devDependencies": {
+    "@gltf-transform/cli": "^4.5.1",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/extensions": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "@playwright/test": "^1.48.0",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@types/three": "0.186.0",
     "@vitejs/plugin-react": "^4.3.4",
+    "fbx2gltf": "0.9.7-p1",
     "jsdom": "^25.0.1",
+    "meshoptimizer": "^1.3.0",
     "openapi-typescript": "^7.4.0",
+    "sharp": "^0.35.5",
     "tsx": "^4.19.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.7",
@@ -34,7 +45,9 @@
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "esbuild"
+      "esbuild",
+      "fbx2gltf",
+      "sharp"
     ]
   }
 }

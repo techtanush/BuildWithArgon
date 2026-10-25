@@ -10,3 +10,6 @@ kernel/.venv
 test-results/
 playwright-report/
 web/src/world/buildings/staging/*.ts
+web/public/assets/*
+!web/public/assets/manifest.json
+!web/public/assets/CREDITS.md

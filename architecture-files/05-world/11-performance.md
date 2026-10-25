@@ -1,5 +1,8 @@
 # 11 — Performance
 
+> **Budgets superseded by [`12-photoreal-look.md`](12-photoreal-look.md) §10 (ADR-018).** The
+> techniques and measuring sections below still apply.
+
 Target: ≥ 50 fps at High and ≥ 60 fps at Medium on the demo laptop (assume an Apple M-series or
 a recent integrated GPU), 1080p window.
 

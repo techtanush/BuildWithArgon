@@ -24,6 +24,11 @@ in phase 10.
 | R17 | Cua setup (gVisor on the host, Spaces login, SDK input methods) takes too long | M | M | phase 9 smoke | xdotool-over-shell fallback; else `CUA_MODE=off` (Antigravity web / Deep Research / Playwright fallbacks) |
 | R18 | Computer-use agent wanders or loops | M | L | step count, repeated screenshots | 30-step cap; Argon re-plan every 6 steps; stop on 3 identical screenshots |
 | R19 | Agent chatter floods channels | L | L | message rate | Typed coordination only; per-run limits; standup cadence ≥ 30 min |
+| R20 | Photoreal assets too heavy (load time, memory, fps) | M | H | W-01/W-09 checks | Texture tiers (1k on Medium/Low), LODs, impostors, auto quality; trim the lock file |
+| R21 | An asset source is down or an asset id changed | M | M | `pnpm assets:fetch` errors | Backup source (ambientCG) per texture; cached raw downloads; procedural PBR fallbacks in the kit |
+| R22 | Rocketbox avatars missing blendshapes / animations | M | M | `build.ts` inspection report | Jaw-bone lip-sync + procedural bone animation; procedural character fallback |
+| R23 | Live World Lab round overruns or fails on stage | M | H | G-07 drills | `fast` mode (medium thinking), pre-pick a building with a known issue, show the last stored live round and say so |
+| R24 | Video input to the critic unsupported | L | M | VERIFY in smoke tests | 8 evenly spaced frames per video as images |
 
 ## Offline / degraded behaviour summary
 
