@@ -1,10 +1,11 @@
 # WORK ORDER — Ayan (branch `ayan`)
 
-**Lane B: models, the autonomous engineering loop, integrations, cloud computers, voice, and
-world generation.** You make Argon do the heavy lifting: the Gemini/Interactions client every
+**Lane B: models, the autonomous engineering loop, integrations, cloud computers, and world
+generation.** You make Argon do the heavy lifting: the Gemini/Interactions client every
 agent uses, the engineering loop that writes, tests, reviews and ships code (Problem Statement 1),
-Antigravity managed agents and Cua computers (Managed Agents prize), Composio/GitHub, voices, and
-the one-pass + render → critique → fix world generation (Problem Statement 2).
+Antigravity managed agents and Cua computers (Managed Agents prize), Composio/GitHub, and the
+one-pass + render → critique → fix world generation (Problem Statement 2). Voice (TTS/STT,
+`/v1/voice/*`) moved to Karthik.
 
 ---
 
@@ -19,7 +20,7 @@ Read these in order (they are on every branch, under `architecture-files/`):
    interfaces and the merge plan. **This work order is the Ayan column of that document.**
 5. `06-execution/06-agent-operating-rules.md`, `02-acceptance-criteria.md`, `03-testing-strategy.md`,
    `04-evals.md`, `05-risk-register-and-fallbacks.md`.
-6. Your sections: **all of `02-models-and-integrations/`** (01–11), `03-company-kernel/02-autonomous-engineering-loop.md`,
+6. Your sections: **`02-models-and-integrations/`** 01–04 and 07–11 (05/06 are Karthik's), `03-company-kernel/02-autonomous-engineering-loop.md`,
    `03-support-and-pr-loop.md`, `05-approval-gates.md` (merge/integration/computer_action),
    `departments/07-engineering.md`, `departments/12-support.md`, `05-world/05-characters-and-faces.md`
    (FaceSpec generation), `05-world/04-buildings.md`, `05-world/09-worldgen-pipeline.md`,
@@ -33,7 +34,7 @@ in `argon-app/docs/decisions/ayan.md`.
 
 ```bash
 git fetch origin && git checkout ayan
-cd argon-app && cp .env.example .env     # add GEMINI_API_KEY (+ COMPOSIO_API_KEY, ELEVENLABS_API_KEY if you have them)
+cd argon-app && cp .env.example .env     # add GEMINI_API_KEY (+ COMPOSIO_API_KEY if you have it)
 cd kernel && uv sync --extra dev && uv run pytest -q     # 11 passed
 cd ../web && pnpm install && pnpm typecheck && pnpm test  # 5 passed
 cd ../kernel && uv run python -m foundry_kernel.llm.smoke basic   # S1 against the live API
@@ -48,18 +49,18 @@ Install the official Gemini API skills for your coding agent first
 costs, smoke), `departments/engineering.py`, `departments/qa.py` (create; helper used by
 `EngineeringHandler` for `qa.verify`), `departments/support.py`, `departments/prompts/eng.*.md` and
 `su.*.md`, `executors/*` (incl. `templates/vite-react-ts/`), `integrations/*` (composio,
-github_watch, slack_mirror, marketing), `computers/*`, `voice/*` (tts, stt, `assign_voices.py`),
-`worldgen/*`, `api/voice.py`, `api/integrations.py`, `api/computers.py`, `api/preview.py`,
+github_watch, slack_mirror, marketing), `computers/*`,
+`worldgen/*`, `api/integrations.py`, `api/computers.py`, `api/preview.py`,
 `evals/engineering_eval.py`; migrations `0100`–`0199` named `NNNN_ayan_<what>.sql`.
 
 **Kernel tests:** `kernel/tests/ayan/**` (add an empty `__init__.py`), `test_fileblocks.py`,
 `test_computer_guard.py`, `test_worldgen_*.py`, `test_engineering*.py`, `test_executor*.py`,
-`test_voice*.py`, `test_llm*.py`, `test_composio*.py`, `test_support*.py`. FakeLLM fixtures
+`test_llm*.py`, `test_composio*.py`, `test_support*.py`. FakeLLM fixtures
 `kernel/tests/fixtures/fake_llm/<job>.json` for `engineering_*`, `qa_analyze`, `eval_baseline`,
-`triage`, `transcribe`, `tts_fallback`, `worldgen_*`, `face_spec`, `portrait`, `texture`,
+`triage`, `worldgen_*`, `face_spec`, `portrait`, `texture`,
 `music_loop`, `computer_*`.
 
-**Generated data you write and commit:** `kernel/data/faces.json`, `kernel/data/voices.json`,
+**Generated data you write and commit:** `kernel/data/faces.json`,
 `kernel/data/worldgen/runs/**`, `web/public/generated/{portraits,textures,signs}/*`,
 `web/src/world/buildings/generated/*` (modules, `index.ts`, `registry.json`),
 `web/src/world/buildings/staging/` (scratch, gitignored), `evals/results/engineering-*.json`.
@@ -78,6 +79,8 @@ Frozen: `schema.sql`, `contracts.py`, `config.py`, `ids.py`, `errors.py`, `secur
 Tanush's: the rest of the kernel (`app.py`, `db.py`, `scheduler.py`, `departments/__init__.py`
 REGISTRY, other handlers, `conversation/*`, other routers) and the dashboard.
 Mahin's: `web/src/world/**` (except generated/staging) and `src/shared/worldApi.ts`.
+Karthik's: `voice/*`, `api/voice.py`, `evals/grounding_eval.py`, `kernel/data/voices.json`, the web
+voice modules (`npc/visemes.ts`, `npc/LipSync.ts`, `conversation/{Mic,Stt,Speech}.ts`).
 Need a change there? → `docs/contract-requests/ayan.md`. Check before every push:
 `make ownership WHO=ayan`.
 
@@ -108,12 +111,12 @@ Need a change there? → `docs/contract-requests/ayan.md`. Check before every pu
   `ref:review:T1`; `qa.verify` returns `waiting_approval` with a `merge` gate, then `done`).
 - `computers.loop.run_task(*, settings, db, llm, venture_id, agent_id, ticket_id, goal, allowed_domains, start_url, max_steps=30) -> ComputerTaskResult`
   — **never raises** for unavailability; returns `status="skipped"` + reason.
-- `voice.tts.synthesize(*, settings, db, agent_id, text) -> TtsResponse` and
-  `voice.stt.transcribe(*, settings, llm, audio, mime) -> SttResponse` — always return a response;
-  `provider="browser"` / `"none"` mean "client handles it".
+- Gemini transcribe/TTS jobs (`transcribe`, `tts_fallback`) and audio `Part`s in the client — Karthik's
+  `voice/stt.py` and TTS fallback call them through `build_llm_client`; report in
+  `docs/verified/ayan.md` whether audio input works (smoke tests); Karthik decides `STT_PRIMARY`.
 - `integrations.github_watch.start/stop(app)`, `computers.manager.start/stop(app)` — called from
   Tanush's lifespan; must not raise when keys are missing.
-- HTTP shapes in `04-api-contract.md` for `/v1/voice/*`, `/media/audio/*`, `/v1/ventures/{vid}/integrations*`,
+- HTTP shapes in `04-api-contract.md` for `/v1/ventures/{vid}/integrations*`,
   `/v1/ventures/{vid}/computers`, `/v1/computers/*`, `/v1/computer-tasks/*`, `/preview/*` (Tanush's
   dashboard and Mahin's world call them).
 - Worldgen outputs at the exact paths in `05-world/09`: `generated/<dept>.ts` default-exporting a
@@ -131,8 +134,9 @@ Commit after each step with its tests green; append `T+hh:mm step — result` to
    `redact()` outputs, `run_agent` for Antigravity (`03-antigravity-managed-agents.md`),
    `generate_images` for Nano Banana. Only `client.py` imports `google.genai`.
 2. `llm/smoke.py` S1–S7 (`python -m foundry_kernel.llm.smoke all`); record every VERIFY result in
-   `docs/verified/ayan.md`; decide `STT_PRIMARY` and `ENGINEERING_EXECUTOR` in `docs/decisions/ayan.md`.
-3. Probe Composio (`GET v3.1/auth_configs`) and ElevenLabs (`GET /v1/voices`); record shapes.
+   `docs/verified/ayan.md`; decide `ENGINEERING_EXECUTOR` in `docs/decisions/ayan.md` (and note whether audio input works, for
+   Karthik's `STT_PRIMARY`).
+3. Probe Composio (`GET v3.1/auth_configs`); record the shape. (ElevenLabs is Karthik's.)
 4. **Start background assets** as soon as S1/S2 pass: `worldgen/faces.py` (job `face_spec`,
    validation + seed fallback) → `kernel/data/faces.json`; `portraits` (Nano Banana) →
    `web/public/generated/portraits/<agent_id>.png`; `textures` + `signs` →
@@ -161,16 +165,7 @@ hidden tests; a live venture produces a PR (or a local build in no-GitHub mode) 
 (For a full venture run on your branch, temporarily run Tanush's branch in a worktree, or test the
 handler directly with `FakeHandlerContext` + a live `LLMClient`.)
 
-### Step C — Voice (kernel side of Phase 7) — `05-elevenlabs-voice.md`, `06-speech-to-text.md`
-1. `voice/tts.py`: ElevenLabs with timestamps → `Alignment`; cache by sha256 in
-   `data/audio-cache/`; fallbacks Gemini TTS → browser (C-08).
-2. `voice/stt.py`: Gemini transcribe (or `provider="none"` per `STT_PRIMARY`).
-3. `voice/assign_voices.py` (`python -m foundry_kernel.voice.assign_voices`) → `kernel/data/voices.json`
-   from each agent's `voice_hint`.
-4. `api/voice.py`: `POST /v1/voice/transcribe`, `POST /v1/voice/tts`, `GET /media/audio/{sha}.mp3`.
-5. Tests: `test_voice_*.py` (cache hit, fallback order, 600-char limit).
-
-### Step D — World generation (kernel/script side of Phase 8) — `05-world/09`, `05-world/10`
+### Step C — World generation (kernel/script side of Phase 8) — `05-world/09`, `05-world/10`
 1. `worldgen/cli.py` subcommands: `faces`, `portraits`, `textures`, `buildings`, `loop --max-iter N`,
    `all`/`--all`, `report`; every run under `kernel/data/worldgen/runs/<run_id>/` + DB rows.
 2. `kit_contract.md` (copy of `web/src/world/kit/types.ts`), `assets.py` (reference webp → png),
@@ -190,7 +185,7 @@ handler directly with `FakeHandlerContext` + a live `LLMClient`.)
    isn't ready yet, leave the loop for the merge session — it is step 6 of the merge checklist.
 5. Tests: `test_worldgen_validate.py` (forbidden tokens, imports, id/export checks), score selection.
 
-### Step E — Support loop, computers, eval (Phase 9)
+### Step D — Support loop, computers, eval (Phase 9)
 1. `departments/support.py` (triage with `triage` job; bug → `eng.fix`; question → answer) +
    `integrations/github_watch.py` (poll issues/PR comments → `support.issue`; E-08). Yuki's bug repro
    uses `ctx.use_computer` when available.
@@ -205,12 +200,12 @@ handler directly with `FakeHandlerContext` + a live `LLMClient`.)
 
 ## 7. Definition of done
 
-- Acceptance: **E-01…E-08, CU-01…CU-05, C-08 (kernel side), G-01…G-03, G-05, V-01**
+- Acceptance: **E-01…E-08, CU-01…CU-05, G-01…G-03, G-05, V-01**
   (`06-execution/02-acceptance-criteria.md`). G-02/G-03 may be completed in the merge session.
 - `cd kernel && uv run pytest -q` green (seed tests included); `cd web && pnpm typecheck && pnpm test` green.
 - Fake-mode engineering path unchanged (Tanush's E2E depends on it).
 - `make ownership WHO=ayan` clean. Branch pushed.
-- `docs/build-logs/ayan.md` ends with a **Handoff** section: smoke results, chosen executor/STT, what
+- `docs/build-logs/ayan.md` ends with a **Handoff** section: smoke results, chosen executor, audio-input support, what
   ran live, generated assets committed (faces/portraits/textures/signs/first-pass modules), whether
   the worldgen loop ran, open issues, contract requests, and the exact env values to set at merge.
 
@@ -220,7 +215,7 @@ handler directly with `FakeHandlerContext` + a live `LLMClient`.)
 > `architecture-files/README.md`, `architecture-files/00-overview/*`, `architecture-files/01-architecture/*`,
 > `architecture-files/06-execution/07-team-split.md`, all of `architecture-files/02-models-and-integrations/`,
 > and `WORKORDER_AYAN.md`, then `argon-app/AGENTS.md`. Install the Gemini API skills. Follow
-> `WORKORDER_AYAN.md` step by step (A → E). Edit only files owned by ayan (check with
+> `WORKORDER_AYAN.md` step by step (A → D). Edit only files owned by ayan (check with
 > `make ownership WHO=ayan`); never edit frozen contracts — write requests in
 > `argon-app/docs/contract-requests/ayan.md`. Keep the fake-mode engineering path and both seed
 > test suites green. After each step: run its tests, append to `argon-app/docs/build-logs/ayan.md`,
