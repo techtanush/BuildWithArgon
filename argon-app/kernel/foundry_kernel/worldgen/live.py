@@ -351,7 +351,9 @@ async def _run(state: _Round, settings: Any, llm: Any, *, source: str, url: str 
         await state.rec.progress(step="round", status="done", department_id=dept, round_id=lr.id, score=c_after["visual_score"],
                                  note=f"{lr.elapsed_s}s")
     except Exception as exc:  # noqa: BLE001 — every failure is reported on the round, never hidden
-        await state.fail(f"{type(exc).__name__}: {exc}")
+        active_step = next((s.name for s in lr.steps if s.status == "running"), "round")
+        detail = f"{active_step} timed out during the live round" if isinstance(exc, TimeoutError) else f"{type(exc).__name__}: {exc}"
+        await state.fail(detail)
 
 
 async def _run_bounded(state: _Round, settings: Any, llm: Any, **kwargs: Any) -> None:

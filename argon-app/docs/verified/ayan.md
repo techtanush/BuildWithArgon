@@ -111,3 +111,9 @@ xdotool + ImageMagick fallback. `spaces` mode raises `CuaUnavailable` (task → 
 `@playwright/test` 1.64 needs `chromium_headless_shell-1248` (`pnpm exec playwright install --only-shell chromium`).
 Its bundled ffmpeg changed between builds: `ffmpeg-1010` had `libvpx` (VP8); `ffmpeg-1013` only `libvpx-vp9` —
 `capture.ts` and `worldgen/media.py` detect the available webm encoder.
+
+## Current adapter and runtime verification, 25 October 2026
+
+The integration owner's controlled live process executed this branch's current adapter: native JSON Probe.ok=true (input7/output138) and32x32PNG image input recognized red (input1100/output49). No credentials or envfiles were copied. Actual Argon world critic consumed screenshots+walkthrough videos for8buildings before its180s cap; this is partial coverage, not13passedcritics. A real live round failed at150s during patch, with no after capture/promotion.
+
+Pinned Cua0.5.0/sandbox0.9.1 interfaces were inspected from installed official package sources and covered by mocked SDK-shape tests. NativeCLI install/doctor and native SDK import succeeded; high-level sandbox import is blocked by macOS rpds library policy. Runtime prerequisites are still downloading, no successful boot claimed. See committed `kernel/data/worldgen/assets/cua-runtime-verification.json`.

@@ -1,0 +1,25 @@
+{
+  "kind": "manual_geometry_repair",
+  "promoted": false,
+  "recapture_required": true,
+  "buildings": {
+    "intake": {
+      "source": "modules/iter-1/intake.ts",
+      "critic": "critic/iter-1/intake.json",
+      "argon_review_interaction_id": "v1_ChdOWERlYW9iT0ViR3ZfdU1QcXJuVndRYxIXTlhEZWFvYk9FYkd2X3VNUHFyblZ3UWM",
+      "output": "modules/iter-2/intake.ts"
+    },
+    "office-hours": {
+      "source": "modules/iter-1/office-hours.ts",
+      "critic": "critic/iter-1/office-hours.json",
+      "argon_review_interaction_id": "v1_ChdRM0RlYXV6SlBKU0gxTWtQNmJiVTRBWRIXUTNEZWF1ekpQSlNIMU1rUDZiYlU0QVk",
+      "output": "modules/iter-2/office-hours.ts"
+    },
+    "outreach": {
+      "source": "modules/iter-1/outreach.ts",
+      "critic": "critic/iter-1/outreach.json",
+      "argon_review_interaction_id": "v1_ChdibkRlYXRya0pJMmtfdU1QOWRTNTZRWRIXYm5EZWF0cmtKSTJrX3VNUDlkUzU2UVk",
+      "output": "modules/iter-2/outreach.ts"
+    }
+  }
+}

@@ -44,24 +44,39 @@ const officeHoursBuilding: BuildingModule = {
 
       // Big clock on the 4th level facing the plaza (+Z)
       k.cylinder({
-        radiusTop: 1.65,
-        radiusBottom: 1.65,
+        radiusTop: 1.1,
+        radiusBottom: 1.1,
         height: 0.25,
         pos: [0, 16.0, 1.72],
         rotX: Math.PI / 2,
         mat: 'accent_dark',
       });
       k.cylinder({
-        radiusTop: 1.4,
-        radiusBottom: 1.4,
+        radiusTop: 0.95,
+        radiusBottom: 0.95,
         height: 0.28,
         pos: [0, 16.0, 1.75],
         rotX: Math.PI / 2,
         mat: 'plaster_wall',
       });
-      k.prop({ kind: 'clock', pos: [0, 16.0, 1.92], rotY: 0, scale: 3.2 });
+      k.prop({ kind: 'clock', pos: [0, 15.2, 1.92], rotY: 0, scale: 3.2 });
     });
 
+    // Articulated side and rear tower walls, plus annex side glazing.
+    for (const y of [3.1, 7.4, 11.4, 16.0]) {
+      for (const side of [-1, 1]) {
+        k.box({ size: [0.22, 2.2, 1.6], pos: [side * 4.05, y, -2.2], mat: 'trim' });
+        k.box({ size: [0.28, 1.9, 1.3], pos: [side * 4.1, y, -2.2], mat: 'window_glow' });
+        k.box({ size: [0.32, 1.9, 0.07], pos: [side * 4.14, y, -2.2], mat: 'metal_dark' });
+      }
+      k.box({ size: [1.6, 2.2, 0.22], pos: [0, y, -6.25], mat: 'trim' });
+      k.box({ size: [1.3, 1.9, 0.28], pos: [0, y, -6.3], mat: 'window_glow' });
+      k.box({ size: [0.07, 1.9, 0.32], pos: [0, y, -6.34], mat: 'metal_dark' });
+    }
+    for (const side of [-1, 1]) {
+      k.box({ size: [0.22, 2.1, 1.6], pos: [side * 5.85, 3.1, 4.7], mat: 'trim' });
+      k.box({ size: [0.28, 1.8, 1.3], pos: [side * 5.9, 3.1, 4.7], mat: 'window_glow' });
+    }
     // Tower windows on storeys 2 and 3
     k.group('tower_windows', () => {
       for (const wy of [7.4, 11.4]) {
@@ -149,10 +164,11 @@ const officeHoursBuilding: BuildingModule = {
       k.prop({ kind: 'mug', pos: [0.15, 0.75, -4.05] });
 
       // Two upholstered armchairs facing the lead's desk
-      k.prop({ kind: 'armchair', pos: [-1.1, 0, -2.5], rotY: Math.PI - 0.2 });
-      k.prop({ kind: 'armchair', pos: [1.1, 0, -2.5], rotY: Math.PI + 0.2 });
+      k.prop({ kind: 'armchair', pos: [-1.1, 0, -1.4], rotY: Math.PI - 0.2 });
+      k.prop({ kind: 'armchair', pos: [1.1, 0, -1.4], rotY: Math.PI + 0.2 });
     });
 
+    k.roundedBox({ size: [0.65, 0.4, 0.65], pos: [0, 0.2, -1.4], radius: 0.04, mat: 'wood_dark' });
     // Large wall clock on the north wall with ornamental pendulum housing
     k.group('wall_clock_feature', () => {
       k.box({ size: [1.2, 2.8, 0.16], pos: [0, 2.1, -6.88], mat: 'wood_dark' });

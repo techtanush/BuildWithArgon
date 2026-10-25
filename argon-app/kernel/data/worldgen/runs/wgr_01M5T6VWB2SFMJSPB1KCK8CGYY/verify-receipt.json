@@ -1,5 +1,5 @@
 {
-  "status": "running",
+  "status": "live_round_failed",
   "model": "gemini-4-argon",
   "limit_usd": 1.7,
   "price_usd_per_million": {
@@ -75,15 +75,76 @@
     {
       "number": 6,
       "job": "worldgen_critic",
-      "status": "reserved",
+      "status": "completed",
       "reserved_usd": 0.127952,
-      "charged_usd": 0.127952,
+      "charged_usd": 0.04518,
       "input_upper_estimate": 53736,
+      "output_cap": 2048,
+      "tokens_in": 15695,
+      "tokens_out": 1379,
+      "usage_actual": true,
+      "actual_cost_usd": 0.04518
+    },
+    {
+      "number": 7,
+      "job": "worldgen_critic",
+      "status": "completed",
+      "reserved_usd": 0.12812,
+      "charged_usd": 0.045428,
+      "input_upper_estimate": 53820,
+      "output_cap": 2048,
+      "tokens_in": 16059,
+      "tokens_out": 1331,
+      "usage_actual": true,
+      "actual_cost_usd": 0.045428
+    },
+    {
+      "number": 8,
+      "job": "worldgen_critic",
+      "status": "completed",
+      "reserved_usd": 0.127708,
+      "charged_usd": 0.039486,
+      "input_upper_estimate": 53614,
+      "output_cap": 2048,
+      "tokens_in": 15938,
+      "tokens_out": 761,
+      "usage_actual": true,
+      "actual_cost_usd": 0.039486
+    },
+    {
+      "number": 9,
+      "job": "worldgen_critic",
+      "status": "uncertain_reserved",
+      "reserved_usd": 0.126814,
+      "charged_usd": 0.126814,
+      "input_upper_estimate": 53167,
       "output_cap": 2048
+    },
+    {
+      "number": 10,
+      "job": "worldgen_critic",
+      "status": "completed",
+      "reserved_usd": 0.12812,
+      "charged_usd": 0.046048,
+      "input_upper_estimate": 53820,
+      "output_cap": 2048,
+      "tokens_in": 16059,
+      "tokens_out": 1393,
+      "usage_actual": true,
+      "actual_cost_usd": 0.046048
+    },
+    {
+      "number": 11,
+      "job": "worldgen_patch",
+      "status": "uncertain_reserved",
+      "reserved_usd": 0.306658,
+      "charged_usd": 0.306658,
+      "input_upper_estimate": 71409,
+      "output_cap": 16384
     }
   ],
-  "generate_calls": 6,
-  "actual_usage_calls": 5,
-  "actual_usage_spend_usd": 0.21812,
-  "estimated_spend_usd": 0.346072
+  "generate_calls": 11,
+  "actual_usage_calls": 9,
+  "actual_usage_spend_usd": 0.394262,
+  "estimated_spend_usd": 0.827734
 }

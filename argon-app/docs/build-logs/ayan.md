@@ -103,3 +103,24 @@ one-time built-in Linux runtime download (`~/.cua/runtimes/linux`) failed twice 
 response body" at 364 MB and 477 MB). No sandbox has booted yet → `CUA_MODE=off`. On a faster network:
 `uv sync --extra dev --extra computers`, then the sandbox smoke in `docs/verified/ayan.md` §Cua, then
 `CUA_MODE=sandbox`.
+
+## 2026-10-25 final hardening and real-render handoff
+
+- Genuine upstream publication: initial hardening commit `ed498af71d2821e2e6196c416294fce17e3a726c` pushed to **ayan**, preserving upstream history. Existing PR #1 is reused, not duplicated. No branch was merged to main.
+- Full verified suite: **269 kernel tests**, **22 web tests**, TypeScript and production build passed. Frozen seed tests retained. Ownership checker reports exactly four intentional computer-viewer UI exceptions under CR-A8; all other changed files are Ayan-owned. No false clean-ownership claim.
+- Real renders: all 13 iteration-1 buildings pass all ten probes, with **78 exact1280x720 screenshots +26 actual walkthrough videos**. Seven iteration-2 repairs guided by actual Argon reviews additionally pass **70/70 real probes**, with **42 fresh screenshots**, source hashes and measured P9. Iteration2 has no new walkthrough videos and is explicitly labeled screenshot-only. Repaired modules are registered; original iterations remain intact.
+- Correct identity portraits: **29/29 actual768x768 PNGs**, exact generated FaceSpecs, zero failures. They remain procedural characters, not photorealistic assets.
+- Live adapter: structured JSON passed (`ok=true`, input7/output138); image input recognized the red test image (input1100/output49). Provider key stayed inside the integration owner's controlled process, never copied to this branch.
+- User approved at most $2 estimated existing Gemini credit usage, with no purchases/plans. The bounded Argon world review completed **8/13**, not13: the180s window expired with5pending. Actual-token estimated world spend **$0.394262**; world charged/reserved **$0.827734**. Separate Argon face-profile review used **$0.00965**, so total reserved/held is **$0.837384**, below$2. No further API calls planned. Receipts preserve unknown/cancelled reservations rather than treating them as free.
+- The real live round `wlr_01M5TEKJ2ZRK0ZSM7G6ETZXHRF` captured a genuine before view (probe1.0, screenshots+videos), ran a real critic, then **FAILED at150s during patch**. No after capture or successful promotion is claimed. This remains an unfinished acceptance item, not a success.
+- Current photoreal quality bar is **not complete**. Actual Argon review identified geometry/composition issues; seven targeted repairs were re-rendered, but full current-source visual review and realistic character meshes/PBR skin assets remain missing.
+- Cua: CLI0.9.0 persisted in account `cua/cli/bin`; pinned native SDK0.5.0 and sandbox0.9.1 persisted under ignored `argon-app/data/cua-venv`, with ignored `data/cua-runtime.sh`. Native Colima prerequisite downloaded; Lima/runtime download continues. No VM boot or screenshot observed, so **CUA_MODE remains off**. High-level `cua_sandbox` import is also blocked by macOS library policy rejecting rpds; no security policy was disabled.
+- Routine `9RjTqsZD4pZtowML` watches existing native download/boot progress every5min for up to4hours, without restarting downloads, purchases or duplicate boots. The sanitized committed Cua receipt records exact paths and limitations.
+
+### Remaining acceptance blockers
+1. Complete live patch/re-capture/score within150s, plus full current-source visual critique/repair.
+2. Finish native Cua runtime download and successful boot; resolve high-level Python native-library policy through a supported host execution environment.
+3. Realistic rigged character assets and complete photoreal verification remain an assets/renderer dependency, not something FaceSpecs or these procedural portraits satisfy.
+4. Live Composio connected-account venture PR/support flow and actual Antigravity authenticated repository push remain unverified without that venture's credentials. No unrelated connection was used.
+
+Latest handoff: `docs/handoff/ayan.md`; machine-readable render/eval/live-budget evidence is committed under worldgen/evals. Do not call this branch fully end-to-end complete while these blockers remain.

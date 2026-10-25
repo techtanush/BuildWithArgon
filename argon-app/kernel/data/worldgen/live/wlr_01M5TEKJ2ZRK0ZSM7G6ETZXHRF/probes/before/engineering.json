@@ -1,0 +1,158 @@
+{
+  "building": "engineering",
+  "source": "generated",
+  "probes": [
+    {
+      "id": "P1",
+      "pass": true,
+      "details": "exterior: Module built without recorded errors; interior: Module built without recorded errors"
+    },
+    {
+      "id": "P2",
+      "pass": true,
+      "details": "exterior: 0 out-of-bounds meshes of 12; interior: 0 out-of-bounds meshes of 25"
+    },
+    {
+      "id": "P3",
+      "pass": true,
+      "details": "exterior: 1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+    },
+    {
+      "id": "P4",
+      "pass": true,
+      "details": "interior: Six distinct, spaced, unobstructed slots"
+    },
+    {
+      "id": "P5",
+      "pass": true,
+      "details": "interior: 0.25m BFS, 0.35m clearance from (0,5.4)"
+    },
+    {
+      "id": "P6",
+      "pass": true,
+      "details": "exterior: 0 collider pairs overlap by >0.01m\u00b3; interior: 0 collider pairs overlap by >0.01m\u00b3"
+    },
+    {
+      "id": "P7",
+      "pass": true,
+      "details": "exterior: 2582 triangles; 12 draw calls; interior: 30100 triangles; 25 draw calls"
+    },
+    {
+      "id": "P8",
+      "pass": true,
+      "details": "exterior: 1 module lights; interior: 3 module lights"
+    },
+    {
+      "id": "P9",
+      "pass": true,
+      "details": "ext-1.png: luminance std 29.4, top color 1%; ext-2.png: luminance std 35.0, top color 0%; ext-3.png: luminance std 28.4, top color 0%; int-1.png: luminance std 32.8, top color 1%; int-2.png: luminance std 32.1, top color 2%; int-3.png: luminance std 21.8, top color 1%"
+    },
+    {
+      "id": "P10",
+      "pass": true,
+      "details": "exterior: Sign 1.27% of image; center visible"
+    }
+  ],
+  "probe_score": 1,
+  "critical_pass": true,
+  "screenshots": {
+    "ext-1": "captures/before/engineering/ext-1.png",
+    "ext-2": "captures/before/engineering/ext-2.png",
+    "ext-3": "captures/before/engineering/ext-3.png",
+    "int-1": "captures/before/engineering/int-1.png",
+    "int-2": "captures/before/engineering/int-2.png",
+    "int-3": "captures/before/engineering/int-3.png"
+  },
+  "videos": {
+    "ext": "captures/before/engineering/ext.webm",
+    "int": "captures/before/engineering/int.webm"
+  },
+  "stats": {
+    "exterior": {
+      "triangles": 2582,
+      "drawCalls": 12,
+      "lights": 1,
+      "kitCalls": 91
+    },
+    "interior": {
+      "triangles": 30100,
+      "drawCalls": 25,
+      "lights": 3,
+      "kitCalls": 85
+    }
+  },
+  "consoleErrors": [],
+  "frames": [],
+  "walkthroughs": [
+    {
+      "path": "ext-orbit",
+      "durationMs": 8016.29999999702,
+      "bytes": 1193258,
+      "mime": "video/webm;codecs=vp9",
+      "width": 1280,
+      "height": 720,
+      "method": "canvas.captureStream20fps MediaRecorder; actual probe.playPath"
+    },
+    {
+      "path": "int-walk",
+      "durationMs": 6016.399999991059,
+      "bytes": 743618,
+      "mime": "video/webm;codecs=vp9",
+      "width": 1280,
+      "height": 720,
+      "method": "canvas.captureStream20fps MediaRecorder; actual probe.playPath"
+    }
+  ],
+  "pngChecks": {
+    "captures/before/engineering/ext-1.png": {
+      "pass": true,
+      "details": "luminance std 29.4, top color 1%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/before/engineering/ext-2.png": {
+      "pass": true,
+      "details": "luminance std 35.0, top color 0%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/before/engineering/ext-3.png": {
+      "pass": true,
+      "details": "luminance std 28.4, top color 0%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/before/engineering/int-1.png": {
+      "pass": true,
+      "details": "luminance std 32.8, top color 1%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/before/engineering/int-2.png": {
+      "pass": true,
+      "details": "luminance std 32.1, top color 2%",
+      "width": 1280,
+      "height": 720
+    },
+    "captures/before/engineering/int-3.png": {
+      "pass": true,
+      "details": "luminance std 21.8, top color 1%",
+      "width": 1280,
+      "height": 720
+    }
+  },
+  "root": "/Users/mahinbharathwaj/.aside/u/0/projects/BuildWithArgon-ayan/argon-app/kernel/data/worldgen/live/wlr_01M5TEKJ2ZRK0ZSM7G6ETZXHRF",
+  "provenance": {
+    "drill": false,
+    "capture": "real",
+    "browser": "Aside Browser REPL",
+    "renderer": "http://127.0.0.1:15174/view/capture",
+    "assetBase": "http://127.0.0.1:15175/assets",
+    "sourcePath": "/Users/mahinbharathwaj/.aside/u/0/projects/BuildWithArgon-ayan/argon-app/web/src/world/buildings/generated/engineering.ts",
+    "source_sha256": "4a6853a0b04a2496877d444dcdb0084ecdf9611dbc0fdcfa065f38cd74d5f3dd",
+    "moduleSha256": "4a6853a0b04a2496877d444dcdb0084ecdf9611dbc0fdcfa065f38cd74d5f3dd",
+    "sourceCopyPath": "/Users/mahinbharathwaj/.aside/u/0/sessions/2026-10-25_SRCAWbNOpFzxQ5YC/tmp/render/src/world/buildings/generated/engineering.ts",
+    "video": "Actual MediaRecorder WebGLcanvas.captureStream20fps +probe.playPath, not nativePlaywright",
+    "screenshot": "Actual canvas margin0 DPR2 screenshot normalized1280x720 with browserCanvas;P9computed from finalPNG"
+  }
+}

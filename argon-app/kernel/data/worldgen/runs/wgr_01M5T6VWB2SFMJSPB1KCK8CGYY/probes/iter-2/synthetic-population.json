@@ -1,0 +1,251 @@
+{
+  "building": "synthetic-population",
+  "source": "staging",
+  "probes": [
+    {
+      "id": "P1",
+      "pass": true,
+      "details": "exterior: Module built without recorded errors; interior: Module built without recorded errors"
+    },
+    {
+      "id": "P2",
+      "pass": true,
+      "details": "exterior: 0 out-of-bounds meshes of 22; interior: 0 out-of-bounds meshes of 24"
+    },
+    {
+      "id": "P3",
+      "pass": true,
+      "details": "exterior: 1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+    },
+    {
+      "id": "P4",
+      "pass": true,
+      "details": "interior: Six distinct, spaced, unobstructed slots"
+    },
+    {
+      "id": "P5",
+      "pass": true,
+      "details": "interior: 0.25m BFS, 0.35m clearance from (0,5.4)"
+    },
+    {
+      "id": "P6",
+      "pass": true,
+      "details": "exterior: 0 collider pairs overlap by >0.01m³; interior: 0 collider pairs overlap by >0.01m³"
+    },
+    {
+      "id": "P7",
+      "pass": true,
+      "details": "exterior: 27006 triangles; 22 draw calls; interior: 42948 triangles; 24 draw calls"
+    },
+    {
+      "id": "P8",
+      "pass": true,
+      "details": "exterior: 1 module lights; interior: 3 module lights"
+    },
+    {
+      "id": "P9",
+      "pass": true,
+      "details": "ext-1: luminance std 35.28, top color 0.59%; ext-2: luminance std 41.29, top color 0.46%; ext-3: luminance std 39.69, top color 1.24%; int-1: luminance std 27.98, top color 1.42%; int-2: luminance std 31.13, top color 0.73%; int-3: luminance std 23.84, top color 0.59%"
+    },
+    {
+      "id": "P10",
+      "pass": true,
+      "details": "exterior: Sign 1.32% of image; center visible"
+    }
+  ],
+  "probe_score": 1,
+  "critical_pass": true,
+  "screenshots": {
+    "ext-1": "captures/iter-2/synthetic-population/ext-1.png",
+    "ext-2": "captures/iter-2/synthetic-population/ext-2.png",
+    "ext-3": "captures/iter-2/synthetic-population/ext-3.png",
+    "int-1": "captures/iter-2/synthetic-population/int-1.png",
+    "int-2": "captures/iter-2/synthetic-population/int-2.png",
+    "int-3": "captures/iter-2/synthetic-population/int-3.png"
+  },
+  "videos": {},
+  "stats": {
+    "exterior": {
+      "triangles": 27006,
+      "drawCalls": 22,
+      "lights": 1,
+      "kitCalls": 161
+    },
+    "interior": {
+      "triangles": 42948,
+      "drawCalls": 24,
+      "lights": 3,
+      "kitCalls": 133
+    }
+  },
+  "consoleErrors": [],
+  "rawProbeResults": [
+    {
+      "building": "synthetic-population",
+      "mode": "exterior",
+      "source": "staging",
+      "probes": [
+        {
+          "id": "P1",
+          "pass": true,
+          "details": "Module built without recorded errors"
+        },
+        {
+          "id": "P2",
+          "pass": true,
+          "details": "0 out-of-bounds meshes of 22"
+        },
+        {
+          "id": "P3",
+          "pass": true,
+          "details": "1 entrances; 1 signs; 0 colliders within 1.5m of ring (door z + 1.5m)"
+        },
+        {
+          "id": "P6",
+          "pass": true,
+          "details": "0 collider pairs overlap by >0.01m³"
+        },
+        {
+          "id": "P7",
+          "pass": true,
+          "details": "27006 triangles; 22 draw calls"
+        },
+        {
+          "id": "P8",
+          "pass": true,
+          "details": "1 module lights"
+        },
+        {
+          "id": "P10",
+          "pass": true,
+          "details": "Sign 1.32% of image; center visible"
+        }
+      ],
+      "stats": {
+        "triangles": 27006,
+        "drawCalls": 22,
+        "lights": 1,
+        "kitCalls": 161
+      },
+      "consoleErrors": []
+    },
+    {
+      "building": "synthetic-population",
+      "mode": "interior",
+      "source": "staging",
+      "probes": [
+        {
+          "id": "P1",
+          "pass": true,
+          "details": "Module built without recorded errors"
+        },
+        {
+          "id": "P2",
+          "pass": true,
+          "details": "0 out-of-bounds meshes of 24"
+        },
+        {
+          "id": "P4",
+          "pass": true,
+          "details": "Six distinct, spaced, unobstructed slots"
+        },
+        {
+          "id": "P5",
+          "pass": true,
+          "details": "0.25m BFS, 0.35m clearance from (0,5.4)"
+        },
+        {
+          "id": "P6",
+          "pass": true,
+          "details": "0 collider pairs overlap by >0.01m³"
+        },
+        {
+          "id": "P7",
+          "pass": true,
+          "details": "42948 triangles; 24 draw calls"
+        },
+        {
+          "id": "P8",
+          "pass": true,
+          "details": "3 module lights"
+        }
+      ],
+      "stats": {
+        "triangles": 42948,
+        "drawCalls": 24,
+        "lights": 3,
+        "kitCalls": 133
+      },
+      "consoleErrors": []
+    }
+  ],
+  "sourceSHA256": "55916b48f0ee978e11fe4cbe9cde6cbe47e51d110f165f895c3ab3b5fd7e0cbe",
+  "stagingSHA256": "55916b48f0ee978e11fe4cbe9cde6cbe47e51d110f165f895c3ab3b5fd7e0cbe",
+  "sourceMatchesStaging": true,
+  "pixelMetrics": [
+    {
+      "camera": "ext-1",
+      "width": 1280,
+      "height": 720,
+      "luminanceStd": 35.281599768508435,
+      "maxColorFraction": 0.005883246527777778,
+      "pass": true,
+      "sha256": "a565091e1a8d1c5145032e2de7e00d314668a14818a57f5dc4d8f2e39a7b901e"
+    },
+    {
+      "camera": "ext-2",
+      "width": 1280,
+      "height": 720,
+      "luminanceStd": 41.285372230565045,
+      "maxColorFraction": 0.004565972222222222,
+      "pass": true,
+      "sha256": "35f330313a323a06649240787ddef97baec60b1694f600061be79ca6dff378a9"
+    },
+    {
+      "camera": "ext-3",
+      "width": 1280,
+      "height": 720,
+      "luminanceStd": 39.691272746202536,
+      "maxColorFraction": 0.012383897569444444,
+      "pass": true,
+      "sha256": "d5f6a3f49abbedebd29c95b3c6cb582e5fd4f3bf458a1f233ae4e1fc3e4f7ee9"
+    },
+    {
+      "camera": "int-1",
+      "width": 1280,
+      "height": 720,
+      "luminanceStd": 27.980303558531055,
+      "maxColorFraction": 0.014249131944444444,
+      "pass": true,
+      "sha256": "de473625795acffb7ffa2f8260195385f87e2016502c1969b1b348395041b7cd"
+    },
+    {
+      "camera": "int-2",
+      "width": 1280,
+      "height": 720,
+      "luminanceStd": 31.130997231720258,
+      "maxColorFraction": 0.007282986111111111,
+      "pass": true,
+      "sha256": "41d1fe6f7b922b8a9dc341899fb193ad60efe95f5acc7464f2e747409708d649"
+    },
+    {
+      "camera": "int-3",
+      "width": 1280,
+      "height": 720,
+      "luminanceStd": 23.835789933681443,
+      "maxColorFraction": 0.005911458333333334,
+      "pass": true,
+      "sha256": "0a59dfafec5628d866d1cb6fcf8c3fabb9640023dda564a93bc46e563fb07423"
+    }
+  ],
+  "provenance": {
+    "capturedAt": "2026-10-25T21:17:00.007Z",
+    "browser": "Actual Aside browser at 127.0.0.1:15174",
+    "assetBase": "http://127.0.0.1:15175/assets",
+    "iteration": 2,
+    "sourceModule": "modules/iter-2/synthetic-population.ts",
+    "videosOmitted": true,
+    "videosOmittedReason": "Screenshot-only real browser revalidation under deadline. No fresh walkthrough videos recorded; no earlier videos reused. This is not full video critic revalidation.",
+    "criticValues": null
+  }
+}

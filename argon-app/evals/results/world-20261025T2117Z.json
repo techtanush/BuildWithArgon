@@ -1,0 +1,304 @@
+{
+  "suite": "world",
+  "run_id": "wgr_01M5T6VWB2SFMJSPB1KCK8CGYY",
+  "created_at": "2026-10-25T21:17:51.430Z",
+  "iteration_0": {
+    "world_score": 0.9,
+    "visual_score": null,
+    "realism": null
+  },
+  "final": {
+    "world_score": 1.0,
+    "visual_score": null,
+    "realism": null,
+    "generated": 13,
+    "fallback": 0,
+    "ai_reviewed_current_buildings": 1
+  },
+  "loop_value": {
+    "world_score": 0.1,
+    "visual_score": null,
+    "realism": null
+  },
+  "iterations": [
+    {
+      "n": 0,
+      "world_score": 0.9,
+      "visual_score": null,
+      "realism": null
+    },
+    {
+      "n": 1,
+      "world_score": 1.0,
+      "visual_score": 0.575,
+      "realism": 0.4875
+    },
+    {
+      "n": 2,
+      "world_score": 1.0,
+      "visual_score": 0.56,
+      "realism": 0.5
+    }
+  ],
+  "per_building": {
+    "intake": {
+      "iteration_0": {
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "failed": []
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "office-hours": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "market-research": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "outreach": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "synthetic-population": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "pivot": {
+      "iteration_0": {
+        "probe": 0.8,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P5",
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "engineering": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 1,
+        "probe": 1.0,
+        "visual": 0.56,
+        "realism": 0.5,
+        "reason": null
+      }
+    },
+    "growth": {
+      "iteration_0": {
+        "probe": 0.8,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P5",
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 2,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "lead-intel": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 1,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "sales": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 1,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "finance-people": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 1,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "support": {
+      "iteration_0": {
+        "probe": 0.9,
+        "visual": null,
+        "realism": null,
+        "failed": [
+          "P10"
+        ]
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 1,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    },
+    "chief-of-staff": {
+      "iteration_0": {
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "failed": []
+      },
+      "final": {
+        "status": "generated",
+        "iteration": 1,
+        "probe": 1.0,
+        "visual": null,
+        "realism": null,
+        "reason": null
+      }
+    }
+  },
+  "live_rounds": [
+    {
+      "id": "wlr_01M5TEKJ2ZRK0ZSM7G6ETZXHRF",
+      "department_id": "engineering",
+      "status": "failed",
+      "elapsed_s": 150.0,
+      "promoted": false,
+      "used_managed_agent": false,
+      "before": {
+        "probe_score": 1.0,
+        "visual_score": 0.56,
+        "realism": 0.5
+      },
+      "after": {
+        "probe_score": null,
+        "visual_score": null,
+        "realism": null
+      }
+    }
+  ],
+  "stop_reason": "Seven targeted repairs verified with real screenshot probes. Full photoreal AI bar is NOT complete; live repair timed out.",
+  "tokens": {
+    "in": 84058,
+    "out": 75050
+  },
+  "cost_usd": 0.9186,
+  "wall_minutes": 11.72
+}

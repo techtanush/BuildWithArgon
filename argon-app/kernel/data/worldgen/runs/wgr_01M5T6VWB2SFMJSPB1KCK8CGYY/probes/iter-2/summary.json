@@ -1,0 +1,81 @@
+{
+  "iteration": 2,
+  "buildings": [
+    {
+      "building": "growth",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "da87179f1592be8b3661e29758bcbb077969b496ec4a476c50d271bfb6244e09",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    },
+    {
+      "building": "pivot",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "d24421b1b3fac017077df19363535a3361200f0d0778ff6d3cb16547a1aec821",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    },
+    {
+      "building": "market-research",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "cfa12f7ce40f98daa4ac774b22f4e5c1830aed59227ce2f27d9047a7e30b12ea",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    },
+    {
+      "building": "synthetic-population",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "55916b48f0ee978e11fe4cbe9cde6cbe47e51d110f165f895c3ab3b5fd7e0cbe",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    },
+    {
+      "building": "intake",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "e9add7e08eb90e20098960311d7bda85054b16a2d4bd69c43ed5d2e56a440592",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    },
+    {
+      "building": "office-hours",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "0b9d75a68052d034dde3084b144fc7d7cf63a4fb5a2a52943e29597727df8927",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    },
+    {
+      "building": "outreach",
+      "critical_pass": true,
+      "probe_score": 1,
+      "failed": [],
+      "sourceSHA256": "9c9bdcba6f333d5d9ea0216d65f94f4ca29ddea887e68e8defe4615722be6a67",
+      "sourceMatchesStaging": true,
+      "screenshots": 6,
+      "videos": 0
+    }
+  ],
+  "allCriticalPass": true,
+  "allTenPass": true,
+  "realBrowserScreenshots": 42,
+  "freshVideos": 0,
+  "fullVideoCriticRevalidated": false,
+  "registered": false
+}

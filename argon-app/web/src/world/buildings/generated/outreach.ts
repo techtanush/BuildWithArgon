@@ -119,6 +119,12 @@ const outreachBuilding: BuildingModule = {
           });
         }
       }
+      // Grounded relay mast and rack physically support every rear wire endpoint.
+      k.cylinder({ radiusTop: 0.16, radiusBottom: 0.23, height: 9.6, pos: [9.3, 4.8, -5.5], mat: 'wood_dark', collide: true });
+      k.box({ size: [0.18, 0.18, 1.2], pos: [9.3, 9.5, -5.5], mat: 'wood_light' });
+      for (const iz of [-1.0, -0.35, 0.35, 1.0]) {
+        k.cylinder({ radiusTop: 0.06, radiusBottom: 0.08, height: 0.18, pos: [9.3, 9.5, -5.5 + iz * 0.4], mat: 'accent' });
+      }
       // Sagging telegraph wires connecting the pole to the house eaves & rear relay post
       for (const iz of [-1.0, -0.35, 0.35, 1.0]) {
         k.tube({

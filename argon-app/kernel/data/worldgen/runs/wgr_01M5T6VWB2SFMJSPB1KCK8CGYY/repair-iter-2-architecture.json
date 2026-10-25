@@ -1,0 +1,57 @@
+{
+  "basis": "Actual Argon iter-1 multimodal reviews; human-directed deterministic geometry repair, no new generation or scores",
+  "recapture_required": true,
+  "changes": {
+    "growth": {
+      "review": "critic/iter-1/growth.json",
+      "review_sha256": "900c0d9ce827dcca02b589ae31b86fbed6c25d1d50cbfeba43357d542635ce2a",
+      "changes": [
+        "size: [6.4, 16.0, 6.4]",
+        "pos: [0, 3.8, 7.9], color: '#FFF0B8', intensity: 1.4"
+      ],
+      "source_sha256": "da87179f1592be8b3661e29758bcbb077969b496ec4a476c50d271bfb6244e09"
+    },
+    "pivot": {
+      "review": "critic/iter-1/pivot.json",
+      "review_sha256": "966fdfc678691e5875004cd4ce626ff3fb9f9084a5b979d985fcabdb02054235",
+      "changes": [
+        "size: [11.6, 8.5, 11.2], pos: [0, 4.25, -1.2]",
+        "size: [3.8, 7.5, 2.8], pos: [-4.6, 3.75, 5.8]",
+        "size: [3.8, 7.5, 2.8], pos: [4.6, 3.75, 5.8]",
+        "// Ring of 8 monumental classical columns",
+        "size: [0.75, 3.2, 0.18], pos: [wx, 4.6, 7.62]",
+        "size: [0.9, 3.4, 0.14], pos: [wx, 4.6, 7.58]"
+      ],
+      "source_sha256": "d24421b1b3fac017077df19363535a3361200f0d0778ff6d3cb16547a1aec821"
+    },
+    "market-research": {
+      "review": "critic/iter-1/market-research.json",
+      "review_sha256": "33f78896117ec5a8fcd6be3bbc3d687272c919a076839573238fc359c270e8b2",
+      "changes": [
+        "size: [12.0, 8.0, 11.0], pos: [0, 4.0, -1.8]",
+        "size: [4.2, 7.0, 3.2], pos: [-4.8, 3.5, 5.6]",
+        "size: [4.2, 7.0, 3.2], pos: [4.8, 3.5, 5.6]",
+        "mat: 'metal_light',\n        name: 'dome'",
+        "[-8.88, 2.2, -1.2]",
+        "[-8.85, 2.2, -1.2]",
+        "[8.88, 2.2, -1.2]",
+        "[8.85, 2.2, -1.2]"
+      ],
+      "source_sha256": "cfa12f7ce40f98daa4ac774b22f4e5c1830aed59227ce2f27d9047a7e30b12ea"
+    },
+    "synthetic-population": {
+      "review": "critic/iter-1/synthetic-population.json",
+      "review_sha256": "6acd24a5fed57210cf1794a434048ac055fbd6b4f53a3dda34445cd81f29a7cf",
+      "changes": [
+        "size: [7.2, 6.5, 13.4], pos: [-6.0, 3.25, -0.2], mat: 'metal_light'",
+        "size: [7.2, 6.5, 13.4], pos: [6.0, 3.25, -0.2], mat: 'metal_light'",
+        "size: [4.4, 6.5, 11.0], pos: [0, 3.25, -1.4], mat: 'metal_light'",
+        "size: [18.4, 4.8, 12.6], pos: [0, 3.8, -0.2], mat: 'window_glow'",
+        "k.box({ size: [19.6, 0.2, 13.8], pos: [0, y, -0.2], mat: 'metal_light' });",
+        "k.box({ size: [18.6, 1.1, 12.6], pos: [0, 7.5, -0.2], mat: 'glass' });",
+        "k.box({ size: [15.6, 1.0, 9.8], pos: [0, 8.6, -0.2], mat: 'glass' });"
+      ],
+      "source_sha256": "55916b48f0ee978e11fe4cbe9cde6cbe47e51d110f165f895c3ab3b5fd7e0cbe"
+    }
+  }
+}

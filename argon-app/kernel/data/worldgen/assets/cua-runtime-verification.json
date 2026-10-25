@@ -1,5 +1,5 @@
 {
-  "observed_at": "2026-10-25T21:11:41.592566+00:00",
+  "observed_at": "2026-10-25T21:14:09.119324+00:00",
   "status": "runtime_bootstrap_downloading_not_ready",
   "host": {
     "os": "macOS",
@@ -17,7 +17,7 @@
   },
   "installation": {
     "sdk_environment": "/Users/mahinbharathwaj/.aside/u/0/projects/BuildWithArgon-ayan/argon-app/data/cua-venv",
-    "persistent_copy_verified_by": "installed package metadata, not SDK import",
+    "persistent_copy_verified_by": "relocated sys.prefix, package metadata, bundled CLI --version, import cua => 0.5.0",
     "launcher": "/Users/mahinbharathwaj/.aside/u/0/projects/BuildWithArgon-ayan/argon-app/data/cua-runtime.sh",
     "official_cli": "/Users/mahinbharathwaj/.aside/u/0/cua/cli/bin/cua",
     "bundled_cli": "/Users/mahinbharathwaj/.aside/u/0/projects/BuildWithArgon-ayan/argon-app/data/cua-venv/lib/python3.13/site-packages/cua/bin/cua",
@@ -43,11 +43,11 @@
     "command": "bundled cua 0.5.0 sb create linux --embedded --on local --name aside-cua-smoke --ready-timeout 120",
     "socket_path_issue_corrected": true,
     "bootstrap_process_still_running": true,
-    "download_stage": "built-in Colima bootstrap",
+    "download_stage": "managed Linux runtime prerequisites: Colima downloaded, Lima archive downloading",
     "current_partial_files": [
       {
         "path": "/Users/mahinbharathwaj/.aside/u/0/cua/runtimes/linux/.install-pf4fwi/tools/lima.tar.partial",
-        "bytes": 1383940
+        "bytes": 11010048
       }
     ],
     "expected_linux_runtime_approx_mb": 455,
@@ -67,7 +67,10 @@
     "do_not_restart_active_download": true,
     "native_script_captures_uname_and_png_then_deletes_smoke_sandbox_on_success": true,
     "parent_scheduled_watch_plan": "5-minute read-only checks, count 48, observe progress/success/error; no duplicate boot commands",
-    "move_or_delete_old_environment_only_after_current_native_process_exits": true
+    "move_or_delete_old_environment_only_after_current_native_process_exits": true,
+    "scheduled_watch_routine_id": "9RjTqsZD4pZtowML",
+    "active_native_session_id_child_scope": "1151",
+    "parent_must_monitor_shared_log_not_child_session_id": true
   },
   "safety": {
     "account_login_performed": false,

@@ -7,9 +7,9 @@ const syntheticPopulationBuilding: BuildingModule = {
   buildExterior(k: KitApi) {
     // Disjoint colliders for the glass conservatory (leaving central entrance at z=7.6 clear)
     k.group('colliders', () => {
-      k.box({ size: [7.2, 6.5, 13.4], pos: [-6.0, 3.25, -0.2], mat: 'metal_light', collide: true, name: 'gh_west_col' });
-      k.box({ size: [7.2, 6.5, 13.4], pos: [6.0, 3.25, -0.2], mat: 'metal_light', collide: true, name: 'gh_east_col' });
-      k.box({ size: [4.4, 6.5, 11.0], pos: [0, 3.25, -1.4], mat: 'metal_light', collide: true, name: 'gh_center_col' });
+      k.box({ size: [0.3, 0.9, 12.8], pos: [-9.2, 0.6, -0.2], mat: 'plaza_stone', collide: true, name: 'gh_west_col' });
+      k.box({ size: [0.3, 0.9, 12.8], pos: [9.2, 0.6, -0.2], mat: 'plaza_stone', collide: true, name: 'gh_east_col' });
+      k.box({ size: [17.6, 0.9, 0.3], pos: [0, 0.6, -6.5], mat: 'plaza_stone', collide: true, name: 'gh_center_col' });
     });
 
     // Glass greenhouse (`glass` panels in `metal_light` frame, pitched roof + ridge lantern)
@@ -20,7 +20,7 @@ const syntheticPopulationBuilding: BuildingModule = {
 
       // Main glazed conservatory walls (`glass` with warm inner glow core)
       k.box({ size: [19.2, 5.2, 13.4], pos: [0, 3.9, -0.2], mat: 'glass', name: 'glass_walls' });
-      k.box({ size: [18.4, 4.8, 12.6], pos: [0, 3.8, -0.2], mat: 'window_glow', name: 'inner_glow' });
+      k.box({ size: [17.8, 4.6, 12.0], pos: [0, 3.8, -0.2], mat: 'plaster_warm', name: 'inner_glow' });
 
       // Structural `metal_light` columns and horizontal glazing bars around the facade
       for (const x of [-9.6, -7.2, -4.8, -2.4, 2.4, 4.8, 7.2, 9.6]) {
@@ -28,15 +28,20 @@ const syntheticPopulationBuilding: BuildingModule = {
         k.box({ size: [0.24, 5.6, 0.28], pos: [x, 4.0, -6.95], mat: 'metal_light' });
       }
       for (const y of [2.8, 4.6, 6.5]) {
-        k.box({ size: [19.6, 0.2, 13.8], pos: [0, y, -0.2], mat: 'metal_light' });
+        for (const z of [-6.95, 6.55]) k.box({ size: [19.6, 0.2, 0.22], pos: [0, y, z], mat: 'metal_light' });
+        for (const x of [-9.7, 9.7]) k.box({ size: [0.22, 0.2, 13.3], pos: [x, y, -0.2], mat: 'metal_light' });
       }
       // Accent green frieze band at the eaves
       k.box({ size: [19.8, 0.36, 14.0], pos: [0, 6.8, -0.2], mat: 'accent', name: 'green_frieze' });
 
       // Pitched glass roof & raised botanical ridge lantern
       k.box({ size: [18.6, 1.1, 12.6], pos: [0, 7.5, -0.2], mat: 'glass' });
+      k.box({ size: [17.6, 1.05, 11.6], pos: [0, 7.5, -0.2], mat: 'plaster_warm' });
+      for (const x of [-8.8, -4.4, 0, 4.4, 8.8]) for (const z of [-6.55, 6.15]) k.box({ size: [0.18, 1.25, 0.2], pos: [x, 7.5, z], mat: 'trim' });
       k.box({ size: [18.8, 0.22, 12.8], pos: [0, 8.05, -0.2], mat: 'metal_light' });
       k.box({ size: [15.6, 1.0, 9.8], pos: [0, 8.6, -0.2], mat: 'glass' });
+      k.box({ size: [14.6, 0.95, 8.8], pos: [0, 8.6, -0.2], mat: 'plaster_warm' });
+      for (const x of [-7.2, -3.6, 0, 3.6, 7.2]) for (const z of [-5.1, 4.7]) k.box({ size: [0.18, 1.2, 0.2], pos: [x, 8.6, z], mat: 'trim' });
       k.box({ size: [15.8, 0.22, 10.0], pos: [0, 9.15, -0.2], mat: 'metal_light' });
 
       // Central clerestory ridge lantern

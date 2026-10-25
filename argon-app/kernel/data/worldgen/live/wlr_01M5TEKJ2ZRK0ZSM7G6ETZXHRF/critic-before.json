@@ -1,0 +1,102 @@
+{
+  "scores": {
+    "realism": 5.0,
+    "department_identity": 7.0,
+    "composition": 6.0,
+    "readability": 5.0,
+    "craft": 5.0
+  },
+  "issues": [
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The exterior sign ('ENGINEERING') is occluded at the top by the roll-up door cylinder housing (`pos: [0, 5.2, 7.25]`) and the overhead gantry beam (`pos: [0, 5.85, 7.9]`), and the text has very low contrast and looks washed out from `ext-1` and `ext-2`.",
+      "fix": "Move the `k.sign(...)` forward and slightly higher or onto a clear fascia header above the gantry (e.g., `pos: [0, 6.6, 7.25]`, `width: 5.8`) or move the roll-up cylinder behind the sign plane (`z: 7.05`) so nothing clips or casts a dark shadow across the sign board."
+    },
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-2",
+      "description": "The sawtooth roof is built from 3 stacked horizontal boxes per bay (`rotY: 0` with no `rotX` tilt), looking like stacked LEGO blocks/steps rather than angled sawtooth roof slopes (`ext-2`, `ext-3`).",
+      "fix": "Use `rot: [0.35, 0, 0]` (or `rotX` if supported by `k.box`, or a clean stepped/angled assembly with side gable cheeks and metal flashing) so the 3 sawtooth bays read as true angled industrial sawtooth roofs rather than rough z-overlapping horizontal slabs."
+    },
+    {
+      "severity": "high",
+      "where": "exterior",
+      "camera": "ext-video",
+      "description": "The east, west, and north (rear) exterior facades are completely blank windowless brick boxes (`ext-2`, `ext-video` 00:01-00:06), violating DESIGN.md ('Avoid: blank flat walls, windowless boxes').",
+      "fix": "Add steel-I-beam pilasters, multi-pane factory windows (`factory_windows`), and a service door or external ductwork/vents along the east, west, and rear facades to match the front fa\u00e7ade."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-1",
+      "description": "The roll-up door entrance (`pos: [0, 2.9, 7.0]`, size `[5.4, 5.8, 0.6]`) is a solid dark metal block (`metal_dark`) that fills the entire doorway opening instead of looking like an open or corrugated roll-up shutter door with recessed doorway depth.",
+      "fix": "Recess the doorway inner backing or make a proper portal frame (left jamb, right jamb, header) with recessed corrugated horizontal slats (`metal_light` / `metal_dark` alternating strips) so the roll-up door has real architectural depth and slat articulation."
+    },
+    {
+      "severity": "high",
+      "where": "interior",
+      "camera": "int-1",
+      "description": "In the interior (`int-1`, `int-2`), the standing `whiteboard` prop at `pos: [-3.4, 0, -6.1]` is placed directly in front of the north window (`center: -3.2`), awkwardly blocking half the window.",
+      "fix": "Move the north windows to `center: -4.8` and `center: 4.8` (or move the whiteboard to `pos: [-2.6, 0, -5.8]` between the window and center workbench) so the whiteboard stands against solid wall and doesn't overlap the window frame."
+    },
+    {
+      "severity": "medium",
+      "where": "interior",
+      "camera": "int-2",
+      "description": "None of the workbenches have chairs or stools, and the vast central and southern floor area of the 20m x 14m interior feels empty and sparse (`int-2`, `int-3`).",
+      "fix": "Add `chair_office` props in front of the workbenches, add a fourth workbench or a central hardware testing/assembly table with prototype parts/oscilloscope boxes, and add industrial shelving (`shelf_tall` or `bookshelf`) along the west/south walls to make the workshop feel like a busy engineering lab."
+    },
+    {
+      "severity": "medium",
+      "where": "interior",
+      "camera": "int-1",
+      "description": "The floor cable `tube` running across the middle of the room (`points: [[6.8, 0.025, -2.2], [4.5, 0.025, -1.8], [2.0, 0.025, -0.4], [-2.5, 0.025, 0.2], [-5.8, 0.025, -1.2]]`) bows upward in the middle and floats above the brown rug (`int-1`, `int-2`).",
+      "fix": "Keep all spline control points at `y: 0.02` with extra intermediate points so the spline doesn't arc vertically, or route the cables neatly around the perimeter of the floor mat with yellow/accent cable-protector ramps."
+    },
+    {
+      "severity": "medium",
+      "where": "exterior",
+      "camera": "ext-3",
+      "description": "The exterior plot has zero landscaping or street furniture around the building apron (`ext-1`, `ext-3`), violating DESIGN.md ('Landscape the plot like a real lot: paved path to the door, planters, low hedges, a bench, bike rack or lamp').",
+      "fix": "Extend the paved driveway apron toward the front plot edge and flank it with industrial street lamps (`lamp_street`), planters or bushes, and a bench or utility details outside the 3m door clearance zone."
+    }
+  ],
+  "keep": [
+    "Tall brick smokestack chimney with steel tension bands and accent crown gives a strong industrial silhouette",
+    "Row of four east-wall server racks with glowing status LEDs reads clearly as an engineering/build center",
+    "Custom 3D printer enclosure with glass panels, gantry rail, and printed orange torus on the build plate",
+    "Exterior crates and barrels grouped cleanly on either side of the loading apron"
+  ],
+  "visual_score": 0.56,
+  "realism": 0.5,
+  "interaction_id": "v1_ChdWWEhlYXZmakc5UFYxTWtQX09hdHlBcxIXVlhIZWF2ZmpHOVBWMU1rUF9PYXR5QXM",
+  "model": "gemini-4-argon",
+  "job": "worldgen_critic",
+  "thinking_level": "medium",
+  "tokens": {
+    "in": 16059,
+    "out": 1393
+  },
+  "cost_usd": 0.046048,
+  "inputs": {
+    "screenshots": [
+      "captures/before/engineering/ext-1.png",
+      "captures/before/engineering/ext-2.png",
+      "captures/before/engineering/ext-3.png",
+      "captures/before/engineering/int-1.png",
+      "captures/before/engineering/int-2.png",
+      "captures/before/engineering/int-3.png"
+    ],
+    "videos": [
+      "captures/before/engineering/ext.webm",
+      "captures/before/engineering/int.webm"
+    ],
+    "frames": [],
+    "video_input": true,
+    "probe_score": 1,
+    "tsc_errors": false
+  }
+}

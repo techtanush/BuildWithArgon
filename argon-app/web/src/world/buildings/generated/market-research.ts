@@ -7,9 +7,9 @@ const marketResearchBuilding: BuildingModule = {
   buildExterior(k: KitApi) {
     // Disjoint colliders for the round observatory body (keeping entrance at z=8.0 clear)
     k.group('colliders', () => {
-      k.box({ size: [12.0, 8.0, 11.0], pos: [0, 4.0, -1.8], mat: 'stucco', collide: true, name: 'obs_core_col' });
-      k.box({ size: [4.2, 7.0, 3.2], pos: [-4.8, 3.5, 5.6], mat: 'stucco', collide: true, name: 'obs_west_col' });
-      k.box({ size: [4.2, 7.0, 3.2], pos: [4.8, 3.5, 5.6], mat: 'stucco', collide: true, name: 'obs_east_col' });
+      k.box({ size: [10.8, 4.0, 10.8], pos: [0, 3.4, -0.8], mat: 'stucco', collide: true, name: 'obs_core_col' });
+      k.box({ size: [1.4, 4.0, 1.0], pos: [-3.2, 3.4, 5.5], mat: 'stucco', collide: true, name: 'obs_west_col' });
+      k.box({ size: [1.4, 4.0, 1.0], pos: [3.2, 3.4, 5.5], mat: 'stucco', collide: true, name: 'obs_east_col' });
     });
 
     // Round building (cylinder r = 8.6) with glass window ring, blue accent band, and metal dome
@@ -83,7 +83,7 @@ const marketResearchBuilding: BuildingModule = {
         radius: 7.7,
         pos: [0, 9.2, -0.8],
         scale: [1, 0.88, 1],
-        mat: 'metal_light',
+        mat: 'plaster_warm',
         name: 'dome',
       });
       // Observation slit arch & shutter ribs
@@ -221,11 +221,11 @@ const marketResearchBuilding: BuildingModule = {
     // Chart screens (`screen`) and market intelligence workstations along east and west walls
     k.group('chart_screens_and_workstations', () => {
       // West wall large market landscape screen + chart bars
-      k.box({ size: [0.1, 1.5, 2.8], pos: [-8.88, 2.2, -1.2], mat: 'metal_dark' });
-      k.box({ size: [0.12, 1.36, 2.66], pos: [-8.85, 2.2, -1.2], mat: 'screen' });
+      k.box({ size: [0.1, 1.5, 2.8], pos: [-8.88, 2.2, -3.8], mat: 'metal_dark' });
+      k.box({ size: [0.12, 1.36, 2.66], pos: [-8.85, 2.2, -3.8], mat: 'screen' });
       // East wall competitor pricing matrix screen
-      k.box({ size: [0.1, 1.5, 2.8], pos: [8.88, 2.2, -1.2], mat: 'metal_dark' });
-      k.box({ size: [0.12, 1.36, 2.66], pos: [8.85, 2.2, -1.2], mat: 'screen' });
+      k.box({ size: [0.1, 1.5, 2.8], pos: [8.88, 2.2, -3.8], mat: 'metal_dark' });
+      k.box({ size: [0.12, 1.36, 2.66], pos: [8.85, 2.2, -3.8], mat: 'screen' });
 
       // West research desks
       k.prop({ kind: 'desk', pos: [-6.4, 0, -3.8], rotY: 0, collide: true });

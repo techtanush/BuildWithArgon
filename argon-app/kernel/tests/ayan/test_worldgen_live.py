@@ -231,3 +231,11 @@ async def test_valid_edit_cannot_inherit_old_capture_scores(fake_env: FakeCaptur
     (live.round_dir(lr.id) / "module.after.ts").write_text(module("engineering", "/* valid but unprobed */ "))
     with pytest.raises(ConflictError, match="changed since capture"):
         await live.promote(db=None, round_id=lr.id)
+
+
+async def test_provider_timeout_names_failed_step(fake_env: FakeCapture, settings: Any, monkeypatch: pytest.MonkeyPatch) -> None:
+    async def timeout_capture(**kw: Any) -> Any:
+        raise TimeoutError()
+    monkeypatch.setattr(live, "run_capture", timeout_capture)
+    lr = await live.start_round(settings=settings, db=None, llm=FakeLLM(), department_id="engineering", fake_capture=True, wait=True)
+    assert lr.status == "failed" and "capture_before timed out" in lr.error

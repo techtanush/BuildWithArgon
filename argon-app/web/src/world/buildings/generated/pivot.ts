@@ -7,9 +7,9 @@ const pivotBuilding: BuildingModule = {
   buildExterior(k: KitApi) {
     // Disjoint colliders for the classical rotunda
     k.group('colliders', () => {
-      k.box({ size: [11.6, 8.5, 11.2], pos: [0, 4.25, -1.2], mat: 'plaster_warm', collide: true, name: 'rotunda_core' });
-      k.box({ size: [3.8, 7.5, 2.8], pos: [-4.6, 3.75, 5.8], mat: 'plaster_warm', collide: true, name: 'rotunda_west' });
-      k.box({ size: [3.8, 7.5, 2.8], pos: [4.6, 3.75, 5.8], mat: 'plaster_warm', collide: true, name: 'rotunda_east' });
+      k.box({ size: [9.8, 7.2, 9.8], pos: [0, 4.95, -0.6], mat: 'plaster_warm', collide: true, name: 'rotunda_core' });
+      k.box({ size: [1.4, 6.5, 1.0], pos: [-2.4, 4.6, 5.2], mat: 'plaster_warm', collide: true, name: 'rotunda_west' });
+      k.box({ size: [1.4, 6.5, 1.0], pos: [2.4, 4.6, 5.2], mat: 'plaster_warm', collide: true, name: 'rotunda_east' });
     });
 
     // Classical small rotunda: stepped stylobate, ring of 8 columns around a round hall, shallow dome
@@ -49,6 +49,8 @@ const pivotBuilding: BuildingModule = {
         mat: 'plaster_warm',
         segments: 32,
       });
+
+      k.cylinder({ radiusTop: 9.3, radiusBottom: 9.3, height: 0.3, pos: [0, 8.75, -0.6], mat: 'trim', segments: 32 });
 
       // Ring of 8 monumental classical columns around the round hall + purple (`accent`) banners
       for (let i = 0; i < 8; i++) {
@@ -130,8 +132,8 @@ const pivotBuilding: BuildingModule = {
       k.box({ size: [6.4, 6.8, 1.8], pos: [0, 4.75, 6.7], mat: 'plaster_warm' });
       // 4 glowing tall windows on the front face
       for (const wx of [-2.4, -1.45, 1.45, 2.4]) {
-        k.box({ size: [0.75, 3.2, 0.18], pos: [wx, 4.6, 7.62], mat: 'window_glow' });
-        k.box({ size: [0.9, 3.4, 0.14], pos: [wx, 4.6, 7.58], mat: 'trim' });
+        k.box({ size: [0.75, 1.6, 0.18], pos: [wx, 3.0, 7.62], mat: 'window_glow' });
+        k.box({ size: [0.9, 1.8, 0.14], pos: [wx, 3.0, 7.58], mat: 'trim' });
       }
       // Steps up to the door (no collider so P3 ring is clear)
       k.box({ size: [5.4, 0.45, 2.6], pos: [0, 0.225, 8.2], mat: 'plaza_stone' });

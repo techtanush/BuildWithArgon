@@ -7,7 +7,7 @@ const growthBuilding: BuildingModule = {
   buildExterior(k: KitApi) {
     // Disjoint colliders: lighthouse tower on the west side, keeper's cottage holding the door
     k.group('colliders', () => {
-      k.box({ size: [6.4, 16.0, 6.4], pos: [-7.0, 8.0, 1.2], mat: 'stucco', collide: true, name: 'lighthouse_col' });
+      k.box({ size: [3.0, 16.0, 3.0], pos: [-7.0, 8.0, 1.2], mat: 'stucco', collide: true, name: 'lighthouse_col' });
       k.box({ size: [5.4, 6.5, 11.2], pos: [5.6, 3.25, 0.6], mat: 'brick', collide: true, name: 'cottage_east_col' });
       k.box({ size: [5.8, 6.5, 9.6], pos: [-0.4, 3.25, -0.2], mat: 'brick', collide: true, name: 'cottage_center_col' });
     });
@@ -141,7 +141,7 @@ const growthBuilding: BuildingModule = {
       k.prop({ kind: 'bench', pos: [5.2, 0, 10.6], rotY: 0, collide: true });
     });
 
-    k.light({ kind: 'point', pos: [0, 3.8, 7.9], color: '#FFF0B8', intensity: 1.4, distance: 10 });
+    k.light({ kind: 'point', pos: [2.2, 3.2, 7.5], color: '#FFF0B8', intensity: 0.8, distance: 10 });
   },
 
   buildInterior(k: KitApi) {

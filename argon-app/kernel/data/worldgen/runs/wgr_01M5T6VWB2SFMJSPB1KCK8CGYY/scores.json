@@ -122,13 +122,114 @@
           "failed": [],
           "critical_pass": true
         }
-      }
+      },
+      "ai_reviewed_buildings": 0
     },
     {
       "n": 1,
       "world_score": 1.0,
-      "visual_score": null,
-      "realism": null,
+      "visual_score": 0.575,
+      "realism": 0.4875,
+      "by_building": {
+        "intake": {
+          "probe": 1.0,
+          "visual": 0.7,
+          "realism": 0.6,
+          "failed": [],
+          "critical_pass": true
+        },
+        "office-hours": {
+          "probe": 1.0,
+          "visual": 0.62,
+          "realism": 0.6,
+          "failed": [],
+          "critical_pass": true
+        },
+        "market-research": {
+          "probe": 1.0,
+          "visual": 0.58,
+          "realism": 0.5,
+          "failed": [],
+          "critical_pass": true
+        },
+        "outreach": {
+          "probe": 1.0,
+          "visual": 0.7,
+          "realism": 0.6,
+          "failed": [],
+          "critical_pass": true
+        },
+        "synthetic-population": {
+          "probe": 1.0,
+          "visual": 0.5,
+          "realism": 0.3,
+          "failed": [],
+          "critical_pass": true
+        },
+        "pivot": {
+          "probe": 1.0,
+          "visual": 0.56,
+          "realism": 0.5,
+          "failed": [],
+          "critical_pass": true
+        },
+        "engineering": {
+          "probe": 1.0,
+          "visual": 0.56,
+          "realism": 0.5,
+          "failed": [],
+          "critical_pass": true
+        },
+        "growth": {
+          "probe": 1.0,
+          "visual": 0.38,
+          "realism": 0.3,
+          "failed": [],
+          "critical_pass": true
+        },
+        "lead-intel": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "sales": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "finance-people": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "support": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        },
+        "chief-of-staff": {
+          "probe": 1.0,
+          "visual": null,
+          "realism": null,
+          "failed": [],
+          "critical_pass": true
+        }
+      },
+      "ai_reviewed_buildings": 8
+    },
+    {
+      "n": 2,
+      "world_score": 1.0,
+      "visual_score": 0.56,
+      "realism": 0.5,
       "by_building": {
         "intake": {
           "probe": 1.0,
@@ -174,8 +275,8 @@
         },
         "engineering": {
           "probe": 1.0,
-          "visual": null,
-          "realism": null,
+          "visual": 0.56,
+          "realism": 0.5,
           "failed": [],
           "critical_pass": true
         },
@@ -221,7 +322,8 @@
           "failed": [],
           "critical_pass": true
         }
-      }
+      },
+      "ai_reviewed_buildings": 1
     }
   ],
   "final": {
@@ -229,88 +331,97 @@
     "visual_score": null,
     "realism": null,
     "generated": 13,
-    "fallback": 0
+    "fallback": 0,
+    "ai_reviewed_current_buildings": 1
   },
   "registry": {
     "intake": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "834a43834c9ad0a6c62ff63530d43b5f16849d8097ad6e003f83f54d99551119",
+      "source_sha256": "e9add7e08eb90e20098960311d7bda85054b16a2d4bd69c43ed5d2e56a440592",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "office-hours": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "f73b9012299c1cb4af18be8f83a03244e73f96c89b9edec84faa5931386ffdf3",
+      "source_sha256": "0b9d75a68052d034dde3084b144fc7d7cf63a4fb5a2a52943e29597727df8927",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "market-research": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "833c289fa180310c75863778ea4bedeefea122813e0db00544c8955c02bbc963",
+      "source_sha256": "cfa12f7ce40f98daa4ac774b22f4e5c1830aed59227ce2f27d9047a7e30b12ea",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "outreach": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "385395f718132d2a824d8abda49cfad483827489cbb2878441da361449db825d",
+      "source_sha256": "9c9bdcba6f333d5d9ea0216d65f94f4ca29ddea887e68e8defe4615722be6a67",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "synthetic-population": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "2a9b11c313b6547beb92e0e97084ec7bb1f3162e844170a7d3fff8520ab2c780",
+      "source_sha256": "55916b48f0ee978e11fe4cbe9cde6cbe47e51d110f165f895c3ab3b5fd7e0cbe",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "pivot": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "79500b4fc9cceed7b4d74078fa326b570161aa5af685ed503a352cb2fb50b22e",
+      "source_sha256": "d24421b1b3fac017077df19363535a3361200f0d0778ff6d3cb16547a1aec821",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "engineering": {
       "status": "generated",
       "iteration": 1,
       "probe_score": 1.0,
-      "visual_score": null,
-      "realism": null,
+      "visual_score": 0.56,
+      "realism": 0.5,
       "source_sha256": "4a6853a0b04a2496877d444dcdb0084ecdf9611dbc0fdcfa065f38cd74d5f3dd",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": true
     },
     "growth": {
       "status": "generated",
-      "iteration": 1,
+      "iteration": 2,
       "probe_score": 1.0,
       "visual_score": null,
       "realism": null,
-      "source_sha256": "450bb9876aeac09f617fcee7d4b29dd65e627df386032c88be9142f856dbd78a",
+      "source_sha256": "da87179f1592be8b3661e29758bcbb077969b496ec4a476c50d271bfb6244e09",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": false
     },
     "lead-intel": {
       "status": "generated",
@@ -320,7 +431,8 @@
       "realism": null,
       "source_sha256": "48a69995ffb23088cdd40f90b311a2a24dfb1a94ac9304b76085460a87d26422",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": true
     },
     "sales": {
       "status": "generated",
@@ -330,7 +442,8 @@
       "realism": null,
       "source_sha256": "15ae0eec30ec76ca8e9fda5b61edfd796a50ab8d5afcb24eed18d09265cc2ea8",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": true
     },
     "finance-people": {
       "status": "generated",
@@ -340,7 +453,8 @@
       "realism": null,
       "source_sha256": "2814738b8da4e06d36a389e138ff9673005798e1ddda016b2e6bb66603f7b6a4",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": true
     },
     "support": {
       "status": "generated",
@@ -350,7 +464,8 @@
       "realism": null,
       "source_sha256": "dcfeb4f387fe50a4720a606681a4c96a3261b0d79606390990a066469c24bd0b",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": true
     },
     "chief-of-staff": {
       "status": "generated",
@@ -360,21 +475,25 @@
       "realism": null,
       "source_sha256": "856819b0f5412afd113faae644a4214f5836d6150bf32c18fd2325dfef9b7ff5",
       "capture_provenance": "real",
-      "photoreal_verified": false
+      "photoreal_verified": false,
+      "walkthrough_validated": true
     }
   },
-  "stop_reason": "Real probe repairs complete. Live Argon visual review separately bounded; no visual scores invented.",
+  "stop_reason": "Seven targeted repairs verified with real screenshot probes. Full photoreal AI bar is NOT complete; live repair timed out.",
   "tokens": {
     "in": 84058,
     "out": 75050
   },
   "cost_usd": 0.9186,
   "wall_minutes": 11.72,
+  "verification_budget_receipt": "verify-receipt.json",
+  "verification_actual_usd": 0.394262,
+  "verification_charged_reserved_usd": 0.827734,
   "provenance": {
     "capture": "real",
-    "renderer": "isolated Mahin PR3 verification copy",
-    "assets": "verified Karthik scanned assets",
-    "patches": "targeted deterministic repairs, not falsely labeled new Argon generations"
+    "iter_1": "all13 actualscreenshots+walkthroughs",
+    "iter_2": "7 changed buildings actualscreenshots, no fresh videos",
+    "patches": "deterministic repairs guided by actual Argon critiques, not falsely labeled new Argon generation"
   },
   "published": true
 }

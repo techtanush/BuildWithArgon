@@ -79,7 +79,7 @@ const intakeBuilding: BuildingModule = {
         for (const y of [2.6, 6.0]) {
           // Window recess & frame
           k.box({ size: [1.7, 2.2, 0.22], pos: [x, y, 6.55], mat: 'trim' });
-          k.box({ size: [1.4, 1.9, 0.26], pos: [x, y, 6.58], mat: y === 2.6 ? 'window_glow' : 'glass' });
+          k.box({ size: [1.4, 1.9, 0.26], pos: [x, y, 6.58], mat: 'window_glow' });
           // Mullions
           k.box({ size: [0.07, 1.9, 0.3], pos: [x, y, 6.62], mat: 'metal_dark' });
           k.box({ size: [1.4, 0.07, 0.3], pos: [x, y + 0.2, 6.62], mat: 'metal_dark' });
@@ -90,6 +90,18 @@ const intakeBuilding: BuildingModule = {
       }
     });
 
+    // Rear and side glazing aligned to interior window centres; second-storey rhythm above.
+    for (const y of [1.9, 6.3]) {
+      for (const side of [-1, 1]) {
+        k.box({ size: [0.22, 2.1, 2.9], pos: [side * 10.47, y, -1.5], mat: 'trim' });
+        k.box({ size: [0.26, 1.8, 2.6], pos: [side * 10.51, y, -1.5], mat: 'window_glow' });
+        k.box({ size: [0.3, 1.8, 0.08], pos: [side * 10.55, y, -1.5], mat: 'metal_dark' });
+        k.box({ size: [0.3, 0.08, 2.6], pos: [side * 10.55, y, -1.5], mat: 'metal_dark' });
+      }
+      k.box({ size: [3.7, 2.2, 0.22], pos: [0, y, -7.47], mat: 'trim' });
+      k.box({ size: [3.4, 1.9, 0.26], pos: [0, y, -7.51], mat: 'window_glow' });
+      k.box({ size: [0.08, 1.9, 0.3], pos: [0, y, -7.55], mat: 'metal_dark' });
+    }
     // Large clock-less station canopy in department accent orange + entrance
     k.group('canopy_and_entrance', () => {
       // Paved forecourt walk
@@ -220,12 +232,12 @@ const intakeBuilding: BuildingModule = {
     k.group('idea_wall', () => {
       k.prop({ kind: 'whiteboard', pos: [-5.2, 0, -6.2], rotY: 0.15 });
       // Large wall-mounted cork/fabric idea pinboard on west wall
-      k.box({ size: [0.1, 1.6, 3.6], pos: [-8.88, 2.1, 1.2], mat: 'wood_dark', name: 'pinboard_frame' });
-      k.box({ size: [0.12, 1.44, 3.44], pos: [-8.86, 2.1, 1.2], mat: 'plaster_warm', name: 'pinboard_surface' });
+      k.box({ size: [0.1, 1.6, 3.2], pos: [-8.88, 2.1, 2.2], mat: 'wood_dark', name: 'pinboard_frame' });
+      k.box({ size: [0.12, 1.44, 3.04], pos: [-8.86, 2.1, 2.2], mat: 'plaster_warm', name: 'pinboard_surface' });
 
       // Grid of colorful structured-brief cards pinned to the board
       const noteMats = ['paper', 'fabric_coral', 'fabric_blue', 'fabric_lavender', 'accent', 'fabric_pink'] as const;
-      const zOffsets = [-0.2, 0.35, 0.9, 1.45, 2.0, 2.55];
+      const zOffsets = [0.9, 1.4, 1.9, 2.4, 2.9, 3.4];
       const yOffsets = [1.65, 2.1, 2.52];
       let idx = 0;
       for (const ny of yOffsets) {
