@@ -17,3 +17,4 @@ Built for the **Gemini 4 Argon hackathon** (Cerebral Valley × Google DeepMind):
 | Tanush — kernel core, company & dashboard | `tanush` | `WORKORDER_TANUSH.md` on that branch |
 | Ayan — models, engineering, integrations & worldgen | `ayan` | `WORKORDER_AYAN.md` on that branch |
 | Mahin — the 3D world | `mahin` | `WORKORDER_MAHIN.md` on that branch |
+| Karthik — voice & lip-sync end to end, grounding eval | `karthik` | `WORKORDER_KARTHIK.md` on that branch |
