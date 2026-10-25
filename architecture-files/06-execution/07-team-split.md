@@ -20,7 +20,9 @@ this split into step-by-step instructions. **Read the spec first** (`architectur
 2. **Disjoint ownership.** Every file has exactly one owner — `tanush`, `ayan`, `mahin`, `karthik`
    or `frozen` — declared in its first line (`OWNER: …`) and enforced by
    `argon-app/scripts/check_ownership.py` (`make ownership WHO=<you>`). Nobody edits a file they
-   don't own, so the merge has no conflicts.
+   don't own, so the merge has no conflicts. `python3 scripts/check_ownership.py --audit` checks
+   that every tracked file and every file the work orders plan to create has exactly one intended
+   owner — it doubles as a "where does this file go?" index.
 3. **Fakes and mocks remove waiting.** `LLM_MODE=fake` + `FakeLLM` + the fake-mode engineering
    handler let Tanush run the full company DAG without Ayan's live loop; `FakeHandlerContext` lets
    Ayan test handlers without Tanush's scheduler; `/view?mock=1` fixtures let Mahin build the whole
@@ -51,7 +53,7 @@ this split into step-by-step instructions. **Read the spec first** (`architectur
 | File | What it freezes |
 |---|---|
 | `kernel/foundry_kernel/schema.sql` | Full DDL from `01-architecture/03-data-model.md` (extend only with migrations) |
-| `kernel/foundry_kernel/contracts.py` | `LLMClientProtocol`, `LLMResult`, `Part`, `HandlerContext`, `Handler`, `HandlerResult` and `New*` records, `Executor`/`ExecutorInput`/`ExecutorResult`, conversation, voice (`TtsResponse`, `SttResponse`, `Alignment`), manifest, FaceSpec, standup and computer models |
+| `kernel/foundry_kernel/contracts.py` | `LLMClientProtocol`, `LLMResult` (incl. `images` and `audio` outputs), `Part`, `HandlerContext`, `Handler`, `HandlerResult` and `New*` records, `Executor`/`ExecutorInput`/`ExecutorResult`, conversation, voice (`TtsResponse`, `SttResponse`, `Alignment`), manifest, FaceSpec, standup and computer models |
 | `config.py`, `ids.py`, `errors.py`, `security.py` (`redact()`), `world_layout.py` | Settings for every env var; ULIDs; error types; redaction; the deterministic city layout + manifest builder |
 | `api/__init__.py`, `evals/cli.py` | Router list (every router file exists); eval dispatcher |
 | `kernel/tests/conftest.py`, `fakes.py`, `test_seed_contracts.py` | Shared fixtures, `FakeHandlerContext`, the seed's safety-net tests |
@@ -59,6 +61,7 @@ this split into step-by-step instructions. **Read the spec first** (`architectur
 | `web/src/App.tsx`, `main.tsx` | Routing: `/view` → world, `/view/capture` → capture page, `/*` → dashboard |
 | `web/src/shared/contracts.ts` | TypeScript mirror of every API object, the manifest and SSE events |
 | `web/src/world/kit/types.ts` | The kit API given to Argon (verbatim from `05-world/09`) |
+| `web/src/world/kit/props.contract.ts` | Footprint (w × d × h) of every `PropKind` — Mahin's `kit/props.ts` builds to it; Ayan's prompt "PROPS LIBRARY" table is generated from it |
 | `web/src/world/npc/FaceSpec.ts` | FaceSpec + enums |
 | `web/src/world/probes/types.ts` | Capture handshake: `window.__foundryProbe`, `ProbeResult`, `BuildingProbeReport`, cameras |
 | `web/src/world/buildings/example/house.example.ts` | Reference module (prompt example; kit smoke test) |
