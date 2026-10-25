@@ -323,7 +323,9 @@ export function Computers() {
                 <span>{titleCase(computer.provider)}</span>
                 <span>{computer.current_task?.steps ?? 0} steps</span>
               </div>
-              {computer.current_task&&<RecentComputerActions taskId={computer.current_task.id}/>}
+              {computer.current_task && (
+                <RecentComputerActions taskId={computer.current_task.id} />
+              )}
               <div className="actions">
                 {computer.current_task && (
                   <Link
@@ -387,15 +389,34 @@ interface Task {
   result?: unknown;
   actions: ComputerAction[];
 }
-function RecentComputerActions({taskId}:{taskId:string}){
-  const query=useQuery<Task>(`/v1/computer-tasks/${taskId}`,()=>get(`/v1/computer-tasks/${taskId}`));
-  useEffect(()=>{if(query.data?.status!=='running')return;const timer=setInterval(()=>void query.refetch(),1500);return()=>clearInterval(timer);},[taskId,query.data?.status]);
-  return <div className="recent-computer-actions"><ErrorNotice error={query.error} retry={query.refetch}/>{query.data?.actions.slice(-5).map(step=><div className="standup-update" key={step.step}><strong>Step {step.step}</strong> <Status value={step.guard}/><p>{step.reason}</p></div>)}</div>;
+function RecentComputerActions({ taskId }: { taskId: string }) {
+  const query = useQuery<Task>(`/v1/computer-tasks/${taskId}`, () =>
+    get(`/v1/computer-tasks/${taskId}`),
+  );
+  useEffect(() => {
+    if (query.data?.status !== "running") return;
+    const timer = setInterval(() => void query.refetch(), 1500);
+    return () => clearInterval(timer);
+  }, [taskId, query.data?.status]);
+  return (
+    <div className="recent-computer-actions">
+      <ErrorNotice error={query.error} retry={query.refetch} />
+      {query.data?.actions.slice(-5).map((step) => (
+        <div className="standup-update" key={step.step}>
+          <strong>Step {step.step}</strong> <Status value={step.guard} />
+          <p>{step.reason}</p>
+        </div>
+      ))}
+    </div>
+  );
 }
 export function ComputerTask() {
   const { id } = useParams();
-  const {ventureId}=useCompany();
-  const approvals=useQuery<ListPage<Approval>>(ventureId?`/v1/ventures/${ventureId}/approvals`:null,()=>get(`/v1/ventures/${ventureId}/approvals`));
+  const { ventureId } = useCompany();
+  const approvals = useQuery<ListPage<Approval>>(
+    ventureId ? `/v1/ventures/${ventureId}/approvals` : null,
+    () => get(`/v1/ventures/${ventureId}/approvals`),
+  );
   const query = useQuery<Task>(`/v1/computer-tasks/${id}`, () =>
     get(`/v1/computer-tasks/${id}`),
   );
@@ -456,26 +477,216 @@ export function ComputerTask() {
           </details>
         )}
       </Card>
-      <div className="approval-grid">{approvals.data?.items.filter(approval=>approval.gate_type==='computer_action'&&approval.payload.task_id===id).map(approval=><ApprovalCard key={approval.id} approval={approval}/>)}</div>
+      <div className="approval-grid">
+        {approvals.data?.items
+          .filter(
+            (approval) =>
+              approval.gate_type === "computer_action" &&
+              approval.payload.task_id === id,
+          )
+          .map((approval) => (
+            <ApprovalCard key={approval.id} approval={approval} />
+          ))}
+      </div>
     </>
   );
 }
 
 interface MetricsData {
   engineering?: {
-    first_run_pass_rate?: number;
-    loop_pass_rate?: number;
-    avg_iterations?: number;
+    first_run_pass_rate?: number | null;
+    loop_pass_rate?: number | null;
+    avg_iterations?: number | null;
+    n: number;
+    first_pass_n: number;
+    final_pass_n: number;
+    cost_per_shipped_task: number | null;
+    tickets: {
+      ticket_id: string;
+      title: string;
+      status: string;
+      first_pass_passed: boolean | null;
+      final_passed: boolean | null;
+      iterations: number | null;
+      tests_passed: number | null;
+      tests_failed: number | null;
+      cost_usd: number | null;
+    }[];
   };
   grounding?: {
-    accuracy?: number;
+    accuracy?: number | null;
     n?: number;
-    citation_accuracy?: number;
-    checker_agreement?: number;
+    citation_accuracy?: number | null;
+    checker_agreement?: number | null;
+    route_accuracy?: number | null;
+    fabrication_rate?: number | null;
+    answerer?: string | null;
+    capability_evidence?: boolean | null;
   };
-  world?: { final_score?: number };
-  latency?: { p50?: number; p90?: number; p50_ms?: number; p90_ms?: number };
+  world?: { final_score?: number | null };
+  latency?: {
+    n: number;
+    p50_ms: number | null;
+    p90_ms: number | null;
+    by_stage: Record<
+      string,
+      { n: number; p50_ms: number | null; p90_ms: number | null }
+    >;
+  };
   costs?: unknown;
+}
+interface EvaluationSuite {
+  suite: string;
+  created_at: string;
+  answerer: string | null;
+  capability_evidence: boolean | null;
+  items: {
+    id: string;
+    case_id: string;
+    condition: string;
+    metrics: Record<string, unknown>;
+    created_at: string;
+  }[];
+}
+interface LatestEvaluations {
+  engineering: EvaluationSuite | null;
+  grounding: EvaluationSuite | null;
+  world: EvaluationSuite | null;
+}
+function EvaluationTable({ suite }: { suite: EvaluationSuite }) {
+  const columns = [
+    ...new Set(suite.items.flatMap((row) => Object.keys(row.metrics))),
+  ].filter(
+    (key) =>
+      ![
+        "evaluation_id",
+        "report_id",
+        "run_id",
+        "summary",
+        "answerer",
+        "capability_evidence",
+        "answer",
+      ].includes(key),
+  );
+  return (
+    <Card title={`${titleCase(suite.suite)} · raw evaluation results`}>
+      <p className="card-intro">
+        {new Date(suite.created_at).toLocaleString()} · failures included ·{" "}
+        {suite.answerer ?? "unlabelled"} answerer
+      </p>
+      {suite.capability_evidence === false && (
+        <p className="notice">
+          Fake or injected evaluation. These results test the implementation and
+          do not measure live model capability.
+        </p>
+      )}
+      <div className="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Case</th>
+              <th>Condition</th>
+              {columns.map((key) => (
+                <th key={key}>{titleCase(key)}</th>
+              ))}
+              <th>Answer & sources</th>
+            </tr>
+          </thead>
+          <tbody>
+            {suite.items.map((row) => (
+              <tr key={row.id}>
+                <td>{row.case_id}</td>
+                <td>{row.condition}</td>
+                {columns.map((key) => (
+                  <td key={key}>
+                    {row.metrics[key] === null || row.metrics[key] === undefined
+                      ? "Not scored"
+                      : typeof row.metrics[key] === "object"
+                        ? JSON.stringify(row.metrics[key])
+                        : String(row.metrics[key])}
+                  </td>
+                ))}
+                <td>
+                  {row.metrics.answer !== undefined ? (
+                    <details>
+                      <summary>Inspect answer</summary>
+                      <pre>{JSON.stringify(row.metrics.answer, null, 2)}</pre>
+                    </details>
+                  ) : (
+                    "Not recorded"
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </Card>
+  );
+}
+function EngineeringComparison({ suite }: { suite: EvaluationSuite }) {
+  const groups = ["baseline", "loop"].map((condition) => {
+    const rows = suite.items.filter((row) => row.condition === condition);
+    const measured = rows
+      .map((row) => row.metrics.all_hidden_pass)
+      .filter((value): value is boolean => typeof value === "boolean");
+    return {
+      condition,
+      n: measured.length,
+      rate: measured.length
+        ? measured.filter(Boolean).length / measured.length
+        : null,
+    };
+  });
+  if (!groups.some((group) => group.n)) return null;
+  return (
+    <Card title="Engineering evaluation · baseline versus loop">
+      <svg
+        viewBox="0 0 460 235"
+        role="img"
+        aria-label="Engineering hidden acceptance test pass rates"
+        style={{ width: "100%", maxHeight: 260 }}
+      >
+        <path d="M50 20V190H430" stroke="#D5C7B0" fill="none" />
+        {groups.map((group, index) => (
+          <g key={group.condition}>
+            <rect
+              x={100 + index * 175}
+              y={group.rate === null ? 190 : 190 - group.rate * 155}
+              width="90"
+              height={(group.rate ?? 0) * 155}
+              fill={index ? "#D67B48" : "#B8A58A"}
+              rx="4"
+            />
+            <text
+              x={145 + index * 175}
+              y="211"
+              textAnchor="middle"
+              fontSize="12"
+              fill="#8E7759"
+            >
+              {titleCase(group.condition)} · n={group.n}
+            </text>
+            <text
+              x={145 + index * 175}
+              y={
+                group.rate === null ? 173 : Math.max(20, 180 - group.rate * 155)
+              }
+              textAnchor="middle"
+              fontSize="13"
+              fill="#765B3A"
+            >
+              {percent(group.rate)}
+            </text>
+          </g>
+        ))}
+      </svg>
+      <p className="muted small-text">
+        Each rate uses only recorded hidden-test outcomes. Missing conditions
+        stay unscored.
+      </p>
+    </Card>
+  );
 }
 export function Metrics() {
   const { ventureId } = useCompany();
@@ -490,7 +701,7 @@ export function Metrics() {
   const world = useQuery<WorldgenRunSummary>("/v1/world/worldgen/latest", () =>
     get("/v1/world/worldgen/latest"),
   );
-  const evals = useQuery<Record<string, unknown>>("/v1/evals/latest", () =>
+  const evals = useQuery<LatestEvaluations>("/v1/evals/latest", () =>
     get("/v1/evals/latest"),
   );
   const missing = query.error instanceof ApiError && query.error.status === 404;
@@ -523,6 +734,11 @@ export function Metrics() {
         </Card>
         <Card>
           <span className="overline">Grounding accuracy</span>
+          {query.data?.grounding?.capability_evidence === false && (
+            <span className="fake-badge">
+              {query.data.grounding.answerer ?? "Fake"} evaluation
+            </span>
+          )}
           <strong className="kpi-value">
             {percent(query.data?.grounding?.accuracy)}
           </strong>
@@ -542,28 +758,32 @@ export function Metrics() {
         <Card>
           <span className="overline">Response latency</span>
           <strong className="kpi-value">
-            {query.data?.latency?.p50_ms ?? query.data?.latency?.p50 ?? "—"}
+            {query.data?.latency?.p50_ms?.toFixed(0) ?? "—"}
             <small> ms p50</small>
           </strong>
           <span className="muted">
-            p90{" "}
-            {query.data?.latency?.p90_ms ??
-              query.data?.latency?.p90 ??
-              "not recorded"}
+            p90 {query.data?.latency?.p90_ms?.toFixed(0) ?? "not recorded"} ms ·{" "}
+            {query.data?.latency?.n ?? 0} samples
           </span>
         </Card>
       </div>
       <div className="two-column">
         <Card title="Engineering outcomes">
-          {query.data?.engineering?.first_run_pass_rate !== undefined ? (
+          {query.data?.engineering?.n ? (
             <dl className="detail-grid">
               <div>
                 <dt>First run pass rate</dt>
                 <dd>{percent(query.data.engineering.first_run_pass_rate)}</dd>
+                <small>
+                  {query.data.engineering.first_pass_n} measured builds
+                </small>
               </div>
               <div>
                 <dt>Loop pass rate</dt>
                 <dd>{percent(query.data.engineering.loop_pass_rate)}</dd>
+                <small>
+                  {query.data.engineering.final_pass_n} measured builds
+                </small>
               </div>
               <div>
                 <dt>Average iterations</dt>
@@ -578,11 +798,11 @@ export function Metrics() {
               run.
             </Empty>
           )}
-          {evals.data && (
-            <details>
-              <summary>Latest evaluation records</summary>
-              <pre>{JSON.stringify(evals.data, null, 2)}</pre>
-            </details>
+          {query.data?.engineering?.cost_per_shipped_task != null && (
+            <p className="muted">
+              Cost per shipped task:{" "}
+              {currency(query.data.engineering.cost_per_shipped_task)}
+            </p>
           )}
         </Card>
         <Card title="Grounded answers">
@@ -595,13 +815,122 @@ export function Metrics() {
               <dt>Checker agreement</dt>
               <dd>{percent(query.data?.grounding?.checker_agreement)}</dd>
             </div>
+            <div>
+              <dt>Route accuracy</dt>
+              <dd>{percent(query.data?.grounding?.route_accuracy)}</dd>
+            </div>
+            <div>
+              <dt>Fabrication rate</dt>
+              <dd>{percent(query.data?.grounding?.fabrication_rate)}</dd>
+            </div>
           </dl>
           <p className="muted">
             Scores come from the grounding evaluation. Missing scores are never
             filled with estimates.
           </p>
+          {query.data?.grounding?.capability_evidence === false && (
+            <p className="notice">
+              Implementation check only ·{" "}
+              {query.data.grounding.answerer ?? "fake or injected"} answers.
+              This is not live model quality evidence.
+            </p>
+          )}
         </Card>
       </div>
+      {Boolean(query.data?.engineering?.tickets.length) && (
+        <Card title="Recorded build outcomes">
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Build ticket</th>
+                  <th>First pass</th>
+                  <th>Final pass</th>
+                  <th>Iterations</th>
+                  <th>Tests passed / failed</th>
+                  <th>Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {query.data?.engineering?.tickets.map((ticket) => (
+                  <tr key={ticket.ticket_id}>
+                    <td>
+                      <Link to={`/tickets/${ticket.ticket_id}`}>
+                        {ticket.title}
+                      </Link>
+                      <small>{ticket.status}</small>
+                    </td>
+                    <td>
+                      {ticket.first_pass_passed == null
+                        ? "Not recorded"
+                        : ticket.first_pass_passed
+                          ? "Passed"
+                          : "Failed"}
+                    </td>
+                    <td>
+                      {ticket.final_passed == null
+                        ? "Not recorded"
+                        : ticket.final_passed
+                          ? "Passed"
+                          : "Failed"}
+                    </td>
+                    <td>{ticket.iterations ?? "—"}</td>
+                    <td>
+                      {ticket.tests_passed ?? "—"} /{" "}
+                      {ticket.tests_failed ?? "—"}
+                    </td>
+                    <td>
+                      {ticket.cost_usd == null
+                        ? "Not recorded"
+                        : currency(ticket.cost_usd)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+      {evals.data?.engineering && (
+        <EngineeringComparison suite={evals.data.engineering} />
+      )}
+      {query.data?.latency && query.data.latency.n > 0 && (
+        <Card title="Voice response latency">
+          <p className="card-intro">
+            Latest {query.data.latency.n} valid samples across all ventures ·
+            milliseconds · maximum 500 samples
+          </p>
+          <div className="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Stage</th>
+                  <th>p50</th>
+                  <th>p90</th>
+                  <th>Samples</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(query.data.latency.by_stage).map(
+                  ([stage, values]) => (
+                    <tr key={stage}>
+                      <td>{titleCase(stage.replace("_ms", ""))}</td>
+                      <td>{values.p50_ms?.toFixed(0) ?? "—"}</td>
+                      <td>{values.p90_ms?.toFixed(0) ?? "—"}</td>
+                      <td>{values.n}</td>
+                    </tr>
+                  ),
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+      )}
+      <ErrorNotice error={evals.error} retry={evals.refetch} />
+      {evals.data &&
+        Object.values(evals.data)
+          .filter((suite): suite is EvaluationSuite => Boolean(suite))
+          .map((suite) => <EvaluationTable key={suite.suite} suite={suite} />)}
       <div className="two-column">
         <CostChart
           title="Spend by department"

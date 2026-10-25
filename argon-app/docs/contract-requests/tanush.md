@@ -57,3 +57,11 @@ Workaround on Lane A: company planning, asks, approval UI and typed runtime tool
 File: `kernel/foundry_kernel/contracts.py`, `StandupLatest`.
 
 Add `audio: list[StandupAudio] = Field(default_factory=list)`, with `StandupAudio` containing `agent_id: str`, `audio_url: str | None = None`, `alignment: Alignment | None = None`, matching the API endpoint table and TypeScript contract. Workaround: owned `api/org.py` defines `LatestStandup(StandupLatest)` with this exact additive field, so the live route and OpenAPI already expose the required shape.
+
+## T-CR-07 — Native structured output and incomplete responses in the live LLM adapter
+
+Files: Ayan-owned `llm/client.py` (`generate_json`, `generate`, `_result`) and `models.py` output limits.
+
+The first real grounding benchmark exposed empty/truncated/non-JSON responses that exhausted the seed's one JSON repair (errors included unterminated strings and missing delimiters). Preserve these failures in the benchmark; do not tune conversation prompts on its gold answers. Implement native Interactions structured output in `generate_json` using `response_format={"type":"text","mime_type":"application/json","schema": schema.model_json_schema()}` on both initial and repair interactions. Keep the public signature. Check terminal interaction status/incomplete details before returning success; retain raw status and bounded, redacted diagnostics. Review whether the fixed 1,024-token conversation output cap accommodates the public answer+citations+route schema; any increase should be measured on a separate development case before rerunning the whole unchanged benchmark. Keep failed cases and both reports.
+
+Verified against [official structured-output documentation](https://ai.google.dev/gemini-api/docs/interactions/structured-output.md.txt), fetched 2026-10-25. This adapter is outside Tanush ownership; Lane A fails closed with a normal provider error and does not invent an answer or a passing score.

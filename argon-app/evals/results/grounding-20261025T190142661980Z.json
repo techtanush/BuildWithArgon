@@ -1,0 +1,672 @@
+{
+  "id": "evl_01M5T7D7TP8JB1858VKASCEDMA",
+  "suite": "grounding",
+  "created_at": "2026-10-25T19:08:13.526Z",
+  "answerer": "live",
+  "capability_evidence": true,
+  "note": "Live provider benchmark.",
+  "summary": {
+    "n": 20,
+    "accuracy": 0.55,
+    "fact_accuracy": 0.55,
+    "citation_accuracy": 0.55,
+    "route_accuracy": 0.0,
+    "route_n": 6,
+    "fabrication_rate": 0.0,
+    "checker_agreement": 0.35,
+    "checker_verified_when_correct": 0.6363636363636364,
+    "checker_unsupported_when_incorrect": 0.0
+  },
+  "cases": [
+    {
+      "case_id": "G-01",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-02",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-03",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-04",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "partial",
+      "checker_agreement": false,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T73AFE1NJ0NJJ8RM2YH1BY",
+        "text": "We have spent $6.40 of the $25.00 budget so far [R7]. Would you like to check in with Hana in Finance & People to review our runway and projections?",
+        "citations": [
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_BUDGET",
+            "quote": "Spent $6.40 of the $25.00 budget.",
+            "label": "Artifact: Budget update"
+          }
+        ],
+        "check": {
+          "status": "partial",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "Some source quotations or claim support are incomplete"
+        },
+        "route_card": null,
+        "latency_ms": 17333
+      }
+    },
+    {
+      "case_id": "G-05",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-06",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": false,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-07",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-08",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T75YP30GVH1JTN7C2V5MP7",
+        "text": "I am working on implementing expiry highlighting for items expiring within 3 days. In the latest run, 39 tests passed and 3 failed on the boundary check.",
+        "citations": [
+          {
+            "kind": "ticket",
+            "id": "tkt_EVAL_EXPIRY",
+            "quote": "Implement AC-3: highlight items expiring within 3 days.",
+            "label": "Ticket: Expiry highlighting"
+          },
+          {
+            "kind": "run",
+            "id": "run_EVAL_EXP1",
+            "quote": "iteration 1/6: 39 passed, 3 failed (expiry highlight boundary at exactly 3 days)",
+            "label": "Run: Latest work run"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            },
+            {
+              "index": 1,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 14574
+      }
+    },
+    {
+      "case_id": "G-09",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T76J30BJ8JY0FM3QTF160A",
+        "text": "Work on expiry highlighting is currently in progress. In iteration one, 39 tests passed, while 3 failed on the boundary for items expiring at exactly three days.",
+        "citations": [
+          {
+            "kind": "ticket",
+            "id": "tkt_EVAL_EXPIRY",
+            "quote": "status: in_progress",
+            "label": "Ticket: Expiry highlighting"
+          },
+          {
+            "kind": "run",
+            "id": "run_EVAL_EXP1",
+            "quote": "iteration 1/6: 39 passed, 3 failed (expiry highlight boundary at exactly 3 days)",
+            "label": "Run: Latest work run"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            },
+            {
+              "index": 1,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 13222
+      }
+    },
+    {
+      "case_id": "G-10",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T774Z1NY0SQ4ZYVMZ0GZHB",
+        "text": "The search feature took 2 iterations to finish, and 42 of 42 tests passed.",
+        "citations": [
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_PR7",
+            "quote": "42 of 42 tests passed after 2 iterations.",
+            "label": "Artifact: Add pantry search"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 13462
+      }
+    },
+    {
+      "case_id": "G-11",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T77KFMGKEVC95Q0JE59BS7",
+        "text": "According to our market research on pantry and recipe apps, Pantry Check costs $2.99/month and includes barcode scanning.",
+        "citations": [
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_MARKET",
+            "quote": "Pantry Check: $2.99/month, barcode scanning.",
+            "label": "Artifact: Market research: pantry & recipe apps"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 14278
+      }
+    },
+    {
+      "case_id": "G-12",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T782QVYJ6TTZ95XP4A836R",
+        "text": "Based on our market research, manual data entry is the main reason users abandon pantry apps.",
+        "citations": [
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_MARKET",
+            "quote": "Manual data entry is the main reason users abandon pantry apps.",
+            "label": "Artifact: Market research: pantry & recipe apps"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 10963
+      }
+    },
+    {
+      "case_id": "G-13",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-14",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "partial",
+      "checker_agreement": false,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T790CTGSK2RE4CXHABCGQ7",
+        "text": "$4.10 is the amount spent by Engineering, making it the department with the highest expenditure. Across the company, $6.40 has been spent in total out of the $25.00 budget, keeping our finances in a solid position.",
+        "citations": [
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_BUDGET",
+            "quote": "Engineering $4.10, Market Research $1.30, all other departments $1.00.",
+            "label": "Artifact: Budget update"
+          },
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_BUDGET",
+            "quote": "Spent $6.40 of the $25.00 budget.",
+            "label": "Artifact: Budget update"
+          }
+        ],
+        "check": {
+          "status": "partial",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            },
+            {
+              "index": 1,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "Some source quotations or claim support are incomplete"
+        },
+        "suggested_agent": null,
+        "latency_ms": 16780
+      }
+    },
+    {
+      "case_id": "G-15",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-16",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T7ABX0W3KSY4GY4T2FPNZN",
+        "text": "Please review that action in the dashboard under Approvals.",
+        "citations": [
+          {
+            "kind": "approval",
+            "id": "apr_EVAL_OUTREACH",
+            "quote": "Send interview invitations (2 drafts)",
+            "label": "Approval: Send interview invitations (2 drafts)"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 13
+      }
+    },
+    {
+      "case_id": "G-17",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T7ABXGN9HP4RK2870STTAT",
+        "text": "According to the specification checklist, acceptance criterion 3 states that items expiring within 3 days are highlighted.",
+        "citations": [
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_SPEC",
+            "quote": "Items expiring within 3 days are highlighted.",
+            "label": "Artifact: Spec: Pantry Pal v1"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 14125
+      }
+    },
+    {
+      "case_id": "G-18",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": false,
+      "route_pass": false,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "error",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "text": "",
+        "check": {
+          "status": "error"
+        },
+        "citations": []
+      },
+      "error": "The agent could not prepare an answer; please try again."
+    },
+    {
+      "case_id": "G-19",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": false,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T7BG46PAQT535PVW69BERX",
+        "text": "I do not know which companies are our best leads. The ticket to define the ideal customer profile is currently open [R4], and Lead Intelligence has not produced any artifacts yet [R3]. I suggest consulting Priya to review existing market research.",
+        "citations": [
+          {
+            "kind": "ticket",
+            "id": "tkt_EVAL_LEADS",
+            "quote": "title: ICP for Pantry Pal\nbody: Define the ideal customer profile.\nstatus: open",
+            "label": "Ticket: ICP for Pantry Pal"
+          }
+        ],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            },
+            {
+              "index": 1,
+              "status": "unsupported",
+              "reason": "Source quotations must contain 1\u2013160 characters"
+            }
+          ],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "suggested_agent": {
+          "agent_id": "mr.research-lead",
+          "reason": "Priya runs deep market research on segments, competitors, and market data while the ideal customer profile ticket is still open."
+        },
+        "latency_ms": 16167
+      }
+    },
+    {
+      "case_id": "G-20",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": false,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T7BZWWWXJT7C0RDZ7M22W8",
+        "text": "\u2022 The plan encompasses 16 tickets across 11 departments. [R4]\n\u2022 The projected total cost for the plan is $14.80. [R5]\n\u2022 Current spending stands at $6.40 of the $25.00 venture budget. [R5]",
+        "citations": [
+          {
+            "kind": "message",
+            "id": "msg_EVAL_2",
+            "quote": "Plan for Pantry Pal: 16 tickets across 11 departments.",
+            "label": "Message: Department conversation"
+          },
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_BUDGET",
+            "quote": "Projected total for the plan: $14.80.",
+            "label": "Artifact: Budget update"
+          },
+          {
+            "kind": "artifact",
+            "id": "art_EVAL_BUDGET",
+            "quote": "Spent $6.40 of the $25.00 budget.",
+            "label": "Artifact: Budget update"
+          }
+        ],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            },
+            {
+              "index": 1,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            },
+            {
+              "index": 2,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "suggested_agent": null,
+        "latency_ms": 13990
+      }
+    }
+  ]
+}

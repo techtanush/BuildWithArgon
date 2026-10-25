@@ -1,0 +1,542 @@
+{
+  "id": "evl_01M5T70TASY7BN2M2NN0X6VFCC",
+  "suite": "grounding",
+  "created_at": "2026-10-25T19:01:26.489Z",
+  "answerer": "fake",
+  "capability_evidence": false,
+  "note": "Plumbing/scoring check only; fake or injected answers are not model capability evidence.",
+  "summary": {
+    "n": 20,
+    "accuracy": 0.1,
+    "fact_accuracy": 0.1,
+    "citation_accuracy": 0.15,
+    "route_accuracy": 0.16666666666666666,
+    "route_n": 6,
+    "fabrication_rate": 0.0,
+    "checker_agreement": 0.45,
+    "checker_verified_when_correct": 1.0,
+    "checker_unsupported_when_incorrect": 0.42105263157894735
+  },
+  "cases": [
+    {
+      "case_id": "G-01",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T6KQ10DCY1MP2TGQSWR",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": null,
+        "latency_ms": 13
+      }
+    },
+    {
+      "case_id": "G-02",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T71HSMZTAXWJWX8SPEE",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": {
+          "agent_id": "mr.research-lead",
+          "agent_name": "Priya",
+          "agent_title": "Research Lead",
+          "department_id": "market-research",
+          "building_id": "b-market-research",
+          "building_name": "The Observatory",
+          "reason": "Their recorded role matches this question.",
+          "citations": []
+        },
+        "latency_ms": 6
+      }
+    },
+    {
+      "case_id": "G-03",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T78N3978Z5NY9DB633T",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": {
+          "agent_id": "mr.research-lead",
+          "agent_name": "Priya",
+          "agent_title": "Research Lead",
+          "department_id": "market-research",
+          "building_id": "b-market-research",
+          "building_name": "The Observatory",
+          "reason": "Their recorded role matches this question.",
+          "citations": []
+        },
+        "latency_ms": 7
+      }
+    },
+    {
+      "case_id": "G-04",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T7FWSCHEN4E2YWFC3M4",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": null,
+        "latency_ms": 7
+      }
+    },
+    {
+      "case_id": "G-05",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T7PNPSYKA9KM7C3125C",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": null,
+        "latency_ms": 7
+      }
+    },
+    {
+      "case_id": "G-06",
+      "fact_pass": false,
+      "citation_pass": true,
+      "citation_required": false,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T7XQR1DWZSY5K09KPE2",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": {
+          "agent_id": "su.liaison",
+          "agent_name": "Ana",
+          "agent_title": "Customer Liaison",
+          "department_id": "support",
+          "building_id": "b-support",
+          "building_name": "The Harbor House",
+          "reason": "Their recorded role matches this question.",
+          "citations": []
+        },
+        "latency_ms": 7
+      }
+    },
+    {
+      "case_id": "G-07",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": false,
+      "route_required": true,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T85CHBCCNNADEF59AHT",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": null,
+        "latency_ms": 7
+      }
+    },
+    {
+      "case_id": "G-08",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T8C1RS5CJVSKWGHABTD",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 6
+      }
+    },
+    {
+      "case_id": "G-09",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T8JF5JWKD42H7RN699C",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-10",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T8RZYPYCQPGMY1NR319",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 6
+      }
+    },
+    {
+      "case_id": "G-11",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T8ZKF79FHMG92J04NQE",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-12",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T95ZCBCHSJFV6GT9SX1",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-13",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T9BSPNTZACGWDVZEDMK",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-14",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T9G40J76ZQAXY4NKNSC",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-15",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70T9PWKKZQZZ5QRQ21NGB",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-16",
+      "fact_pass": true,
+      "citation_pass": true,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": true,
+      "fact_citation_pass": true,
+      "answer": {
+        "answer_id": "ans_01M5T70T9WBSTK5VQZJ9FYEKSC",
+        "text": "Please review that action in the dashboard under Approvals.",
+        "citations": [
+          {
+            "kind": "approval",
+            "id": "apr_EVAL_OUTREACH",
+            "quote": "Send interview invitations (2 drafts)",
+            "label": "Approval: Send interview invitations (2 drafts)"
+          }
+        ],
+        "check": {
+          "status": "verified",
+          "per_citation": [
+            {
+              "index": 0,
+              "status": "verified",
+              "reason": "Exact quotation of a fresh record"
+            }
+          ],
+          "reason": "All supplied sources passed the current checks"
+        },
+        "suggested_agent": null,
+        "latency_ms": 4
+      }
+    },
+    {
+      "case_id": "G-17",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70TA11M696NA2R6P1W52C",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-18",
+      "fact_pass": false,
+      "citation_pass": true,
+      "citation_required": false,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "unsupported",
+      "checker_agreement": true,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70TA7HJJDJA5SPDE97N1S",
+        "text": "I do not have a verified record for that yet. Ask Rhea for the current company plan.",
+        "citations": [],
+        "check": {
+          "status": "unsupported",
+          "per_citation": [],
+          "reason": "One or more claims have no valid supporting source"
+        },
+        "route_card": null,
+        "latency_ms": 7
+      }
+    },
+    {
+      "case_id": "G-19",
+      "fact_pass": true,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70TAE6JRRS747FXDF14HW",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    },
+    {
+      "case_id": "G-20",
+      "fact_pass": false,
+      "citation_pass": false,
+      "citation_required": true,
+      "route_pass": true,
+      "route_required": false,
+      "fabrication": false,
+      "check_status": "verified",
+      "checker_agreement": false,
+      "fact_citation_pass": false,
+      "answer": {
+        "answer_id": "ans_01M5T70TAMYMYWN6HEQN8BF6P2",
+        "text": "I do not have a verified record to answer that yet.",
+        "citations": [],
+        "check": {
+          "status": "verified",
+          "per_citation": [],
+          "reason": "No factual claim requires a citation"
+        },
+        "suggested_agent": null,
+        "latency_ms": 5
+      }
+    }
+  ]
+}
