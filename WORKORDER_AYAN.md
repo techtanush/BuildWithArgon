@@ -36,7 +36,9 @@ Read these in order (they are on every branch, under `architecture-files/`):
    (05/06 are Karthik's); `03-company-kernel/02-autonomous-engineering-loop.md`,
    `03-support-and-pr-loop.md`, `05-approval-gates.md` (merge/integration/computer_action),
    `departments/07-engineering.md`, `departments/12-support.md`, `05-world/05-characters-and-faces.md`
-   (FaceSpec generation), `templates/eval-briefs/*`.
+   (FaceSpec generation), `templates/eval-briefs/*`, **`03-company-kernel/10-agent-model-matrix.md`**
+   (every job each agent and system agent uses — `models.JOBS` must define all of them, and your
+   handlers use exactly those jobs; it also lists which agents run as Antigravity managed agents).
 7. `argon-app/AGENTS.md` and every seed file you own (they start with `# OWNER: ayan` / `// OWNER: ayan`).
 
 The spec is the contract. If this work order and the spec ever disagree, follow the spec and log it
@@ -47,8 +49,8 @@ in `argon-app/docs/decisions/ayan.md`.
 ```bash
 git fetch origin && git checkout ayan
 cd argon-app && cp .env.example .env     # add GEMINI_API_KEY (+ COMPOSIO_API_KEY if you have it)
-cd kernel && uv sync --extra dev && uv run pytest -q     # 11 passed
-cd ../web && pnpm install && pnpm typecheck && pnpm test  # 7 passed
+cd kernel && uv sync --extra dev && uv run pytest -q     # 12 passed
+cd ../web && pnpm install && pnpm typecheck && pnpm test  # 8 passed
 cd ../kernel && uv run python -m foundry_kernel.llm.smoke basic   # S1 against the live API
 ```
 
