@@ -7,8 +7,12 @@ from pathlib import Path
 from foundry_kernel.contracts import FaceSpec
 from foundry_kernel.llm.fake import FakeLLM
 from foundry_kernel.worldgen import paths
-from foundry_kernel.worldgen.faces import check_face, fallback_face, generate_faces, mulberry32
-from tests.ayan.conftest import wg_paths  # noqa: F401 — fixture
+from foundry_kernel.worldgen.faces import (
+    check_face,
+    fallback_face,
+    generate_faces,
+    mulberry32,
+)
 
 
 def test_mulberry32_matches_reference_sequence() -> None:

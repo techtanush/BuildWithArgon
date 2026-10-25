@@ -5,7 +5,12 @@ from __future__ import annotations
 import pytest
 
 from foundry_kernel.worldgen import paths
-from foundry_kernel.worldgen.validate import parse_file_blocks, static_check, tsc_bin, validate
+from foundry_kernel.worldgen.validate import (
+    parse_file_blocks,
+    static_check,
+    tsc_bin,
+    validate,
+)
 from tests.ayan.conftest import file_block, module
 
 

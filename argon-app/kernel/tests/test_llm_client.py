@@ -13,7 +13,14 @@ from pydantic import BaseModel
 from foundry_kernel.contracts import Part
 from foundry_kernel.ids import new_id, utc_now
 from foundry_kernel.llm import client as client_mod
-from foundry_kernel.llm.client import LLMCallError, LLMClient, compose_input, extract_media, generation_config, video_part
+from foundry_kernel.llm.client import (
+    LLMCallError,
+    LLMClient,
+    compose_input,
+    extract_media,
+    generation_config,
+    video_part,
+)
 from foundry_kernel.llm.costs import estimate
 from foundry_kernel.llm.jsonout import LLMOutputError, extract_json
 from foundry_kernel.models import JOBS, job

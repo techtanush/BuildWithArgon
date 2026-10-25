@@ -29,7 +29,7 @@ def no_tsc(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def seed_run(depts: list[str]) -> Path:
-    run_id, run_dir = loop.new_run()
+    _, run_dir = loop.new_run()
     (run_dir / "modules" / "iter-0").mkdir(parents=True)
     for d in depts:
         (run_dir / "modules" / "iter-0" / f"{d}.ts").write_text(module(d))

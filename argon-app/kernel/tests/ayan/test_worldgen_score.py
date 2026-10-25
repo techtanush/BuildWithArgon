@@ -6,8 +6,14 @@ import json
 from pathlib import Path
 
 from foundry_kernel.worldgen import paths
-from foundry_kernel.worldgen.score import Version, better, invalid_report, promote_module, write_outputs
-from tests.ayan.conftest import module, wg_paths  # noqa: F401 — fixture
+from foundry_kernel.worldgen.score import (
+    Version,
+    better,
+    invalid_report,
+    promote_module,
+    write_outputs,
+)
+from tests.ayan.conftest import module
 
 
 def rep(failing: list[str]) -> dict:

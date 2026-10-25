@@ -46,11 +46,33 @@ def round_dir(round_id: str) -> Path:
     return paths.LIVE_DIR / round_id
 
 
+TERMINAL = ("done", "failed")
+
+
+def _orphan_check(path: Path, data: dict[str, Any]) -> dict[str, Any]:
+    """A round left non-terminal by a kernel restart (no task is running it) is reported as failed — never hidden."""
+    if data.get("status") in TERMINAL or (is_running() and getattr(_ACTIVE, "round_id", None) == data.get("id")):
+        return data
+    for s in data.get("steps", []):
+        if s.get("status") == "running":
+            s["status"], s["note"] = "failed", "kernel restarted"
+        elif s.get("status") == "pending":
+            s["status"] = "skipped"
+    data.update({"status": "failed", "error": "kernel restarted during the round", "finished_at": data.get("finished_at") or utc_now()})
+    write_json(path, data)
+    return data
+
+
+def _model(data: dict[str, Any]) -> LiveRound:
+    return LiveRound.model_validate({k: v for k, v in data.items() if k in LiveRound.model_fields})
+
+
 def load_round(round_id: str) -> LiveRound:
-    data = read_json(round_dir(round_id) / "round.json")
+    path = round_dir(round_id) / "round.json"
+    data = read_json(path)
     if not data:
         raise NotFoundError("live round", round_id)
-    return LiveRound.model_validate({k: v for k, v in data.items() if k in LiveRound.model_fields})
+    return _model(_orphan_check(path, data))
 
 
 def list_rounds() -> list[LiveRound]:
@@ -60,7 +82,7 @@ def list_rounds() -> list[LiveRound]:
     for d in sorted(paths.LIVE_DIR.iterdir(), key=lambda p: p.name, reverse=True):
         data = read_json(d / "round.json")
         if data:
-            out.append(LiveRound.model_validate({k: v for k, v in data.items() if k in LiveRound.model_fields}))
+            out.append(_model(_orphan_check(d / "round.json", data)))
     return out
 
 
@@ -220,7 +242,7 @@ async def architect_patch(llm: Any, settings: Any, dept: str, *, source: str, cr
         rec.update({"error": f"{type(exc).__name__}: {str(exc)[:300]}", "seconds": round(time.monotonic() - started, 1)})
         write_json(out_file, rec)
         return {**rec, "source": None}
-    m = re.search(r"^WORLD_ARCHITECT_RESULT (\{.*\})\s*$", res.text, re.M)
+    m = re.search(r"^WORLD_ARCHITECT_RESULT (\{.*\})\s*$", res.text, re.MULTILINE)
     try:
         result = json.loads(m.group(1)) if m else {}
     except ValueError:

@@ -143,3 +143,14 @@ def test_api_history_files_and_live_round_errors(fake_env: FakeCapture, client: 
     assert client.get("/v1/world/worldgen/live-rounds").json() == {"data": {"items": []}}
     assert client.get("/v1/world/worldgen/live-rounds/wlr_bad").status_code == 404
     assert client.post("/v1/world/worldgen/live-rounds/wlr_01HZZZZZZZZZZZZZZZZZZZZZZZ/promote").status_code == 404
+
+
+async def test_orphaned_round_is_reported_failed(fake_env: FakeCapture) -> None:
+    rid = "wlr_01HZZZZZZZZZZZZZZZZZZZZZZZ"
+    d = paths.LIVE_DIR / rid
+    d.mkdir(parents=True)
+    (d / "round.json").write_text(json.dumps({"id": rid, "department_id": "engineering", "status": "capturing",
+                                              "created_at": "2026-10-26T01:00:00.000Z",
+                                              "steps": [{"name": "capture_before", "status": "running"}, {"name": "critique", "status": "pending"}]}))
+    lr = live.load_round(rid)
+    assert lr.status == "failed" and "restarted" in (lr.error or "") and [s.status for s in lr.steps] == ["failed", "skipped"]

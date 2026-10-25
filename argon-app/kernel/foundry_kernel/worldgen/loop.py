@@ -207,6 +207,9 @@ async def run_loop(settings: Settings, llm: Any, db: Any, opts: LoopOptions, *, 
                 stop_reason = f"reached --max-iter {opts.max_iter}"
                 break
             todo = [d for d, b in best.items() if b is not None and needs_patch(b.report, b.critic)]
+            if not todo:
+                stop_reason = "nothing left to patch (no failed probes or high-severity issues)"
+                break
             changed = set()
 
             async def fix(d: str, n: int = n, vals: dict[str, Validation] = vals, changed: set[str] = changed) -> None:

@@ -9,7 +9,13 @@ from foundry_kernel.contracts import LLMResult
 from foundry_kernel.llm.client import LLMCallError
 from foundry_kernel.llm.fake import FakeLLM
 from foundry_kernel.worldgen import paths
-from foundry_kernel.worldgen.critique import critique, media_parts, needs_patch, patch, visual_score
+from foundry_kernel.worldgen.critique import (
+    critique,
+    media_parts,
+    needs_patch,
+    patch,
+    visual_score,
+)
 from tests.ayan.conftest import critic_json, file_block, module, png
 
 
