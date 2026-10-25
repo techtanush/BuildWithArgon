@@ -73,6 +73,13 @@ def test_system_status_reports_provider_configuration_without_secrets(client):
     assert {"last_run_id", "final_score"} <= set(status["worldgen"])
 
 
+@pytest.mark.parametrize("stored,expected", [('"local"', "local"), ('"antigravity"', "antigravity"), ('"unknown"', None), ('not-json', None)])
+def test_system_status_reports_validated_runtime_executor_override(client, stored, expected):
+    write(client, "INSERT INTO kv(key,value_json,updated_at) VALUES('executor.override',?,?)", (stored, utc_now()))
+    result = data(client.get("/v1/system/status"))
+    assert result["executor"] == (expected or client.app.state.settings.engineering_executor)
+
+
 def test_create_list_and_detail_venture(client, venture):
     assert venture["name"] == "Pantry Pal" and venture["status"] == "draft"
     assert venture["budget_usd"] == 25 and venture["spent_usd"] == 0
@@ -219,6 +226,23 @@ def test_retry_preserves_attempts_and_cancel_returns_updated_ticket(client, vent
     cancelled = data(client.post(f"/v1/tickets/{tid}/cancel", json={}))
     assert cancelled["status"] == "cancelled"
     assert rows(client, "SELECT type FROM events WHERE entity_id=? AND type='ticket.updated'", (tid,))
+
+
+def test_cancel_finishes_active_run_expires_gate_and_keeps_output_out_of_events(client, records):
+    tid, vid, rid = records["tid"], records["vid"], records["rid"]
+    write(client, "UPDATE tickets SET status='in_progress' WHERE id=?", (tid,))
+    write(client, "UPDATE runs SET status='running',output_text='Lengthy sandbox output' WHERE id=?", (rid,))
+    write(client, "UPDATE agent_state SET status='working',current_ticket_id=? WHERE venture_id=? AND agent_id='intake.brief-lead'", (tid, vid))
+    assert data(client.post(f"/v1/tickets/{tid}/cancel", json={}))["status"] == "cancelled"
+    run = data(client.get(f"/v1/runs/{rid}"))
+    assert run["status"] == "cancelled" and run["completed_at"]
+    assert run["output_text"] == "Lengthy sandbox output"
+    approval = rows(client, "SELECT status FROM approvals WHERE id=?", (records["apr"],))[0]
+    assert approval["status"] == "expired"
+    agent = rows(client, "SELECT status,current_ticket_id FROM agent_state WHERE venture_id=? AND agent_id='intake.brief-lead'", (vid,))[0]
+    assert agent == {"status": "idle", "current_ticket_id": None}
+    event = json.loads(rows(client, "SELECT data_json FROM events WHERE type='run.finished' AND entity_id=?", (rid,))[0]["data_json"])
+    assert event["status"] == "cancelled" and "output_text" not in event
 
 
 def test_runs_list_detail_filters_and_incremental_logs(client, records):

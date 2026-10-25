@@ -10,4 +10,4 @@ from ..errors import NotImplementedYet
 
 
 async def ask(*, db: Any, llm: Any, settings: Any, venture_id: str, req: TalkRequest) -> ConciergeResponse:
-    raise NotImplementedYet("conversation.concierge not implemented yet (owner: tanush)")
+    raise NotImplementedYet("conversation.concierge", "tanush")

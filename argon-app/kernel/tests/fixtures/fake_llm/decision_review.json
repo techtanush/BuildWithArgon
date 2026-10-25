@@ -1,0 +1,15 @@
+[
+  {
+    "verdict": "proceed",
+    "confidence": 0.7,
+    "reasons_for": [
+      "Fake-mode workflow evidence only."
+    ],
+    "reasons_against": [
+      "No live customer validation."
+    ],
+    "evidence": [],
+    "proposed_revision": "",
+    "summary": "Proceed through the fake-mode demonstration."
+  }
+]

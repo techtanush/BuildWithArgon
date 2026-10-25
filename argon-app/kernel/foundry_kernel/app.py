@@ -3,10 +3,10 @@
 """FastAPI app. Run: uv run uvicorn foundry_kernel.app:app --host 127.0.0.1 --port 8787 --reload"""
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
-from contextlib import AsyncExitStack, asynccontextmanager
 import secrets
 import sqlite3
+from collections.abc import AsyncIterator
+from contextlib import AsyncExitStack, asynccontextmanager
 from typing import Any, Literal
 
 from fastapi import FastAPI, Request

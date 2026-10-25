@@ -205,7 +205,7 @@ async def create_ticket(tx: Any, *, venture_id: str, type: str, department_id: s
         assigned_agent_id = assigned_agent_id or default_agent
     elif type in ("chat.reply", "agent.request"):
         if not assigned_agent_id:
-            lead = await tx.fetch_one("SELECT id FROM agents WHERE department_id=? AND is_lead=1 AND (venture_id IS NULL OR venture_id=?) ORDER BY generated DESC,id LIMIT 1", (department_id, venture_id))
+            lead = await tx.fetch_one("SELECT id FROM agents WHERE department_id=? AND is_lead=1 AND id!='concierge' AND (venture_id IS NULL OR venture_id=?) ORDER BY generated,id LIMIT 1", (department_id, venture_id))
             assigned_agent_id = lead["id"] if lead else None
     else:
         raise KernelError(400, "invalid_ticket_type", "Unknown ticket type")

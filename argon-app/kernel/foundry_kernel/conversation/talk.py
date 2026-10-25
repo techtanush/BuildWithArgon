@@ -10,4 +10,4 @@ from ..errors import NotImplementedYet
 
 
 async def talk(*, db: Any, llm: Any, settings: Any, venture_id: str, agent_id: str, req: TalkRequest) -> TalkResponse:
-    raise NotImplementedYet("conversation.talk not implemented yet (owner: tanush)")
+    raise NotImplementedYet("conversation.talk", "tanush")

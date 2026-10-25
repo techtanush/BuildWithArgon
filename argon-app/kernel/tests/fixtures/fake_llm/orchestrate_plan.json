@@ -1,0 +1,142 @@
+[
+  {
+    "summary": "The contractual company plan (model output did not pass validation).",
+    "tickets": [
+      {
+        "ref": "finance.budget",
+        "type": "finance.budget",
+        "title": "Finance Budget for the fake-mode venture",
+        "body": "Complete finance.budget for the founder's stated idea and cite the provided records.",
+        "depends_on": [],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "research.market",
+        "type": "research.market",
+        "title": "Research Market for the fake-mode venture",
+        "body": "Complete research.market for the founder's stated idea and cite the provided records.",
+        "depends_on": [],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "research.competitors",
+        "type": "research.competitors",
+        "title": "Research Competitors for the fake-mode venture",
+        "body": "Complete research.competitors for the founder's stated idea and cite the provided records.",
+        "depends_on": [],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "validation.synthetic_panel",
+        "type": "validation.synthetic_panel",
+        "title": "Validation Synthetic_Panel for the fake-mode venture",
+        "body": "Complete validation.synthetic_panel for the founder's stated idea and cite the provided records.",
+        "depends_on": [],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "validation.interview_plan",
+        "type": "validation.interview_plan",
+        "title": "Validation Interview_Plan for the fake-mode venture",
+        "body": "Complete validation.interview_plan for the founder's stated idea and cite the provided records.",
+        "depends_on": [],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "decision.review",
+        "type": "decision.review",
+        "title": "Decision Review for the fake-mode venture",
+        "body": "Complete decision.review for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "research.market",
+          "research.competitors",
+          "validation.synthetic_panel"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "eng.design",
+        "type": "eng.design",
+        "title": "Eng Design for the fake-mode venture",
+        "body": "Complete eng.design for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "decision.review"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "growth.positioning",
+        "type": "growth.positioning",
+        "title": "Growth Positioning for the fake-mode venture",
+        "body": "Complete growth.positioning for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "decision.review"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "leads.icp",
+        "type": "leads.icp",
+        "title": "Leads Icp for the fake-mode venture",
+        "body": "Complete leads.icp for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "growth.positioning"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "sales.proposal",
+        "type": "sales.proposal",
+        "title": "Sales Proposal for the fake-mode venture",
+        "body": "Complete sales.proposal for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "growth.positioning",
+          "leads.icp"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "growth.launch_plan",
+        "type": "growth.launch_plan",
+        "title": "Growth Launch_Plan for the fake-mode venture",
+        "body": "Complete growth.launch_plan for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "growth.positioning"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      },
+      {
+        "ref": "cos.report",
+        "type": "cos.report",
+        "title": "Cos Report for the fake-mode venture",
+        "body": "Complete cos.report for the founder's stated idea and cite the provided records.",
+        "depends_on": [
+          "finance.budget",
+          "research.market",
+          "research.competitors",
+          "validation.synthetic_panel",
+          "validation.interview_plan",
+          "decision.review",
+          "eng.design",
+          "growth.positioning",
+          "leads.icp",
+          "sales.proposal",
+          "growth.launch_plan"
+        ],
+        "priority": 2,
+        "requires_capability": null
+      }
+    ]
+  }
+]

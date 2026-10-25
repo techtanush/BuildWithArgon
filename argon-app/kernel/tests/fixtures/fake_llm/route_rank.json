@@ -1,0 +1,6 @@
+[
+  {
+    "agent_id": "cos.orchestrator",
+    "reason": "Chief of Staff fallback when no evidence matches."
+  }
+]

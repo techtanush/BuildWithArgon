@@ -112,3 +112,17 @@ async def test_gate_cannot_reference_another_ventures_ticket(db):
         async with db.tx() as tx:
             await gates.request_approval(tx, venture_id=second, gate_type="merge", title="Unsafe reference", summary="Cross-venture", ticket_id=tid)
     assert not await db.fetch_all("SELECT id FROM approvals WHERE venture_id=?", (second,))
+
+
+async def test_gate_reentry_preserves_agent_working_on_another_ticket(db):
+    vid = await insert_venture(db)
+    waiting = await insert_ticket(db, vid, status="waiting_approval")
+    current = await insert_ticket(db, vid, status="in_progress")
+    async with db.tx() as tx:
+        aid = await gates.request_approval(tx, venture_id=vid, gate_type="clarification", title="Clarify older work", summary="Scope", ticket_id=waiting)
+        await tx.execute("INSERT INTO agent_state(venture_id,agent_id,status,current_ticket_id) VALUES(?,?,'working',?)", (vid, "oh.skeptic", current))
+    await gates.decide(db, aid, decision="approve", decided_by="Tanush")
+    assert (await db.fetch_one("SELECT status FROM tickets WHERE id=?", (waiting,)))["status"] == "open"
+    assert (await db.fetch_one("SELECT status FROM tickets WHERE id=?", (current,)))["status"] == "in_progress"
+    assert await db.fetch_one("SELECT status,current_ticket_id FROM agent_state WHERE venture_id=? AND agent_id=?", (vid, "oh.skeptic")) == {"status": "working", "current_ticket_id": current}
+    assert not await db.fetch_all("SELECT id FROM events WHERE venture_id=? AND type='agent.status'", (vid,))

@@ -1,0 +1,5 @@
+# OWNER: tanush
+
+Plan a dependency DAG. Include finance.budget,research.market,research.competitors,validation.synthetic_panel,validation.interview_plan,decision.review,eng.design,growth.positioning,growth.launch_plan,leads.icp,sales.proposal,cos.report exactly once. decision.review depends on market,competitors,panel; engineering and positioning depend on decision; leads on positioning; sales on positioning+leads; launch on positioning; report on every other ticket. Return summary,tickets [{ref,type,title,body,depends_on,priority,requires_capability}]. Refs unique, DAG acyclic. Tailor to supplied venture. Use requires_capability only outside supplied department skills. Reports/standups use recorded company state and list pending gates, next steps and actual costs. Only Rhea may reprioritize or request department work.
+
+Use only provided records; never invent facts, customers, sources or completed work. Draft consequential actions for founder approval. Use they/them unless told otherwise.

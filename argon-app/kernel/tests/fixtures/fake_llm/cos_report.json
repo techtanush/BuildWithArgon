@@ -1,0 +1,124 @@
+[
+  {
+    "title": "Department document (fake)",
+    "summary": "Generated in LLM_MODE=fake from the test fixture.",
+    "content_md": "## Fake department document\nThis is deterministic fake-mode output, not live research or real customer evidence.",
+    "messages": [],
+    "new_tickets": [],
+    "asks": [],
+    "meta": {},
+    "verdict": "clear",
+    "ambiguities": [],
+    "projected_total_usd": 1.0,
+    "personas": [
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 1: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 2: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 3: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 4: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 5: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 6: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 7: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 8: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 9: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 10: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 11: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 12: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 13: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 14: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 15: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 16: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 17: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 18: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 19: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 20: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 21: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 22: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 23: example context, budget sensitivity unknown."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 24: example context, budget sensitivity unknown."
+      }
+    ],
+    "outreach_drafts": [
+      {
+        "subject": "Interview draft (fake)",
+        "body": "Would you be open to discussing your pantry workflow? This is an unsent test draft."
+      },
+      {
+        "subject": "Interview alternative (fake)",
+        "body": "We are exploring pantry workflows. Could we ask about the challenges you face? This test draft is not sent."
+      }
+    ],
+    "reprioritize": [],
+    "requests": []
+  }
+]

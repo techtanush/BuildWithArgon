@@ -91,7 +91,9 @@ async def cancel(tid: str, request: Request):
         await tx.execute("UPDATE tickets SET status='cancelled',updated_at=?,completed_at=? WHERE id=?", (now, now, tid))
         for run in await tx.fetch_all("SELECT * FROM runs WHERE ticket_id=? AND status IN ('queued','running')", (tid,)):
             await tx.execute("UPDATE runs SET status='cancelled',completed_at=? WHERE id=?", (now, run["id"]))
-            await bus.emit(tx, venture_id=ticket["venture_id"], type="run.finished", entity_kind="run", entity_id=run["id"], data=serialize_run(await get_row(tx, "runs", run["id"])))
+            run_data = serialize_run(await get_row(tx, "runs", run["id"]))
+            run_data.pop("output_text", None)
+            await bus.emit(tx, venture_id=ticket["venture_id"], type="run.finished", entity_kind="run", entity_id=run["id"], data=run_data)
         for approval in await tx.fetch_all("SELECT * FROM approvals WHERE ticket_id=? AND status='pending'", (tid,)):
             await tx.execute("UPDATE approvals SET status='expired',decided_at=? WHERE id=?", (now, approval["id"]))
             await bus.emit(tx, venture_id=ticket["venture_id"], type="approval.decided", entity_kind="approval", entity_id=approval["id"], data=serialize_approval(await get_row(tx, "approvals", approval["id"])))

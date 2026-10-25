@@ -104,11 +104,14 @@ async def decide(db: Any, approval_id: str, *, decision: str, decided_by: str,
                 await bus.emit(tx, venture_id=approval["venture_id"], type="ticket.updated", entity_kind="ticket",
                                entity_id=ticket["id"], data=await serialize_ticket(tx, ticket))
                 if ticket["assigned_agent_id"]:
-                    await tx.execute("UPDATE agent_state SET status='idle',current_ticket_id=NULL WHERE venture_id=? AND agent_id=?",
-                                     (approval["venture_id"], ticket["assigned_agent_id"]))
-                    await bus.emit(tx, venture_id=approval["venture_id"], type="agent.status", entity_kind="agent",
-                                   entity_id=ticket["assigned_agent_id"], data={"agent_id": ticket["assigned_agent_id"],
-                                   "status": "idle", "current_ticket_id": None})
+                    state = await tx.fetch_one("SELECT current_ticket_id FROM agent_state WHERE venture_id=? AND agent_id=?",
+                                               (approval["venture_id"], ticket["assigned_agent_id"]))
+                    if state and state["current_ticket_id"] == ticket["id"]:
+                        await tx.execute("UPDATE agent_state SET status='idle',current_ticket_id=NULL WHERE venture_id=? AND agent_id=? AND current_ticket_id=?",
+                                         (approval["venture_id"], ticket["assigned_agent_id"], ticket["id"]))
+                        await bus.emit(tx, venture_id=approval["venture_id"], type="agent.status", entity_kind="agent",
+                                       entity_id=ticket["assigned_agent_id"], data={"agent_id": ticket["assigned_agent_id"],
+                                       "status": "idle", "current_ticket_id": None})
         row = await tx.fetch_one("SELECT * FROM approvals WHERE id=?", (approval_id,))
         result = serialize_approval(row)
         await bus.emit(tx, venture_id=approval["venture_id"], type="approval.decided", entity_kind="approval",

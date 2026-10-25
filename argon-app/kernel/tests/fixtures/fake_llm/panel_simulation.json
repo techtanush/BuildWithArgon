@@ -1,0 +1,198 @@
+[
+  {
+    "rows": [
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 1: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 2: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 3: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 4: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 5: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 1",
+        "profile": "Simulated profile 6: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 7: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 8: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 9: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 10: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 11: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 2",
+        "profile": "Simulated profile 12: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 13: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 14: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 15: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 16: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 17: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 3",
+        "profile": "Simulated profile 18: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 19: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 20: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 21: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 22: example context, budget sensitivity unknown.",
+        "would_try": 3,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 23: example context, budget sensitivity unknown.",
+        "would_try": 4,
+        "would_pay": "no",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      },
+      {
+        "segment": "Segment 4",
+        "profile": "Simulated profile 24: example context, budget sensitivity unknown.",
+        "would_try": 5,
+        "would_pay": "yes",
+        "objection": "Simulated concern about manual entry.",
+        "quote": "This is a simulated persona quote, not a real customer."
+      }
+    ]
+  }
+]
