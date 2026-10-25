@@ -1,0 +1,370 @@
+[
+  {
+    "id": "polyhaven/ArmChair_01",
+    "url": "/assets/models/ArmChair_01.glb",
+    "lods": [
+      "/assets/models/ArmChair_01_lod1.glb",
+      "/assets/models/ArmChair_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.8500000000000001,
+      "h": 0.9,
+      "d": 0.8500000000000001
+    },
+    "triangles": 5626,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/ArmChair_01",
+      "author": "Kirill Sannikov",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/book_encyclopedia_set_01",
+    "url": "/assets/models/book_encyclopedia_set_01.glb",
+    "lods": [
+      "/assets/models/book_encyclopedia_set_01_lod1.glb",
+      "/assets/models/book_encyclopedia_set_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.30000000000000004,
+      "h": 0.25,
+      "d": 0.22
+    },
+    "triangles": 14823,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/book_encyclopedia_set_01",
+      "author": "John Malcolm",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": true
+    }
+  },
+  {
+    "id": "polyhaven/industrial_pipe_lamp",
+    "url": "/assets/models/industrial_pipe_lamp.glb",
+    "lods": [
+      "/assets/models/industrial_pipe_lamp_lod1.glb",
+      "/assets/models/industrial_pipe_lamp_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.2,
+      "h": 0.44999999999999996,
+      "d": 0.2
+    },
+    "triangles": 8626,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/industrial_pipe_lamp",
+      "author": "Mateusz Sadek",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/metal_office_desk",
+    "url": "/assets/models/metal_office_desk.glb",
+    "lods": [
+      "/assets/models/metal_office_desk_lod1.glb",
+      "/assets/models/metal_office_desk_lod2.glb"
+    ],
+    "bbox": {
+      "w": 1.4,
+      "h": 0.75,
+      "d": 0.7
+    },
+    "triangles": 6898,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/metal_office_desk",
+      "author": "Ulan Cabanilla",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/painted_wooden_bench",
+    "url": "/assets/models/painted_wooden_bench.glb",
+    "lods": [
+      "/assets/models/painted_wooden_bench_lod1.glb",
+      "/assets/models/painted_wooden_bench_lod2.glb"
+    ],
+    "bbox": {
+      "w": 1.1649435758590698,
+      "h": 0.8892914750613272,
+      "d": 0.4965430945158005
+    },
+    "triangles": 630,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/painted_wooden_bench",
+      "author": "Kirill Sannikov",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/painted_wooden_table",
+    "url": "/assets/models/painted_wooden_table.glb",
+    "lods": [
+      "/assets/models/painted_wooden_table_lod1.glb",
+      "/assets/models/painted_wooden_table_lod2.glb"
+    ],
+    "bbox": {
+      "w": 3,
+      "h": 0.7600000000000001,
+      "d": 1.1
+    },
+    "triangles": 600,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/painted_wooden_table",
+      "author": "Kirill Sannikov",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/planter_box_01",
+    "url": "/assets/models/planter_box_01.glb",
+    "lods": [
+      "/assets/models/planter_box_01_lod1.glb",
+      "/assets/models/planter_box_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.9126113951206207,
+      "h": 0.42496823612600565,
+      "d": 0.4136679768562317
+    },
+    "triangles": 8094,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/planter_box_01",
+      "author": "James Ray Cock",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/potted_plant_01",
+    "url": "/assets/models/potted_plant_01.glb",
+    "lods": [
+      "/assets/models/potted_plant_01_lod1.glb",
+      "/assets/models/potted_plant_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.3994759465913837,
+      "h": 0.5932152297162226,
+      "d": 0.4
+    },
+    "triangles": 14835,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/potted_plant_01",
+      "author": "Rico Cilliers",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": true
+    }
+  },
+  {
+    "id": "polyhaven/round_wooden_table_02",
+    "url": "/assets/models/round_wooden_table_02.glb",
+    "lods": [
+      "/assets/models/round_wooden_table_02_lod1.glb",
+      "/assets/models/round_wooden_table_02_lod2.glb"
+    ],
+    "bbox": {
+      "w": 1.2,
+      "h": 0.7500000000000001,
+      "d": 1.2
+    },
+    "triangles": 4254,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/round_wooden_table_02",
+      "author": "Ulan Cabanilla",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/SchoolChair_01",
+    "url": "/assets/models/SchoolChair_01.glb",
+    "lods": [
+      "/assets/models/SchoolChair_01_lod1.glb",
+      "/assets/models/SchoolChair_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.5,
+      "h": 0.9,
+      "d": 0.49999999999999994
+    },
+    "triangles": 5072,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/SchoolChair_01",
+      "author": "Ethan Place",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/Sofa_01",
+    "url": "/assets/models/Sofa_01.glb",
+    "lods": [
+      "/assets/models/Sofa_01_lod1.glb",
+      "/assets/models/Sofa_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 2,
+      "h": 0.8500000000000001,
+      "d": 0.9
+    },
+    "triangles": 4101,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/Sofa_01",
+      "author": "Kirill Sannikov",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/street_lamp_01",
+    "url": "/assets/models/street_lamp_01.glb",
+    "lods": [
+      "/assets/models/street_lamp_01_lod1.glb",
+      "/assets/models/street_lamp_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.7040164172649384,
+      "h": 3.8705554008483887,
+      "d": 0.38649316132068634
+    },
+    "triangles": 14118,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/street_lamp_01",
+      "author": "Josh Dean",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/wall_clock",
+    "url": "/assets/models/wall_clock.glb",
+    "lods": [
+      "/assets/models/wall_clock_lod1.glb",
+      "/assets/models/wall_clock_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.5,
+      "h": 0.5,
+      "d": 0.08000000000000002
+    },
+    "triangles": 3658,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/wall_clock",
+      "author": "PierreB3D",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/wine_barrel_01",
+    "url": "/assets/models/wine_barrel_01.glb",
+    "lods": [
+      "/assets/models/wine_barrel_01_lod1.glb",
+      "/assets/models/wine_barrel_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.6,
+      "h": 0.9,
+      "d": 0.6
+    },
+    "triangles": 10820,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/wine_barrel_01",
+      "author": "James Ray Cock",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/wooden_bookshelf_worn",
+    "url": "/assets/models/wooden_bookshelf_worn.glb",
+    "lods": [
+      "/assets/models/wooden_bookshelf_worn_lod1.glb",
+      "/assets/models/wooden_bookshelf_worn_lod2.glb"
+    ],
+    "bbox": {
+      "w": 1,
+      "h": 1.9999999999999998,
+      "d": 0.35
+    },
+    "triangles": 10106,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/wooden_bookshelf_worn",
+      "author": "Ulan Cabanilla",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  },
+  {
+    "id": "polyhaven/wooden_crate_01",
+    "url": "/assets/models/wooden_crate_01.glb",
+    "lods": [
+      "/assets/models/wooden_crate_01_lod1.glb",
+      "/assets/models/wooden_crate_01_lod2.glb"
+    ],
+    "bbox": {
+      "w": 0.6,
+      "h": 0.6,
+      "d": 0.6
+    },
+    "triangles": 6576,
+    "credit": {
+      "source": "Poly Haven",
+      "url": "https://polyhaven.com/a/wooden_crate_01",
+      "author": "James Ray Cock",
+      "license": "CC0"
+    },
+    "optimization": {
+      "permissiveLod0": false
+    }
+  }
+]

@@ -54,3 +54,64 @@ def test_unsupported_ogg_rejected_explicitly(client):
     response=client.post('/v1/voice/transcribe',files={'audio':('voice.ogg',b'OggS','audio/ogg')})
     assert response.status_code==400
     assert response.json()['error']['message']=='Unsupported audio format.'
+
+
+def test_voice_openapi_response_envelopes(client):
+    schema=client.get('/openapi.json').json()
+    envelopes={
+        '/v1/voice/tts':('TtsEnvelope','TtsResponse'),
+        '/v1/voice/transcribe':('SttEnvelope','SttResponse'),
+        '/v1/voice/sessions':('VoiceSessionEnvelope','VoiceSessionInfo'),
+        '/v1/voice/sessions/{session_id}/end':('VoiceSessionEndEnvelope','VoiceSessionEndData'),
+    }
+    for path,(envelope,payload) in envelopes.items():
+        responses=schema['paths'][path]['post']['responses']
+        assert responses['200']['content']['application/json']['schema']=={'$ref':f'#/components/schemas/{envelope}'}
+        assert schema['components']['schemas'][envelope]['properties']['data']=={'$ref':f'#/components/schemas/{payload}'}
+        assert 'data' in schema['components']['schemas'][envelope]['required']
+        assert responses['422']['content']['application/json']['schema']=={'$ref':'#/components/schemas/VoiceErrorEnvelope'}
+    error=schema['components']['schemas']['VoiceError']
+    assert set(error['properties'])=={'code','message','details'}
+    assert set(error['required'])=={'code','message','details'}
+    for ext,mime in [('mp3','audio/mpeg'),('wav','audio/wav')]:
+        response=schema['paths'][f'/media/audio/{{sha}}.{ext}']['get']['responses']['200']
+        assert response['content'][mime]['schema']=={'type':'string','format':'binary'}
+        assert 'application/json' not in response['content']
+
+
+def test_voice_schema_errors_are_sanitized_envelopes(client):
+    marker='private-input-key-and-content'
+    cases=[
+        ('/v1/voice/tts',{}),
+        ('/v1/voice/tts',{'json':{'agent_id':'concierge'}}),
+        ('/v1/voice/tts',{'json':{'agent_id':'concierge','text':{marker:marker}}}),
+        ('/v1/voice/tts',{'content':'{"text":"'+marker+'",', 'headers':{'content-type':'application/json'}}),
+        ('/v1/voice/transcribe',{}),
+        ('/v1/voice/transcribe',{'files':{'audio':(None,marker)}}),
+        ('/v1/voice/transcribe',{'json':{'audio':marker}}),
+        ('/v1/voice/sessions',{}),
+        ('/v1/voice/sessions',{'json':{'agent_id':'concierge','venture_id':'ven_TEST','surface':marker}}),
+        ('/v1/voice/sessions/vcs_TEST/end',{}),
+        ('/v1/voice/sessions/vcs_TEST/end',{'json':{'turns':{marker:marker}}}),
+        ('/v1/voice/sessions/vcs_TEST/end',{'json':{'duration_s':-1}}),
+    ]
+    expected={'error':{'code':'invalid_request','message':'The voice request does not match the required schema.','details':{}}}
+    for path,kwargs in cases:
+        response=client.post(path,**kwargs)
+        assert response.status_code==422,(path,response.text)
+        assert response.json()==expected
+        assert marker not in response.text
+        assert 'detail' not in response.json()
+
+
+def test_voice_semantic_error_statuses_unchanged(client):
+    for response,code in [
+        (client.post('/v1/voice/tts',json={'agent_id':'concierge','text':'x'*601}),400),
+        (client.post('/v1/voice/tts',json={'agent_id':'concierge','text':' '}),400),
+        (client.post('/v1/voice/transcribe',files={'audio':('bad.wav',b'broken','audio/wav')}),400),
+        (client.get('/media/audio/not-a-sha.mp3'),404),
+        (client.post('/v1/voice/sessions/vcs_UNKNOWN/end',json={}),404),
+    ]:
+        assert response.status_code==code
+        assert set(response.json())=={'error'}
+        assert set(response.json()['error'])=={'code','message','details'}

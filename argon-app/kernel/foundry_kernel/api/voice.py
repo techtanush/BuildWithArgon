@@ -7,13 +7,13 @@ import re
 import wave
 from pathlib import Path
 from urllib.parse import urlparse
-from typing import Annotated
+from typing import Annotated, Any
 from fastapi import APIRouter, Depends, File, Request, UploadFile
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRoute
 from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel, Field
-from ..contracts import TtsRequest, VoiceSessionRequest
+from ..contracts import SttResponse, TtsRequest, TtsResponse, VoiceSessionInfo, VoiceSessionRequest
 from ..errors import KernelError
 from ..voice import sessions, stt, tts
 
@@ -43,7 +43,38 @@ async def authorize(request: Request) -> None:
         if not matched:
             raise KernelError(403, 'forbidden', 'Untrusted request origin.')
 
+class TtsEnvelope(BaseModel):
+    data: TtsResponse
+
+
+class SttEnvelope(BaseModel):
+    data: SttResponse
+
+
+class VoiceSessionEnvelope(BaseModel):
+    data: VoiceSessionInfo
+
+
+class VoiceSessionEndData(BaseModel):
+    stored: bool
+
+
+class VoiceSessionEndEnvelope(BaseModel):
+    data: VoiceSessionEndData
+
+
+class VoiceError(BaseModel):
+    code: str
+    message: str
+    details: dict[str, Any]
+
+
+class VoiceErrorEnvelope(BaseModel):
+    error: VoiceError
+
+
 class VoiceRoute(APIRoute):
+    """Translate only voice request-schema errors without echoing any submitted data."""
     def get_route_handler(self):
         original = super().get_route_handler()
         async def handler(request):
@@ -53,20 +84,21 @@ class VoiceRoute(APIRoute):
                 raise KernelError(422, 'invalid_request', 'The voice request does not match the required schema.') from None
         return handler
 
-router = APIRouter(tags=['voice'], dependencies=[Depends(authorize)], route_class=VoiceRoute)
+router = APIRouter(tags=['voice'], dependencies=[Depends(authorize)], route_class=VoiceRoute,
+                   responses={422: {'model': VoiceErrorEnvelope, 'description': 'Invalid voice request schema'}})
 
-@router.post('/v1/voice/tts')
-async def speak(body: TtsRequest, request: Request):
+@router.post('/v1/voice/tts', response_model=TtsEnvelope)
+async def speak(body: TtsRequest, request: Request) -> TtsEnvelope:
     settings = request.app.state.settings
     if len(body.text) > settings.tts_max_chars:
         raise KernelError(400, 'invalid_request', 'Speech text exceeds the character limit.')
     if not body.text.strip():
         raise KernelError(400, 'invalid_request', 'Speech text is required.')
     result = await tts.synthesize(settings=settings, db=request.app.state.db, agent_id=body.agent_id, text=body.text)
-    return {'data': result.model_dump()}
+    return TtsEnvelope(data=result)
 
-@router.post('/v1/voice/transcribe')
-async def transcribe_audio(request: Request, audio: Annotated[UploadFile, File()]):
+@router.post('/v1/voice/transcribe', response_model=SttEnvelope)
+async def transcribe_audio(request: Request, audio: Annotated[UploadFile, File()]) -> SttEnvelope:
     mime = (audio.content_type or '').split(';')[0].lower()
     try:
         content = await audio.read(stt.MAX_AUDIO_BYTES + 1)
@@ -91,9 +123,9 @@ async def transcribe_audio(request: Request, audio: Annotated[UploadFile, File()
         if duration is None or not .3 <= duration <= 30:
             raise KernelError(400, 'invalid_audio', 'Audio must declare a valid duration between 0.3 and 30 seconds.')
     result = await stt.transcribe(settings=request.app.state.settings, llm=request.app.state.llm, audio=content, mime=mime)
-    return {'data': result.model_dump()}
+    return SttEnvelope(data=result)
 
-async def _media(request: Request, sha: str, extension: str):
+async def _media(request: Request, sha: str, extension: str) -> FileResponse:
     if not re.fullmatch(r'[a-fA-F0-9]{64}', sha):
         raise KernelError(404, 'not_found', 'Audio was not found.')
     root = Path(request.app.state.settings.data_dir) / 'audio-cache'
@@ -103,18 +135,20 @@ async def _media(request: Request, sha: str, extension: str):
     return FileResponse(target, media_type='audio/mpeg' if extension == 'mp3' else 'audio/wav',
                         headers={'Cache-Control': 'private, max-age=86400', 'X-Content-Type-Options': 'nosniff'})
 
-@router.get('/media/audio/{sha}.mp3')
-async def mp3(request: Request, sha: str):
+@router.get('/media/audio/{sha}.mp3', response_class=FileResponse,
+            responses={200: {'content': {'audio/mpeg': {'schema': {'type': 'string', 'format': 'binary'}}}}})
+async def mp3(request: Request, sha: str) -> FileResponse:
     return await _media(request, sha, 'mp3')
 
-@router.get('/media/audio/{sha}.wav')
-async def wav(request: Request, sha: str):
+@router.get('/media/audio/{sha}.wav', response_class=FileResponse,
+            responses={200: {'content': {'audio/wav': {'schema': {'type': 'string', 'format': 'binary'}}}}})
+async def wav(request: Request, sha: str) -> FileResponse:
     return await _media(request, sha, 'wav')
 
-@router.post('/v1/voice/sessions')
-async def create_session(body: VoiceSessionRequest, request: Request):
+@router.post('/v1/voice/sessions', response_model=VoiceSessionEnvelope)
+async def create_session(body: VoiceSessionRequest, request: Request) -> VoiceSessionEnvelope:
     result = await sessions.create_session(settings=request.app.state.settings, db=request.app.state.db, request=body)
-    return {'data': result.model_dump()}
+    return VoiceSessionEnvelope(data=result)
 
 class EndSummary(BaseModel):
     conversation_id: str | None = Field(default=None, max_length=256)
@@ -122,8 +156,8 @@ class EndSummary(BaseModel):
     answer_ids: list[str] = Field(default_factory=list, max_length=1000)
     turns: int = Field(default=0, ge=0, le=100000)
 
-@router.post('/v1/voice/sessions/{session_id}/end')
-async def end_session(session_id: str, body: EndSummary, request: Request):
+@router.post('/v1/voice/sessions/{session_id}/end', response_model=VoiceSessionEndEnvelope)
+async def end_session(session_id: str, body: EndSummary, request: Request) -> VoiceSessionEndEnvelope:
     await sessions.end_session(settings=request.app.state.settings, db=request.app.state.db,
                                session_id=session_id, summary=body.model_dump())
-    return {'data': {'stored': True}}
+    return VoiceSessionEndEnvelope(data=VoiceSessionEndData(stored=True))

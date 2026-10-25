@@ -1,0 +1,731 @@
+{
+  "validatedAt": "2026-10-25T19:58:41.686Z",
+  "lockSha256": "d530c1e9caef68adcbe64f2fd3733a592a65d98e9f304e52d1f173a42aeeaf4d",
+  "manifestSha256": "e82196fa93659815c1b0d21e5ee8296c12e6edf59be378910b6cb5863e618dcb",
+  "rawFiles": 129,
+  "rawBytes": 144238320,
+  "outputFiles": 128,
+  "outputBytes": 181162466,
+  "textureSets": 13,
+  "materialBindings": 34,
+  "models": 16,
+  "props": [
+    "armchair",
+    "sofa",
+    "chair",
+    "desk",
+    "table_long",
+    "bookshelf",
+    "table_round",
+    "barrel",
+    "clock",
+    "lamp_desk",
+    "crate",
+    "books",
+    "plant_small"
+  ],
+  "streetFurniture": [
+    "street_lamp",
+    "planter",
+    "bench"
+  ],
+  "hdris": [
+    {
+      "id": "polyhaven/kloofendal_38d_partly_cloudy",
+      "use": "exterior"
+    },
+    {
+      "id": "polyhaven/small_empty_room_1",
+      "use": "interior"
+    }
+  ],
+  "characters": 0,
+  "vehicles": 0,
+  "modelTriangles": 118837,
+  "tests": {
+    "passed": 60,
+    "failed": 0
+  },
+  "procedural": {
+    "props": [
+      "plant_tall",
+      "lamp_floor",
+      "screen_stand",
+      "whiteboard",
+      "counter",
+      "bench",
+      "telescope",
+      "vault_door",
+      "workbench",
+      "server_rack",
+      "flowerbed",
+      "mailbox",
+      "flag",
+      "easel",
+      "filing_cabinet",
+      "mug"
+    ],
+    "streetFurniture": [
+      "trash_bin",
+      "bollard",
+      "bike_rack"
+    ],
+    "vehicle": "No verified usable CC0 car in inspected Poly Haven catalog; covered_car is a tarp-covered prop, not a drivable car.",
+    "characters": "Rocketbox MIT verified; 35-avatar production conversion and rig inspection remain incomplete. One separate jaw-only WASM smoke had invalid facial morph data; no production avatars are published.",
+    "bench": "PropKind bench expects 0.45m total height/backless seat; backed scan retained only as native-height street furniture to avoid squashing.",
+    "metal_light": "No verified brushed-aluminium scan in inspected Poly Haven catalog; physical brushed-metal approximation remains."
+  },
+  "outputs": [
+    {
+      "url": "/assets/hdri/kloofendal_38d_partly_cloudy.hdr",
+      "bytes": 1615714,
+      "sha256": "49bd4c204d2d34da7298396a708f1977856697c344b52c211372d1a3967cbb76"
+    },
+    {
+      "url": "/assets/hdri/small_empty_room_1.hdr",
+      "bytes": 1548604,
+      "sha256": "b3e042c4a650370c383699f61f65fcca4f037af32660994dafa61fbb257a4b52"
+    },
+    {
+      "url": "/assets/models/ArmChair_01.glb",
+      "bytes": 425716,
+      "sha256": "a840343e0b2b5a7c040becc0baf4bd21ae998587f4a2de50d84e8cddb0445780"
+    },
+    {
+      "url": "/assets/models/ArmChair_01_lod1.glb",
+      "bytes": 402152,
+      "sha256": "8918e7c882b2359f9fb4ae32ddee32bdb94e42835d920d32888157c2304c9c44"
+    },
+    {
+      "url": "/assets/models/ArmChair_01_lod2.glb",
+      "bytes": 386980,
+      "sha256": "e6d683ce92fde2aa8330c8701f346a4eda275e95d582592632dd8cdd7d1c82e8"
+    },
+    {
+      "url": "/assets/models/SchoolChair_01.glb",
+      "bytes": 212792,
+      "sha256": "c25257e5fa0aafbde0c1c2159f800495bfbf28359d959c2fd5abaf03fedc4aca"
+    },
+    {
+      "url": "/assets/models/SchoolChair_01_lod1.glb",
+      "bytes": 195988,
+      "sha256": "1151edea275b0007b8f18a5a3f3505542f103b2918e1b1daaca8f4fa2ff1eaa7"
+    },
+    {
+      "url": "/assets/models/SchoolChair_01_lod2.glb",
+      "bytes": 184612,
+      "sha256": "c40ef426dde298518e44bfd76af01ce093db6605a109e3110dab6155f00a73e5"
+    },
+    {
+      "url": "/assets/models/Sofa_01.glb",
+      "bytes": 207784,
+      "sha256": "540329360b2146a180057dd558001e91003c55eb290af1e6dc6d0a56a8051ca3"
+    },
+    {
+      "url": "/assets/models/Sofa_01_lod1.glb",
+      "bytes": 190772,
+      "sha256": "8bb106382c5ae9cc737f3284abface4c89f95cc3082e59bad28f983b1ca7d7ef"
+    },
+    {
+      "url": "/assets/models/Sofa_01_lod2.glb",
+      "bytes": 177100,
+      "sha256": "686751d8cf0944a0d0ef9104dc97203b97983c4dc5dc9406d26132ba17711301"
+    },
+    {
+      "url": "/assets/models/book_encyclopedia_set_01.glb",
+      "bytes": 448548,
+      "sha256": "f6f4a20084506b213152ac110e5b43a966ac47cda95e0a3707593d147302dc49"
+    },
+    {
+      "url": "/assets/models/book_encyclopedia_set_01_lod1.glb",
+      "bytes": 348896,
+      "sha256": "f4af643834f44a032ac3ced6cc0efc1d6d5c364437d2978b6dae396001da0c14"
+    },
+    {
+      "url": "/assets/models/book_encyclopedia_set_01_lod2.glb",
+      "bytes": 293084,
+      "sha256": "c857cf47fa4ef1f806200b47ae032e28ecdb1009dc83ef3a3567c6ed63d506f2"
+    },
+    {
+      "url": "/assets/models/industrial_pipe_lamp.glb",
+      "bytes": 355848,
+      "sha256": "c697d95ade5cfcf7f922ca17cfafed778a3a229c129bc516740c474b4e418759"
+    },
+    {
+      "url": "/assets/models/industrial_pipe_lamp_lod1.glb",
+      "bytes": 324360,
+      "sha256": "d0da2cde60300c19ec6cf44d82674d8f65fac0623a3be19844185f6305c55543"
+    },
+    {
+      "url": "/assets/models/industrial_pipe_lamp_lod2.glb",
+      "bytes": 303508,
+      "sha256": "fdd86f0261be346c45797cc8261e85da77c179d82aee07b09c59de62447d2a11"
+    },
+    {
+      "url": "/assets/models/metal_office_desk.glb",
+      "bytes": 193808,
+      "sha256": "38ca2f6be10c9e343daf60030ab449aa97e0cb3d7971c37e1e053f34ab9812d9"
+    },
+    {
+      "url": "/assets/models/metal_office_desk_lod1.glb",
+      "bytes": 181100,
+      "sha256": "2e094c830ea5257f6a8f50a6a74564708f4a9421b9e16228cf4cdfc1e23a4272"
+    },
+    {
+      "url": "/assets/models/metal_office_desk_lod2.glb",
+      "bytes": 164476,
+      "sha256": "7dd4d1d293c1dbb12ebb9639fd3b87148801a356e18480c22e863d308982ef30"
+    },
+    {
+      "url": "/assets/models/painted_wooden_bench.glb",
+      "bytes": 258896,
+      "sha256": "b75160951db76d90f35deac97f89dae75389786a3ff822b652bddea5e60a4ff0"
+    },
+    {
+      "url": "/assets/models/painted_wooden_bench_lod1.glb",
+      "bytes": 256104,
+      "sha256": "6a7d091d8dafe12f2458d56efee65be524895a42c24591fd3579269dfb5fdfa6"
+    },
+    {
+      "url": "/assets/models/painted_wooden_bench_lod2.glb",
+      "bytes": 254472,
+      "sha256": "d4fea42f2d7147fe09895ca38cd40a29af232fa2eeb80bc5f42922efac3d6fdb"
+    },
+    {
+      "url": "/assets/models/painted_wooden_table.glb",
+      "bytes": 144532,
+      "sha256": "bf4524ebe815b38e9e656af855badfe3c063e3907060beb243d816611532f353"
+    },
+    {
+      "url": "/assets/models/painted_wooden_table_lod1.glb",
+      "bytes": 142080,
+      "sha256": "990e9883eeee15b9a69584e8cf911f372b4f813dd8d6142553185107b928924a"
+    },
+    {
+      "url": "/assets/models/painted_wooden_table_lod2.glb",
+      "bytes": 140320,
+      "sha256": "2e3319aabd3d40265aefa6ccf61965fc8d6f5b8eb9376622efdb6635326b8617"
+    },
+    {
+      "url": "/assets/models/planter_box_01.glb",
+      "bytes": 357788,
+      "sha256": "a0d056e7fa95d09b3bdacf74e8d8054163087462178c6f8d3e8c3718d728635e"
+    },
+    {
+      "url": "/assets/models/planter_box_01_lod1.glb",
+      "bytes": 329128,
+      "sha256": "d059401cf75b95fba7a81bf0e88babc6a64190bb30d7ca33ff6cbeff5227aaf3"
+    },
+    {
+      "url": "/assets/models/planter_box_01_lod2.glb",
+      "bytes": 308972,
+      "sha256": "e152fbd708db81620f61759bad5aed192f631041d236436b5fabcec6894d7961"
+    },
+    {
+      "url": "/assets/models/potted_plant_01.glb",
+      "bytes": 679260,
+      "sha256": "3fafe951ab3687e636e1cc045a626786c8e5af326268fd95fe8e6c652f732861"
+    },
+    {
+      "url": "/assets/models/potted_plant_01_lod1.glb",
+      "bytes": 616424,
+      "sha256": "5f19d36a7a8d73192ee6a707ff668bdf6036badb1d17c8b54eb9d95787c8ccb0"
+    },
+    {
+      "url": "/assets/models/potted_plant_01_lod2.glb",
+      "bytes": 603792,
+      "sha256": "20f6d62054eb28f101279e4693110d361b950e9c6ef641d64abb9c75db53037f"
+    },
+    {
+      "url": "/assets/models/round_wooden_table_02.glb",
+      "bytes": 233004,
+      "sha256": "86f8b2cb59c3049a96d3ffd2cb861b63845d051cbd554a5cd0b32c75c6cad65f"
+    },
+    {
+      "url": "/assets/models/round_wooden_table_02_lod1.glb",
+      "bytes": 219508,
+      "sha256": "2d9e1c5995c6cf775ff795826de1b4c2611d00ff9745a469c1b849c0f2047bc2"
+    },
+    {
+      "url": "/assets/models/round_wooden_table_02_lod2.glb",
+      "bytes": 208256,
+      "sha256": "36e084f5705868ca4c635feca60b9a994cff15217220d10b7aea807078260117"
+    },
+    {
+      "url": "/assets/models/street_lamp_01.glb",
+      "bytes": 250800,
+      "sha256": "b3275cd6388e9a403a0be64cb18b32d7dd3cc99caa95d4657d7fefee26403c52"
+    },
+    {
+      "url": "/assets/models/street_lamp_01_lod1.glb",
+      "bytes": 210000,
+      "sha256": "02a6e0906797504f8d26ff8741006ed41847ccc7d81b0edf1207ff588758ab08"
+    },
+    {
+      "url": "/assets/models/street_lamp_01_lod2.glb",
+      "bytes": 183400,
+      "sha256": "b65c567176a96eba77a22b1cd02c45fb0811e41d6a58013c304b6afc700d62d8"
+    },
+    {
+      "url": "/assets/models/wall_clock.glb",
+      "bytes": 181384,
+      "sha256": "58d36045565ddd4fa4d1f90b641a7b6017c9098530b59ca1c132642bf0081260"
+    },
+    {
+      "url": "/assets/models/wall_clock_lod1.glb",
+      "bytes": 163912,
+      "sha256": "447aeb922f00030a8a0a62ada1c6fbac2687b009119ff503fc9053aff44f91dd"
+    },
+    {
+      "url": "/assets/models/wall_clock_lod2.glb",
+      "bytes": 151572,
+      "sha256": "0accbf12f06755d1e019749e8ddea528b905fb288c023ab7f8eb5b26e458f16a"
+    },
+    {
+      "url": "/assets/models/wine_barrel_01.glb",
+      "bytes": 355092,
+      "sha256": "3d4c62e2d28909164114c647896c9304e701361bf0b45c521cda663ae531971b"
+    },
+    {
+      "url": "/assets/models/wine_barrel_01_lod1.glb",
+      "bytes": 315252,
+      "sha256": "74a5a2c38e69245618e22780b81c64b0c98a7c56a2c9f999d4a67c1ee9f19e8f"
+    },
+    {
+      "url": "/assets/models/wine_barrel_01_lod2.glb",
+      "bytes": 285952,
+      "sha256": "3873ec92a615ff1c10db3f62c1cbfdb6c20848faddf843a1ed20dfe886fc7ae2"
+    },
+    {
+      "url": "/assets/models/wooden_bookshelf_worn.glb",
+      "bytes": 584916,
+      "sha256": "52c053563713269a28f8a6f104252ba660debbea8d69af8e9227df515afab894"
+    },
+    {
+      "url": "/assets/models/wooden_bookshelf_worn_lod1.glb",
+      "bytes": 558796,
+      "sha256": "322fb475ca02963891151dca4fbf400fd61f1a447864729c37b13d186d7e53f0"
+    },
+    {
+      "url": "/assets/models/wooden_bookshelf_worn_lod2.glb",
+      "bytes": 540180,
+      "sha256": "cf91c4230d0712f68a83adbbec3e383b5a6da952b310b408de07386224eafc2c"
+    },
+    {
+      "url": "/assets/models/wooden_crate_01.glb",
+      "bytes": 327516,
+      "sha256": "81d73045b007ccf077f4ff377c12f925e9d767eea01770dd904ca0fe8dbceab5"
+    },
+    {
+      "url": "/assets/models/wooden_crate_01_lod1.glb",
+      "bytes": 304488,
+      "sha256": "fc494795dac7fc85155d50d9cbb69d33f2ec50cdf6b8c3669fc7933f0c6ba558"
+    },
+    {
+      "url": "/assets/models/wooden_crate_01_lod2.glb",
+      "bytes": 290916,
+      "sha256": "f27759e30492574b079ce46874abe504f4cf9a68a6c0fbbd96e33e38ea4fbf1b"
+    },
+    {
+      "url": "/assets/textures/asphalt_02/color_1024.webp",
+      "bytes": 489790,
+      "sha256": "c9976777e767535b042907eda1e08dce88698eca841ab69c392ffdfcb7bbe1da"
+    },
+    {
+      "url": "/assets/textures/asphalt_02/color_2048.webp",
+      "bytes": 2071192,
+      "sha256": "e535337b13c289681bffe4422e44ba81535f513fba8240d4e5bf921def4389d7"
+    },
+    {
+      "url": "/assets/textures/asphalt_02/normal_1024.webp",
+      "bytes": 2205836,
+      "sha256": "6b30f64b326504cd47758ff186eaaf1957939f1bba227304d2a9c3b89d1bc0f9"
+    },
+    {
+      "url": "/assets/textures/asphalt_02/normal_2048.webp",
+      "bytes": 9239540,
+      "sha256": "c1c79f6dca0ce2518a407d2dd2ac1ddb8ec76f82c94e5414377b50f25f7acb42"
+    },
+    {
+      "url": "/assets/textures/asphalt_02/roughness_1024.webp",
+      "bytes": 803768,
+      "sha256": "840141c043b7d237167846848a81a71ea69c4d0676a274e6ac3cf9f585983522"
+    },
+    {
+      "url": "/assets/textures/asphalt_02/roughness_2048.webp",
+      "bytes": 2981496,
+      "sha256": "de95e38cf77da3ebface6c3180d9b4b4263ba3c291e1938feeb6660a563b5100"
+    },
+    {
+      "url": "/assets/textures/blue_metal_plate/color_1024.webp",
+      "bytes": 120610,
+      "sha256": "2984347b4205db874dd7bbdfa058cf422159defd348a3dc050ed940f58397303"
+    },
+    {
+      "url": "/assets/textures/blue_metal_plate/color_2048.webp",
+      "bytes": 528492,
+      "sha256": "e600d2a35a7ec3aa06db115277033de245af4ebb3acbb02df63c3681e6a3e43d"
+    },
+    {
+      "url": "/assets/textures/blue_metal_plate/normal_1024.webp",
+      "bytes": 579242,
+      "sha256": "5b2789760ae91987b82d847b2b6b7d720dad997b332f9d117177a7a4c1515431"
+    },
+    {
+      "url": "/assets/textures/blue_metal_plate/normal_2048.webp",
+      "bytes": 1708708,
+      "sha256": "795ddcff3bec78a4e919c2b4fb0166788aafb5a03d7830dddb1491974934714e"
+    },
+    {
+      "url": "/assets/textures/blue_metal_plate/roughness_1024.webp",
+      "bytes": 375218,
+      "sha256": "515b6572ff33b83c7fc3862e5cedd46606f5161090734dd1d816c074915bc59b"
+    },
+    {
+      "url": "/assets/textures/blue_metal_plate/roughness_2048.webp",
+      "bytes": 1521214,
+      "sha256": "56e5a77050184d716ac2d3dde5317c7f534057340985aae55ca007a50dc4d828"
+    },
+    {
+      "url": "/assets/textures/clay_roof_tiles/color_1024.webp",
+      "bytes": 304888,
+      "sha256": "f22cb19d1e54dcc9fce839ef2cb4d4d2b37d09c07e6bac9d99c93385648f6368"
+    },
+    {
+      "url": "/assets/textures/clay_roof_tiles/color_2048.webp",
+      "bytes": 973470,
+      "sha256": "eb87d84f5e4faacf6f79562654e3bb33ebfd0be0e3e04920ed714c1cfa522a51"
+    },
+    {
+      "url": "/assets/textures/clay_roof_tiles/normal_1024.webp",
+      "bytes": 1952540,
+      "sha256": "ecda42b0d0e765778bd3a331e4f01d55cbe714c84abc9bcdfc0fba7406a6598e"
+    },
+    {
+      "url": "/assets/textures/clay_roof_tiles/normal_2048.webp",
+      "bytes": 6669804,
+      "sha256": "0f7c285f0f054bba8ce4777ebbbcf56dc2cbb343241f2eacf95f66582c022154"
+    },
+    {
+      "url": "/assets/textures/clay_roof_tiles/roughness_1024.webp",
+      "bytes": 301040,
+      "sha256": "756bd08ee472834ff7f5c9495d30f43d3f583ff15a25a1d52b4aa6041088da5e"
+    },
+    {
+      "url": "/assets/textures/clay_roof_tiles/roughness_2048.webp",
+      "bytes": 1059310,
+      "sha256": "a81f806fb91b52fdee786d12d69ac8f07e0cf1fad12937be1449190e66b1bb07"
+    },
+    {
+      "url": "/assets/textures/cobblestone_floor_01/color_1024.webp",
+      "bytes": 296094,
+      "sha256": "54d70e986e5440fb572d0538e9ea0b3825d673b8ad7e31157c2599321fbaf90c"
+    },
+    {
+      "url": "/assets/textures/cobblestone_floor_01/color_2048.webp",
+      "bytes": 1081842,
+      "sha256": "347373970073e5c1b0b401488078b8b8bee57476825f8aaa1f9246a70e9a9c72"
+    },
+    {
+      "url": "/assets/textures/cobblestone_floor_01/normal_1024.webp",
+      "bytes": 1904188,
+      "sha256": "9a7aab26fd44976634de5db69c74af6d43a00742b4d765ed40cebc10d597deee"
+    },
+    {
+      "url": "/assets/textures/cobblestone_floor_01/normal_2048.webp",
+      "bytes": 7316882,
+      "sha256": "0d5955f53d21eac301775549c50066010e1bea4c76cf2341ffefe3a2afef401b"
+    },
+    {
+      "url": "/assets/textures/cobblestone_floor_01/roughness_1024.webp",
+      "bytes": 584322,
+      "sha256": "8c113938ac28fdbe465eecd66310195100ec2b977a8ea6cd6c26ddcd66db9109"
+    },
+    {
+      "url": "/assets/textures/cobblestone_floor_01/roughness_2048.webp",
+      "bytes": 2210948,
+      "sha256": "f587653171a3045dea9441b38b12026e848b41f4c361c24a726322657e185af3"
+    },
+    {
+      "url": "/assets/textures/concrete_pavement/color_1024.webp",
+      "bytes": 367998,
+      "sha256": "ad3305f0d33316e0e5db8a957d33fbab3a07bc1984d56490ea1681bf253aab9d"
+    },
+    {
+      "url": "/assets/textures/concrete_pavement/color_2048.webp",
+      "bytes": 1516448,
+      "sha256": "6739bcff5900349a38970a90ca207605bc3c0c3bee4f8639b78195a0ee63524e"
+    },
+    {
+      "url": "/assets/textures/concrete_pavement/normal_1024.webp",
+      "bytes": 2249546,
+      "sha256": "cb1476b764a3419fb0f27f21b68faccf0c34460362150a8dd13d3e2993456391"
+    },
+    {
+      "url": "/assets/textures/concrete_pavement/normal_2048.webp",
+      "bytes": 8597876,
+      "sha256": "b4600e151b4bb86bc9b7d946e1a602209572c6b1929003eee1539ebad515ffa0"
+    },
+    {
+      "url": "/assets/textures/concrete_pavement/roughness_1024.webp",
+      "bytes": 449602,
+      "sha256": "8918ff8676f27aa3be9df53d961fce8576a34a1d8518c49ec70f506ae1171dc3"
+    },
+    {
+      "url": "/assets/textures/concrete_pavement/roughness_2048.webp",
+      "bytes": 2029128,
+      "sha256": "6f3bbf3c01ff67298d9e9cb71fc95c3cc19897eb20be1cebfd084b7a67106419"
+    },
+    {
+      "url": "/assets/textures/dirt/color_1024.webp",
+      "bytes": 235820,
+      "sha256": "4326c80d8e20f0cdb84146479c52cf219bdd882fce42ec8f5ff7af279d087493"
+    },
+    {
+      "url": "/assets/textures/dirt/color_2048.webp",
+      "bytes": 1015022,
+      "sha256": "23e3fe2c6d07ea8db654c4066df5ccc7554662cb1b9b7a76905c47153969602f"
+    },
+    {
+      "url": "/assets/textures/dirt/normal_1024.webp",
+      "bytes": 2102654,
+      "sha256": "84e1d2042e227fc5c5cebbab571c2c63b46d0fc5b8e2490d1ed81fae4c8725a9"
+    },
+    {
+      "url": "/assets/textures/dirt/normal_2048.webp",
+      "bytes": 8137968,
+      "sha256": "b82d9d45a96893c7cad5dad79bd6290620fa267c97412e11ac31579af57ef766"
+    },
+    {
+      "url": "/assets/textures/dirt/roughness_1024.webp",
+      "bytes": 252630,
+      "sha256": "7bab730eed1fdf29483e17dd010db75dda45c3a45173653f02f303adf1e3aff2"
+    },
+    {
+      "url": "/assets/textures/dirt/roughness_2048.webp",
+      "bytes": 972156,
+      "sha256": "1c05e32c507e3f9212f1ab00631591de00e4ede8e1e49941e7738de9695e61a9"
+    },
+    {
+      "url": "/assets/textures/grass_ground/color_1024.webp",
+      "bytes": 322216,
+      "sha256": "5ee0c2efb232934ff0f6eaeeecb4bd5519fe7b20cd2c4b08015c126c2026dd16"
+    },
+    {
+      "url": "/assets/textures/grass_ground/color_2048.webp",
+      "bytes": 1490568,
+      "sha256": "a3043ee48be4178c2abc389c8dc5229208968d5b9d72c053347662464823fae2"
+    },
+    {
+      "url": "/assets/textures/grass_ground/normal_1024.webp",
+      "bytes": 2419604,
+      "sha256": "48815f2790323f5c1d200141dd989889f8f09f3de303a10f6a64431f3fb8dea1"
+    },
+    {
+      "url": "/assets/textures/grass_ground/normal_2048.webp",
+      "bytes": 9256928,
+      "sha256": "9793551d53660c5648217c3c9c46f53b301c683bffd19bd4d9ac194080a51a8e"
+    },
+    {
+      "url": "/assets/textures/grass_ground/roughness_1024.webp",
+      "bytes": 303742,
+      "sha256": "16eaf9ccc82377788972427da8876e1a621b9661bd81a171d244e9b8720df888"
+    },
+    {
+      "url": "/assets/textures/grass_ground/roughness_2048.webp",
+      "bytes": 1493812,
+      "sha256": "b109c710937661400b68457b536bc6c21d9f3c31f76b406f09b6a3e97adb193b"
+    },
+    {
+      "url": "/assets/textures/grey_roof_tiles/color_1024.webp",
+      "bytes": 354792,
+      "sha256": "49684fe7fb3f943c7758a83440cceb76dd2376a04e94fea78b8bac99e7f89703"
+    },
+    {
+      "url": "/assets/textures/grey_roof_tiles/color_2048.webp",
+      "bytes": 1054214,
+      "sha256": "8cce58562aac59e472167ad83297ed398148ec3b705be8a6b55ec5f649c1e4d4"
+    },
+    {
+      "url": "/assets/textures/grey_roof_tiles/normal_1024.webp",
+      "bytes": 1368752,
+      "sha256": "c2f2e2a409cce8ff7351afdb1c6cf15cff4324a2e83547191d7d686f00109013"
+    },
+    {
+      "url": "/assets/textures/grey_roof_tiles/normal_2048.webp",
+      "bytes": 4434330,
+      "sha256": "beb7cf040f76c92c74c8da25368225d68ab13619d4c529f49d17c6ca145f407f"
+    },
+    {
+      "url": "/assets/textures/grey_roof_tiles/roughness_1024.webp",
+      "bytes": 504210,
+      "sha256": "6e1c982b965241e7ad61393ae9bff5a90e2075599a9ba46db8162b1ddcef343a"
+    },
+    {
+      "url": "/assets/textures/grey_roof_tiles/roughness_2048.webp",
+      "bytes": 1735526,
+      "sha256": "cc649839f2a3b5873a1d65fafe4f6391ed146123426b380d0869c467aca3e183"
+    },
+    {
+      "url": "/assets/textures/oak_wood_planks/color_1024.webp",
+      "bytes": 201468,
+      "sha256": "813861f678ef6b8132e08977d2ced0b63a180ca41a6e31aae6eb8289ce06aa05"
+    },
+    {
+      "url": "/assets/textures/oak_wood_planks/color_2048.webp",
+      "bytes": 780306,
+      "sha256": "b1546091c6e7635fbe66ba3e0fc94b187196a5e89733875da5e9810b9a068b2d"
+    },
+    {
+      "url": "/assets/textures/oak_wood_planks/normal_1024.webp",
+      "bytes": 888200,
+      "sha256": "f2b2c330e29a5e7b6cfc11b1c5fe69c4a6977d462c2662e202963b5d8a599bbb"
+    },
+    {
+      "url": "/assets/textures/oak_wood_planks/normal_2048.webp",
+      "bytes": 3702202,
+      "sha256": "16bc3dccffc5b6fb1a00882b9ad0a16ae4a233c5193ecfa22593563220d5dd4f"
+    },
+    {
+      "url": "/assets/textures/oak_wood_planks/roughness_1024.webp",
+      "bytes": 741328,
+      "sha256": "6b23818c63f81e1fe38ce043f149b9689693d44b4cbfd0907605433be6d05b29"
+    },
+    {
+      "url": "/assets/textures/oak_wood_planks/roughness_2048.webp",
+      "bytes": 2933968,
+      "sha256": "2615d29e17cfdaedb8dedcdc41948801d68a527be4e5257ef954138a11f609c0"
+    },
+    {
+      "url": "/assets/textures/red_brick_03/color_1024.webp",
+      "bytes": 414114,
+      "sha256": "8d59fbc5bdc0e731feac9e940142dead8e2dee475328d8aa0ed6b26e5be495d3"
+    },
+    {
+      "url": "/assets/textures/red_brick_03/color_2048.webp",
+      "bytes": 1830178,
+      "sha256": "c9fb726c1b666ead113632296c311eb4c2280adc1a8249326a787dd9fe648bac"
+    },
+    {
+      "url": "/assets/textures/red_brick_03/normal_1024.webp",
+      "bytes": 2034912,
+      "sha256": "9a6d37c008ca71cd01dd83de4a07fc324972a6e0bf105c9dc4bb14000bfe04d6"
+    },
+    {
+      "url": "/assets/textures/red_brick_03/normal_2048.webp",
+      "bytes": 8138486,
+      "sha256": "0c985379e7d4f3358ba05ab08bcaf0cdb737f957f5f95fd02bd2e4a838205d9c"
+    },
+    {
+      "url": "/assets/textures/red_brick_03/roughness_1024.webp",
+      "bytes": 562840,
+      "sha256": "18cae5b635d0310f5d2337d6d3da4b3a290f5dce3ae5c82fe59744e06bfb800b"
+    },
+    {
+      "url": "/assets/textures/red_brick_03/roughness_2048.webp",
+      "bytes": 2188792,
+      "sha256": "c494f4ffc9c67148d675458b76f41430d89c7c84a3023f7aa2b9486a93f3385b"
+    },
+    {
+      "url": "/assets/textures/rough_linen/color_1024.webp",
+      "bytes": 549650,
+      "sha256": "f8ab3851d751d9b8e616ab9777769948ea0893564d78430c945f407b292d3c13"
+    },
+    {
+      "url": "/assets/textures/rough_linen/color_2048.webp",
+      "bytes": 2106412,
+      "sha256": "476174ec1c3628a4ed618832c499c6f84350c136760a905c074be0e3601ecb44"
+    },
+    {
+      "url": "/assets/textures/rough_linen/normal_1024.webp",
+      "bytes": 1893996,
+      "sha256": "841ec710e38c0026d7f41bc19e82fcd90aaab10ac9208892d036b228ae51d2a4"
+    },
+    {
+      "url": "/assets/textures/rough_linen/normal_2048.webp",
+      "bytes": 6573070,
+      "sha256": "cfcdf193b2d5665427620ec370c028705a7bb0d6fdffd71a38a17c6a9ad5ab9d"
+    },
+    {
+      "url": "/assets/textures/rough_linen/roughness_1024.webp",
+      "bytes": 877268,
+      "sha256": "fc181c3c139cae132780d760e8b70911d7e045b62133785c1bbedef3ff1cf83f"
+    },
+    {
+      "url": "/assets/textures/rough_linen/roughness_2048.webp",
+      "bytes": 3731020,
+      "sha256": "378a17048384e9d2fb91eefad11b0bd7261fc5f6457d3ddab9224b6d50e1bdeb"
+    },
+    {
+      "url": "/assets/textures/white_plaster_02/color_1024.webp",
+      "bytes": 383148,
+      "sha256": "ee42c2ce82abc7147239854be844929140a1dde72cf0b08138872216307e1bbd"
+    },
+    {
+      "url": "/assets/textures/white_plaster_02/color_2048.webp",
+      "bytes": 1725694,
+      "sha256": "c01b28d7c9bdbb13aaa2309e229faf8e51fe9378efebb3f4847f9f5d98dcc986"
+    },
+    {
+      "url": "/assets/textures/white_plaster_02/normal_1024.webp",
+      "bytes": 1756058,
+      "sha256": "2a39a613f4d3f5cbde96f15ff8faa2fbf8ab3ad10d37d5548968a234729adbe5"
+    },
+    {
+      "url": "/assets/textures/white_plaster_02/normal_2048.webp",
+      "bytes": 7634558,
+      "sha256": "82ef04677a5f8af8574cc9d3f3df015b84c954e9a78b4d1cb2730c1f03cf6852"
+    },
+    {
+      "url": "/assets/textures/white_plaster_02/roughness_1024.webp",
+      "bytes": 586312,
+      "sha256": "c3da3bcbec133fe19c92fc34d8b356f62809421b2677c15d492d9d206ef4ee40"
+    },
+    {
+      "url": "/assets/textures/white_plaster_02/roughness_2048.webp",
+      "bytes": 2486280,
+      "sha256": "6edcf9d8d116b5137d324f23851bb7e22ebf660150048ceafd62abcbcc1220ef"
+    },
+    {
+      "url": "/assets/textures/wood_floor/color_1024.webp",
+      "bytes": 231690,
+      "sha256": "ffb72d94d1283f5fd9898575d40e2e796056a27956c21871b556327f4c85916d"
+    },
+    {
+      "url": "/assets/textures/wood_floor/color_2048.webp",
+      "bytes": 908350,
+      "sha256": "bf21cf6ae8486b1302f8826d58ab2f3a99045d0f8c1a3cece5b7e6be7827e672"
+    },
+    {
+      "url": "/assets/textures/wood_floor/normal_1024.webp",
+      "bytes": 1026572,
+      "sha256": "7d763223bbfb5d4be00104797bfed545bcbd4455cf7a01447e697218b0e4adea"
+    },
+    {
+      "url": "/assets/textures/wood_floor/normal_2048.webp",
+      "bytes": 3658360,
+      "sha256": "ac4a188093ff8d2548d315f43ac99d9ea9db91600532759cce6a6aa34c3b7a59"
+    },
+    {
+      "url": "/assets/textures/wood_floor/roughness_1024.webp",
+      "bytes": 568910,
+      "sha256": "db3a034bd82fdccc40745053a93773b3b7830a9e9c42e54a5e57a33d5bec8f4b"
+    },
+    {
+      "url": "/assets/textures/wood_floor/roughness_2048.webp",
+      "bytes": 2483794,
+      "sha256": "c7933c41b389830ce82ca2fa2af4d75f09481a52c22c7cdbd0ad5265fba273b2"
+    }
+  ],
+  "byteIdenticalRebuild": true,
+  "reproducibleBinaryFiles": 128,
+  "reproducibleManifest": true,
+  "packageScriptsVerified": [
+    "npm run assets:fetch",
+    "npm run assets:build"
+  ],
+  "orientationReviewedModels": 16,
+  "finalFlatBookPoseVerified": true,
+  "typecheck": "Project and standalone pipeline passed",
+  "generatedDocsBytes": 24788
+}

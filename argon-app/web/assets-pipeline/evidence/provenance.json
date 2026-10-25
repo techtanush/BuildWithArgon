@@ -1,0 +1,79 @@
+{
+  "observedAt": "2026-10-25T19:16:35.630Z",
+  "polyhaven": {
+    "list": "https://api.polyhaven.com/assets?t=textures",
+    "textures": 869,
+    "models": 521,
+    "files": "https://api.polyhaven.com/files/ArmChair_01",
+    "shape": "map -> resolution -> format -> {url,size,md5,include?:{relativePath:{url,size,md5}}}",
+    "license": "https://polyhaven.com/license"
+  },
+  "ambientCG": {
+    "url": "https://ambientcg.com/api/v2/full_json?include=downloadData&limit=1",
+    "shape": "foundAssets[].downloadFolders.default.downloadFiletypeCategories.zip.downloads[]: fullDownloadPath,downloadLink,fileName,size,filetype,attribute,zipContent",
+    "license": "https://docs.ambientcg.com/license/",
+    "sample": "Fabric086",
+    "sizeMetersKnown": false
+  },
+  "rocketbox": {
+    "license": "https://raw.githubusercontent.com/microsoft/Microsoft-Rocketbox/master/LICENSE.md",
+    "readme": "https://raw.githubusercontent.com/microsoft/Microsoft-Rocketbox/master/README.md",
+    "licenseVerified": "MIT, Copyright (c) 2020 Microsoft",
+    "api": "Unauthenticated GitHub API rate limited; HTML tree and raw endpoints worked",
+    "fbxProbe": {
+      "bytes": 256,
+      "header": "4b617964617261204642582042696e6172792020001a00e81c0000ec07000000",
+      "isLfsPointer": false
+    },
+    "converter": "Installed Darwin FBX2glTF failed: Bad CPU type in executable; no avatar conversion completed"
+  },
+  "buildBlocker": null,
+  "nativeRuntime": "Sharp fixed by parent after official npm/lock integrity and binary provenance verification; bounded sample native build successful. esbuild-wasm runtime linked by parent locally without source config changes.",
+  "expansion": {
+    "status": "Built, visually reviewed, 60 web tests passed; 128 binaries and manifest byte-identical on unchanged-source rebuild",
+    "metadataDirectory": "session tmp/assets-evidence/full",
+    "catalogChanges": [
+      "white_plaster_02: smooth neutral wall scan",
+      "rough_linen: neutralized woven upholstery instead of creased denim",
+      "concrete_pavement: genuine pavers instead of vertically grooved concrete",
+      "dirt: real ground scan instead of grass alias",
+      "wine_barrel_01: wooden barrel rather than industrial steel drum",
+      "round_wooden_table_02: approximately dining-height source",
+      "industrial_pipe_lamp: non-articulated desk lamp",
+      "book_encyclopedia_set_01: compact book set rather than2.5m decorative spread"
+    ],
+    "orientation": "unreviewed; local preview at /assets-pipeline/orientation-preview.html on Vite5174",
+    "rawFiles": 129,
+    "rawBytes": 144238320
+  },
+  "geometry": {
+    "standardBookTopologyFloor": 19991,
+    "standardBookSourceTriangles": 67306,
+    "permissiveProbeTriangles": 13969,
+    "permissiveProbeError": 0.001,
+    "notes": "Conservative permissive seam-collapse fallback, actual final counts in build-report.json"
+  },
+  "orientationReview": {
+    "observedAt": "2026-10-25T20:01:35.057Z",
+    "models": {
+      "ArmChair_01": "Seat front +Z",
+      "book_encyclopedia_set_01": "Actual flat stack verified; spine faces +Z, rotationZ=pi/2 applied before footprint normalization",
+      "industrial_pipe_lamp": "Shade opening/front visible from +Z",
+      "metal_office_desk": "Drawers face +Z",
+      "painted_wooden_bench": "Seat front +Z; native-height backed street model, not squashed PropKind bench",
+      "painted_wooden_table": "Long edge toward +Z; table has no directional front",
+      "planter_box_01": "Long side +Z; symmetric container",
+      "potted_plant_01": "Plant has no semantic front",
+      "round_wooden_table_02": "Round tabletop orientation-neutral; source panel visible +Z",
+      "SchoolChair_01": "Seat front +Z",
+      "Sofa_01": "Seat front +Z",
+      "street_lamp_01": "Street lamp has no semantic front",
+      "wall_clock": "Dial faces +Z",
+      "wine_barrel_01": "Barrel front/bung visible +Z",
+      "wooden_bookshelf_worn": "Open shelf front +Z",
+      "wooden_crate_01": "Latch faces +Z"
+    },
+    "screenshot": "/Users/mahinbharathwaj/.aside/u/0/sessions/2026-10-25_Nj68lRCAzJ3C3jw9/tmp/repl-display-vReebsfVxInPP7L3.jpeg",
+    "manifestSha256": "e82196fa93659815c1b0d21e5ee8296c12e6edf59be378910b6cb5863e618dcb"
+  }
+}
