@@ -1,24 +1,63 @@
-// OWNER: karthik — seed version; replace/extend freely but keep the exported names and signatures (mahin calls them).
-// Push-to-talk recording (hold V): MediaRecorder webm/opus, max 30 s (05-world/07-npc-conversation.md).
+// OWNER: karthik
+/** One permission request per recording, with no idle microphone left open. */
 export class Mic {
   static supported(): boolean {
-    return typeof navigator !== 'undefined' && !!navigator.mediaDevices && typeof MediaRecorder !== 'undefined';
+    return typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && typeof MediaRecorder !== 'undefined';
   }
-
   recording = false;
-
-  /** Ask permission (first time) and start recording. Rejects if the mic is unavailable/denied. */
-  async start(): Promise<void> {
-    throw new Error('Mic not implemented yet (owner: karthik)');
+  private recorder: MediaRecorder | null = null;
+  private stream: MediaStream | null = null;
+  private pending: Promise<void> | null = null;
+  private result: Promise<Blob | null> = Promise.resolve(null);
+  private finish: ((blob: Blob | null) => void) | null = null;
+  private timer: ReturnType<typeof setTimeout> | undefined;
+  private generation = 0;
+  private since = 0;
+  start(): Promise<void> {
+    if (this.pending) return this.pending;
+    if (this.recording) return Promise.resolve();
+    const generation = ++this.generation;
+    this.pending = this.begin(generation).finally(() => { this.pending = null; });
+    return this.pending;
   }
-
-  /** Stop and return the recording (null if nothing was recorded). */
+  private async begin(generation: number): Promise<void> {
+    if (!Mic.supported()) throw new Error('Microphone recording is unavailable. Type instead.');
+    let stream: MediaStream;
+    try { stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } }); }
+    catch { throw new Error('Microphone permission denied or unavailable. Type instead.'); }
+    if (generation !== this.generation) { stream.getTracks().forEach(t => t.stop()); return; }
+    this.stream = stream;
+    try {
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4'].find(m => MediaRecorder.isTypeSupported?.(m));
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      this.recorder = recorder;
+      const chunks: Blob[] = [];
+      this.result = new Promise(resolve => { this.finish = resolve; });
+      recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data); };
+      recorder.onerror = () => { if (this.recorder === recorder) this.cancel(); };
+      recorder.onstop = () => {
+        if (this.recorder !== recorder) return;
+        const blob = new Blob(chunks, { type: recorder.mimeType || chunks[0]?.type || 'audio/webm' });
+        this.cleanup(generation === this.generation && performance.now() - this.since >= 300 && blob.size ? blob : null);
+      };
+      this.since = performance.now(); recorder.start(); this.recording = true;
+      this.timer = setTimeout(() => { void this.stop(); }, 30_000);
+    } catch { this.cleanup(null); throw new Error('Microphone recording could not start. Type instead.'); }
+  }
   async stop(): Promise<Blob | null> {
+    await this.pending?.catch(() => {});
+    if (this.recorder?.state === 'recording') this.recorder.stop();
     this.recording = false;
-    return null;
+    return this.result;
   }
-
   cancel(): void {
-    this.recording = false;
+    ++this.generation;
+    try { if (this.recorder?.state === 'recording') this.recorder.stop(); } catch { /* already stopped */ }
+    this.cleanup(null);
+  }
+  private cleanup(blob: Blob | null): void {
+    clearTimeout(this.timer); this.recording = false;
+    this.stream?.getTracks().forEach(t => t.stop()); this.stream = null; this.recorder = null;
+    this.finish?.(blob); this.finish = null;
   }
 }

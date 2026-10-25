@@ -17,12 +17,27 @@ export const VISEMES: Record<Viseme, MouthShape> = {
 };
 export const REST: MouthShape = VISEMES.Rest;
 
-/** Viseme for one character (lowercased, NFD diacritics stripped). Seed: always Rest. */
-export function visemeForChar(_ch: string): Viseme {
-  return 'Rest';
+/** Maps a single normalized character, not arbitrary words. */
+export function visemeForChar(ch: string): Viseme {
+  const c = ch.toLowerCase().normalize('NFD').replace(/\p{M}/gu, '');
+  if (c.length !== 1) return 'Rest';
+  if ('ah'.includes(c)) return 'A';
+  if ('eiy'.includes(c)) return 'E';
+  if (c === 'o') return 'O';
+  if ('uwq'.includes(c)) return 'U';
+  if ('mbp'.includes(c)) return 'M';
+  if ('fv'.includes(c)) return 'F';
+  return 'lntdszckgjrx0123456789'.includes(c) ? 'C' : 'Rest';
 }
 
 /** Index k with starts[k] <= t < ends[k] (binary search), or -1. Seed: always -1. */
-export function charIndexAt(_alignment: Alignment, _t: number): number {
-  return -1;
+export function charIndexAt(alignment: Alignment, t: number): number {
+  if (!Number.isFinite(t)) return -1;
+  let lo = 0, hi = Math.min(alignment.chars.length, alignment.starts.length, alignment.ends.length) - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >>> 1;
+    if (alignment.starts[mid] > t) hi = mid - 1;
+    else lo = mid + 1;
+  }
+  return hi >= 0 && t < alignment.ends[hi] ? hi : -1;
 }
