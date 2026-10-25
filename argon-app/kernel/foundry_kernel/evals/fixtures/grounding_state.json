@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "note": "Fixed company state for the grounding eval. Loader: create the venture via the same code path as POST /v1/ventures (agent_state, channels, integrations), then insert records with these exact ids. Timestamps are fixed.",
+  "venture": {
+    "id": "ven_EVAL0000000000000000000000",
+    "name": "Pantry Pal",
+    "slug": "pantry-pal",
+    "idea": "A web app that tracks what's in your pantry and suggests recipes you can cook with what you already have.",
+    "founder_name": "Alex",
+    "status": "running",
+    "budget_usd": 25.0,
+    "spent_usd": 6.40,
+    "repo_full_name": "alex/foundry-pantry-pal",
+    "repo_url": "https://github.com/alex/foundry-pantry-pal",
+    "created_at": "2026-10-26T09:00:00Z"
+  },
+  "artifacts": [
+    {"id": "art_EVAL_BRIEF", "kind": "brief", "department_id": "intake", "agent_id": "intake.brief-lead", "title": "Brief: Pantry Pal", "summary": "Track pantry items and suggest recipes from what you have.", "content_md": "## Goals\nHelp busy home cooks track pantry items and get recipe suggestions using what they already have.\n## Users\nBusy home cooks who waste food because they forget what they bought.\n## Core features\n1. Add items with quantity and expiry date\n2. Search items\n3. Highlight items expiring soon\n4. Recipe suggestions\n## Non-goals\nGrocery delivery, nutrition tracking.", "created_at": "2026-10-26T09:05:00Z"},
+    {"id": "art_EVAL_SPEC", "kind": "spec", "department_id": "intake", "agent_id": "intake.spec-writer", "title": "Spec: Pantry Pal v1", "summary": "4 acceptance criteria for the first version.", "content_md": "## Acceptance criteria\n- AC-1: Users can add an item with name, quantity and expiry date.\n- AC-2: Search filters items by name, case-insensitive.\n- AC-3: Items expiring within 3 days are highlighted.\n- AC-4: Recipe suggestions list recipes whose ingredients are all in the pantry.", "meta": {"acceptance_criteria": [{"id": "AC-1", "text": "Users can add an item with name, quantity and expiry date."}, {"id": "AC-2", "text": "Search filters items by name, case-insensitive."}, {"id": "AC-3", "text": "Items expiring within 3 days are highlighted."}, {"id": "AC-4", "text": "Recipe suggestions list recipes whose ingredients are all in the pantry."}]}, "created_at": "2026-10-26T09:20:00Z"},
+    {"id": "art_EVAL_MARKET", "kind": "research", "department_id": "market-research", "agent_id": "mr.research-lead", "title": "Market research: pantry & recipe apps", "summary": "Crowded but fragmented market; main competitors Pantry Check, Whisk and Paprika.", "content_md": "## Competitors\n- Pantry Check: $2.99/month, barcode scanning.\n- Whisk: free, recipe saving and shopping lists.\n- Paprika: $4.99 one-time, recipe manager.\n## Demand\nAn estimated 18% of US households use a recipe app weekly (source: example.org/survey-2025, estimate).\n## Risk\nManual data entry is the main reason users abandon pantry apps.", "meta": {"sources": ["https://example.org/survey-2025"]}, "created_at": "2026-10-26T10:10:00Z"},
+    {"id": "art_EVAL_PANEL", "kind": "report", "department_id": "synthetic-population", "agent_id": "sp.panel-analyst", "title": "Synthetic panel results", "summary": "Synthetic — 24 simulated personas; average 'would try' 3.9/5.", "content_md": "Synthetic — simulated personas, not real customers.\n24 personas in 4 segments. Average 'would try' score: 3.9 out of 5. Top objection: typing in every item is tedious (9 of 24 personas). Students were most price-sensitive.", "created_at": "2026-10-26T10:20:00Z"},
+    {"id": "art_EVAL_DECISION", "kind": "decision", "department_id": "pivot", "agent_id": "pv.decision-analyst", "title": "Decision: proceed", "summary": "Proceed with v1 (confidence 0.72); reduce data-entry friction.", "content_md": "Verdict: proceed (confidence 0.72).\nReasons for: clear pain around food waste; synthetic panel interest 3.9/5.\nReasons against: data entry friction is the top objection.\nCondition: v1 must make adding items fast.", "created_at": "2026-10-26T10:40:00Z"},
+    {"id": "art_EVAL_PR7", "kind": "pr", "department_id": "engineering", "agent_id": "eng.builder", "title": "Add pantry search", "summary": "Search filters items by name (case-insensitive). 42/42 tests passed after 2 iterations.", "content_md": "Implements AC-2. 42 of 42 tests passed after 2 iterations. Reviewed by Mina (approve), verified by Ben.", "uri": "https://github.com/alex/foundry-pantry-pal/pull/7", "meta": {"pr_number": 7, "state": "open"}, "created_at": "2026-10-26T12:30:00Z"},
+    {"id": "art_EVAL_BUDGET", "kind": "budget", "department_id": "finance-people", "agent_id": "fp.cfo", "title": "Budget update", "summary": "Spent $6.40 of $25.00.", "content_md": "Spent $6.40 of the $25.00 budget. Engineering $4.10, Market Research $1.30, all other departments $1.00. Projected total for the plan: $14.80.", "created_at": "2026-10-26T12:45:00Z"},
+    {"id": "art_EVAL_POSITIONING", "kind": "doc", "department_id": "growth", "agent_id": "gr.positioning-lead", "title": "Positioning", "summary": "One-liner: Cook with what you already have.", "content_md": "Target user: busy home cooks.\nOne-liner: Cook with what you already have.\nKey message: less food waste, faster dinner decisions.", "created_at": "2026-10-26T11:15:00Z"}
+  ],
+  "tickets": [
+    {"id": "tkt_EVAL_SEARCH", "type": "eng.build", "department_id": "engineering", "assigned_agent_id": "eng.builder", "title": "Search UI", "body": "Implement AC-2: case-insensitive search by name.", "status": "done", "result": {"iterations": 2, "first_pass_passed": false, "tests_passed": 42, "tests_failed": 0}, "created_by": "eng.tech-lead", "created_at": "2026-10-26T11:30:00Z"},
+    {"id": "tkt_EVAL_EXPIRY", "type": "eng.build", "department_id": "engineering", "assigned_agent_id": "eng.builder", "title": "Expiry highlighting", "body": "Implement AC-3: highlight items expiring within 3 days.", "status": "in_progress", "created_by": "eng.tech-lead", "created_at": "2026-10-26T12:35:00Z"},
+    {"id": "tkt_EVAL_QA7", "type": "qa.verify", "department_id": "engineering", "assigned_agent_id": "eng.qa", "title": "Verify PR #7", "body": "Independent acceptance tests for AC-2.", "status": "done", "result": {"acceptance": [{"id": "AC-2", "status": "pass"}]}, "created_by": "eng.tech-lead", "created_at": "2026-10-26T12:32:00Z"},
+    {"id": "tkt_EVAL_LEADS", "type": "leads.icp", "department_id": "lead-intel", "assigned_agent_id": "li.lead-researcher", "title": "ICP for Pantry Pal", "body": "Define the ideal customer profile.", "status": "open", "created_by": "cos.orchestrator", "created_at": "2026-10-26T09:40:00Z"}
+  ],
+  "runs": [
+    {"id": "run_EVAL_EXP1", "ticket_id": "tkt_EVAL_EXPIRY", "agent_id": "eng.builder", "kind": "ticket", "job": "engineering_build", "model": "gemini-4-argon", "status": "running", "output_text": "iteration 1/6: 39 passed, 3 failed (expiry highlight boundary at exactly 3 days)", "created_at": "2026-10-26T12:36:00Z"}
+  ],
+  "approvals": [
+    {"id": "apr_EVAL_MERGE7", "gate_type": "merge", "status": "pending", "title": "Merge PR #7: Add pantry search", "summary": "42/42 tests, reviewed and verified. Ready to merge.", "requested_by_agent_id": "eng.qa", "ticket_id": "tkt_EVAL_QA7", "payload": {"pr_number": 7}, "created_at": "2026-10-26T12:40:00Z"},
+    {"id": "apr_EVAL_OUTREACH", "gate_type": "outreach", "status": "pending", "title": "Send interview invitations (2 drafts)", "summary": "Two invitation drafts for 5 home cooks from the founder's network.", "requested_by_agent_id": "out.outreach-drafter", "payload": {"channel": "email_draft"}, "created_at": "2026-10-26T11:00:00Z"}
+  ],
+  "messages": [
+    {"id": "msg_EVAL_1", "channel_slug": "dept-engineering", "author_kind": "agent", "author_id": "eng.tech-lead", "body": "Expiry highlighting is next; Zara is on it.", "created_at": "2026-10-26T12:36:00Z"},
+    {"id": "msg_EVAL_2", "channel_slug": "exec", "author_kind": "agent", "author_id": "cos.orchestrator", "body": "Plan for Pantry Pal: 16 tickets across 11 departments. First up: market research, synthetic panel, budget.", "created_at": "2026-10-26T09:40:00Z"}
+  ]
+}

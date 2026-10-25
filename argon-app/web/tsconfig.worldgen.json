@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": [
+      "ES2022"
+    ],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "types": []
+  },
+  "include": [
+    "src/world/kit/types.ts",
+    "src/world/buildings/staging/**/*.ts",
+    "src/world/buildings/example/**/*.ts"
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "answer_id": "ans_mock_concierge",
+  "text": "Priya in Market Research wrote the pricing research \u2014 The Observatory, north-east of the plaza. Want to race there or go straight to her?",
+  "citations": [
+    {
+      "kind": "artifact",
+      "id": "art_MOCK_PRICING",
+      "quote": "Pantry Check: $6/month",
+      "label": "Competitor pricing"
+    }
+  ],
+  "check": {
+    "status": "verified",
+    "per_citation": [
+      {
+        "index": 0,
+        "status": "verified",
+        "reason": "exact quote"
+      }
+    ],
+    "reason": ""
+  },
+  "route_card": {
+    "agent_id": "mr.research-lead",
+    "agent_name": "Priya",
+    "agent_title": "Research Lead",
+    "department_id": "market-research",
+    "building_id": "b-market-research",
+    "building_name": "The Observatory",
+    "reason": "Priya wrote the pricing research (art_MOCK_PRICING).",
+    "citations": [
+      {
+        "kind": "artifact",
+        "id": "art_MOCK_PRICING",
+        "quote": "Pantry Check: $6/month",
+        "label": "Competitor pricing"
+      }
+    ]
+  },
+  "latency_ms": 800
+}

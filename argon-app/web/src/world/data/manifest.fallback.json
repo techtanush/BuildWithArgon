@@ -1,0 +1,1343 @@
+{
+  "version": 1,
+  "seed": 1337,
+  "plaza": {
+    "radius": 30.0,
+    "fountain": {
+      "pos": [
+        0,
+        0,
+        0
+      ],
+      "radius": 4.5
+    },
+    "concierge": {
+      "agent_id": "concierge",
+      "pos": [
+        0,
+        0,
+        11.5
+      ],
+      "facing_y": 0
+    },
+    "spawn": {
+      "pos": [
+        0,
+        1.65,
+        16
+      ],
+      "yaw": 0
+    },
+    "car": {
+      "pos": [
+        6,
+        0,
+        18
+      ],
+      "heading": 0
+    }
+  },
+  "roads": {
+    "ring": {
+      "radius": 92.0,
+      "width": 10
+    },
+    "spoke_width": 8,
+    "driveway_width": 6,
+    "nodes": [
+      {
+        "id": "E0",
+        "pos": [
+          0.0,
+          -30.0
+        ]
+      },
+      {
+        "id": "R0",
+        "pos": [
+          0.0,
+          -92.0
+        ]
+      },
+      {
+        "id": "M0",
+        "pos": [
+          22.02,
+          -89.33
+        ]
+      },
+      {
+        "id": "D0",
+        "pos": [
+          0.0,
+          -110.0
+        ]
+      },
+      {
+        "id": "E1",
+        "pos": [
+          13.94,
+          -26.56
+        ]
+      },
+      {
+        "id": "R1",
+        "pos": [
+          42.75,
+          -81.46
+        ]
+      },
+      {
+        "id": "M1",
+        "pos": [
+          61.01,
+          -68.86
+        ]
+      },
+      {
+        "id": "D1",
+        "pos": [
+          51.12,
+          -97.4
+        ]
+      },
+      {
+        "id": "E2",
+        "pos": [
+          24.69,
+          -17.04
+        ]
+      },
+      {
+        "id": "R2",
+        "pos": [
+          75.71,
+          -52.26
+        ]
+      },
+      {
+        "id": "M2",
+        "pos": [
+          86.02,
+          -32.62
+        ]
+      },
+      {
+        "id": "D2",
+        "pos": [
+          90.53,
+          -62.49
+        ]
+      },
+      {
+        "id": "E3",
+        "pos": [
+          29.78,
+          -3.62
+        ]
+      },
+      {
+        "id": "R3",
+        "pos": [
+          91.33,
+          -11.09
+        ]
+      },
+      {
+        "id": "M3",
+        "pos": [
+          91.33,
+          11.09
+        ]
+      },
+      {
+        "id": "D3",
+        "pos": [
+          109.2,
+          -13.26
+        ]
+      },
+      {
+        "id": "E4",
+        "pos": [
+          28.05,
+          10.64
+        ]
+      },
+      {
+        "id": "R4",
+        "pos": [
+          86.02,
+          32.62
+        ]
+      },
+      {
+        "id": "M4",
+        "pos": [
+          75.71,
+          52.26
+        ]
+      },
+      {
+        "id": "D4",
+        "pos": [
+          102.85,
+          39.01
+        ]
+      },
+      {
+        "id": "E5",
+        "pos": [
+          19.89,
+          22.46
+        ]
+      },
+      {
+        "id": "R5",
+        "pos": [
+          61.01,
+          68.86
+        ]
+      },
+      {
+        "id": "M5",
+        "pos": [
+          42.75,
+          81.46
+        ]
+      },
+      {
+        "id": "D5",
+        "pos": [
+          72.94,
+          82.34
+        ]
+      },
+      {
+        "id": "E6",
+        "pos": [
+          7.18,
+          29.13
+        ]
+      },
+      {
+        "id": "R6",
+        "pos": [
+          22.02,
+          89.33
+        ]
+      },
+      {
+        "id": "M6",
+        "pos": [
+          0.0,
+          92.0
+        ]
+      },
+      {
+        "id": "D6",
+        "pos": [
+          26.32,
+          106.8
+        ]
+      },
+      {
+        "id": "E7",
+        "pos": [
+          -7.18,
+          29.13
+        ]
+      },
+      {
+        "id": "R7",
+        "pos": [
+          -22.02,
+          89.33
+        ]
+      },
+      {
+        "id": "M7",
+        "pos": [
+          -42.75,
+          81.46
+        ]
+      },
+      {
+        "id": "D7",
+        "pos": [
+          -26.32,
+          106.8
+        ]
+      },
+      {
+        "id": "E8",
+        "pos": [
+          -19.89,
+          22.46
+        ]
+      },
+      {
+        "id": "R8",
+        "pos": [
+          -61.01,
+          68.86
+        ]
+      },
+      {
+        "id": "M8",
+        "pos": [
+          -75.71,
+          52.26
+        ]
+      },
+      {
+        "id": "D8",
+        "pos": [
+          -72.94,
+          82.34
+        ]
+      },
+      {
+        "id": "E9",
+        "pos": [
+          -28.05,
+          10.64
+        ]
+      },
+      {
+        "id": "R9",
+        "pos": [
+          -86.02,
+          32.62
+        ]
+      },
+      {
+        "id": "M9",
+        "pos": [
+          -91.33,
+          11.09
+        ]
+      },
+      {
+        "id": "D9",
+        "pos": [
+          -102.85,
+          39.01
+        ]
+      },
+      {
+        "id": "E10",
+        "pos": [
+          -29.78,
+          -3.62
+        ]
+      },
+      {
+        "id": "R10",
+        "pos": [
+          -91.33,
+          -11.09
+        ]
+      },
+      {
+        "id": "M10",
+        "pos": [
+          -86.02,
+          -32.62
+        ]
+      },
+      {
+        "id": "D10",
+        "pos": [
+          -109.2,
+          -13.26
+        ]
+      },
+      {
+        "id": "E11",
+        "pos": [
+          -24.69,
+          -17.04
+        ]
+      },
+      {
+        "id": "R11",
+        "pos": [
+          -75.71,
+          -52.26
+        ]
+      },
+      {
+        "id": "M11",
+        "pos": [
+          -61.01,
+          -68.86
+        ]
+      },
+      {
+        "id": "D11",
+        "pos": [
+          -90.53,
+          -62.49
+        ]
+      },
+      {
+        "id": "E12",
+        "pos": [
+          -13.94,
+          -26.56
+        ]
+      },
+      {
+        "id": "R12",
+        "pos": [
+          -42.75,
+          -81.46
+        ]
+      },
+      {
+        "id": "M12",
+        "pos": [
+          -22.02,
+          -89.33
+        ]
+      },
+      {
+        "id": "D12",
+        "pos": [
+          -51.12,
+          -97.4
+        ]
+      }
+    ],
+    "edges": [
+      [
+        "E0",
+        "R0"
+      ],
+      [
+        "R0",
+        "D0"
+      ],
+      [
+        "R0",
+        "M0"
+      ],
+      [
+        "M0",
+        "R1"
+      ],
+      [
+        "E0",
+        "E1"
+      ],
+      [
+        "E1",
+        "R1"
+      ],
+      [
+        "R1",
+        "D1"
+      ],
+      [
+        "R1",
+        "M1"
+      ],
+      [
+        "M1",
+        "R2"
+      ],
+      [
+        "E1",
+        "E2"
+      ],
+      [
+        "E2",
+        "R2"
+      ],
+      [
+        "R2",
+        "D2"
+      ],
+      [
+        "R2",
+        "M2"
+      ],
+      [
+        "M2",
+        "R3"
+      ],
+      [
+        "E2",
+        "E3"
+      ],
+      [
+        "E3",
+        "R3"
+      ],
+      [
+        "R3",
+        "D3"
+      ],
+      [
+        "R3",
+        "M3"
+      ],
+      [
+        "M3",
+        "R4"
+      ],
+      [
+        "E3",
+        "E4"
+      ],
+      [
+        "E4",
+        "R4"
+      ],
+      [
+        "R4",
+        "D4"
+      ],
+      [
+        "R4",
+        "M4"
+      ],
+      [
+        "M4",
+        "R5"
+      ],
+      [
+        "E4",
+        "E5"
+      ],
+      [
+        "E5",
+        "R5"
+      ],
+      [
+        "R5",
+        "D5"
+      ],
+      [
+        "R5",
+        "M5"
+      ],
+      [
+        "M5",
+        "R6"
+      ],
+      [
+        "E5",
+        "E6"
+      ],
+      [
+        "E6",
+        "R6"
+      ],
+      [
+        "R6",
+        "D6"
+      ],
+      [
+        "R6",
+        "M6"
+      ],
+      [
+        "M6",
+        "R7"
+      ],
+      [
+        "E6",
+        "E7"
+      ],
+      [
+        "E7",
+        "R7"
+      ],
+      [
+        "R7",
+        "D7"
+      ],
+      [
+        "R7",
+        "M7"
+      ],
+      [
+        "M7",
+        "R8"
+      ],
+      [
+        "E7",
+        "E8"
+      ],
+      [
+        "E8",
+        "R8"
+      ],
+      [
+        "R8",
+        "D8"
+      ],
+      [
+        "R8",
+        "M8"
+      ],
+      [
+        "M8",
+        "R9"
+      ],
+      [
+        "E8",
+        "E9"
+      ],
+      [
+        "E9",
+        "R9"
+      ],
+      [
+        "R9",
+        "D9"
+      ],
+      [
+        "R9",
+        "M9"
+      ],
+      [
+        "M9",
+        "R10"
+      ],
+      [
+        "E9",
+        "E10"
+      ],
+      [
+        "E10",
+        "R10"
+      ],
+      [
+        "R10",
+        "D10"
+      ],
+      [
+        "R10",
+        "M10"
+      ],
+      [
+        "M10",
+        "R11"
+      ],
+      [
+        "E10",
+        "E11"
+      ],
+      [
+        "E11",
+        "R11"
+      ],
+      [
+        "R11",
+        "D11"
+      ],
+      [
+        "R11",
+        "M11"
+      ],
+      [
+        "M11",
+        "R12"
+      ],
+      [
+        "E11",
+        "E12"
+      ],
+      [
+        "E12",
+        "R12"
+      ],
+      [
+        "R12",
+        "D12"
+      ],
+      [
+        "R12",
+        "M12"
+      ],
+      [
+        "M12",
+        "R0"
+      ],
+      [
+        "E12",
+        "E0"
+      ]
+    ]
+  },
+  "buildings": [
+    {
+      "index": 0,
+      "department_id": "intake",
+      "code": "D01",
+      "building_id": "b-intake",
+      "name": "The Arrivals Hall",
+      "department_name": "Intake",
+      "color": "#E07A3F",
+      "theta": 0.0,
+      "plot_center": [
+        0.0,
+        -132.0
+      ],
+      "rotation_y": 0.0,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D0",
+      "sign_url": "/generated/signs/intake.png",
+      "module": "fallback"
+    },
+    {
+      "index": 1,
+      "department_id": "office-hours",
+      "code": "D02",
+      "building_id": "b-office-hours",
+      "name": "The Clocktower",
+      "department_name": "Office Hours",
+      "color": "#C9A227",
+      "theta": 0.483322,
+      "plot_center": [
+        61.34,
+        -116.88
+      ],
+      "rotation_y": -0.483322,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D1",
+      "sign_url": "/generated/signs/office-hours.png",
+      "module": "fallback"
+    },
+    {
+      "index": 2,
+      "department_id": "market-research",
+      "code": "D03",
+      "building_id": "b-market-research",
+      "name": "The Observatory",
+      "department_name": "Market Research",
+      "color": "#3E7CB1",
+      "theta": 0.966644,
+      "plot_center": [
+        108.63,
+        -74.98
+      ],
+      "rotation_y": -0.966644,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D2",
+      "sign_url": "/generated/signs/market-research.png",
+      "module": "fallback"
+    },
+    {
+      "index": 3,
+      "department_id": "outreach",
+      "code": "D04",
+      "building_id": "b-outreach",
+      "name": "The Telegraph House",
+      "department_name": "Outreach & Validation",
+      "color": "#4FA3A5",
+      "theta": 1.449966,
+      "plot_center": [
+        131.04,
+        -15.91
+      ],
+      "rotation_y": -1.449966,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D3",
+      "sign_url": "/generated/signs/outreach.png",
+      "module": "fallback"
+    },
+    {
+      "index": 4,
+      "department_id": "synthetic-population",
+      "code": "D05",
+      "building_id": "b-synthetic-population",
+      "name": "The Greenhouse",
+      "department_name": "Synthetic Population",
+      "color": "#5FA35F",
+      "theta": 1.933288,
+      "plot_center": [
+        123.42,
+        46.81
+      ],
+      "rotation_y": -1.933288,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D4",
+      "sign_url": "/generated/signs/synthetic-population.png",
+      "module": "fallback"
+    },
+    {
+      "index": 5,
+      "department_id": "pivot",
+      "code": "D06",
+      "building_id": "b-pivot",
+      "name": "The Rotunda",
+      "department_name": "Pivot & Decision",
+      "color": "#8E6CC4",
+      "theta": 2.41661,
+      "plot_center": [
+        87.53,
+        98.8
+      ],
+      "rotation_y": -2.41661,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D5",
+      "sign_url": "/generated/signs/pivot.png",
+      "module": "fallback"
+    },
+    {
+      "index": 6,
+      "department_id": "engineering",
+      "code": "D07",
+      "building_id": "b-engineering",
+      "name": "The Foundry Works",
+      "department_name": "Engineering & Build",
+      "color": "#D0573F",
+      "theta": 2.899932,
+      "plot_center": [
+        31.59,
+        128.16
+      ],
+      "rotation_y": -2.899932,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D6",
+      "sign_url": "/generated/signs/engineering.png",
+      "module": "fallback"
+    },
+    {
+      "index": 7,
+      "department_id": "growth",
+      "code": "D08",
+      "building_id": "b-growth",
+      "name": "The Lighthouse",
+      "department_name": "Strategy & Growth",
+      "color": "#E3B341",
+      "theta": 3.383254,
+      "plot_center": [
+        -31.59,
+        128.16
+      ],
+      "rotation_y": -3.383254,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D7",
+      "sign_url": "/generated/signs/growth.png",
+      "module": "fallback"
+    },
+    {
+      "index": 8,
+      "department_id": "lead-intel",
+      "code": "D09",
+      "building_id": "b-lead-intel",
+      "name": "The Archive",
+      "department_name": "Lead Intelligence",
+      "color": "#6B7FA8",
+      "theta": 3.866576,
+      "plot_center": [
+        -87.53,
+        98.8
+      ],
+      "rotation_y": -3.866576,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D8",
+      "sign_url": "/generated/signs/lead-intel.png",
+      "module": "fallback"
+    },
+    {
+      "index": 9,
+      "department_id": "sales",
+      "code": "D10",
+      "building_id": "b-sales",
+      "name": "The Market Hall",
+      "department_name": "Sales",
+      "color": "#C2477A",
+      "theta": 4.349898,
+      "plot_center": [
+        -123.42,
+        46.81
+      ],
+      "rotation_y": -4.349898,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D9",
+      "sign_url": "/generated/signs/sales.png",
+      "module": "fallback"
+    },
+    {
+      "index": 10,
+      "department_id": "finance-people",
+      "code": "D11",
+      "building_id": "b-finance-people",
+      "name": "The Bank & Guild",
+      "department_name": "Finance & People",
+      "color": "#2F8F6B",
+      "theta": 4.833219,
+      "plot_center": [
+        -131.04,
+        -15.91
+      ],
+      "rotation_y": -4.833219,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D10",
+      "sign_url": "/generated/signs/finance-people.png",
+      "module": "fallback"
+    },
+    {
+      "index": 11,
+      "department_id": "support",
+      "code": "D12",
+      "building_id": "b-support",
+      "name": "The Harbor House",
+      "department_name": "Support & Retention",
+      "color": "#38A3C9",
+      "theta": 5.316541,
+      "plot_center": [
+        -108.63,
+        -74.98
+      ],
+      "rotation_y": -5.316541,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D11",
+      "sign_url": "/generated/signs/support.png",
+      "module": "fallback"
+    },
+    {
+      "index": 12,
+      "department_id": "chief-of-staff",
+      "code": "D13",
+      "building_id": "b-chief-of-staff",
+      "name": "Town Hall",
+      "department_name": "Chief of Staff",
+      "color": "#6C7A99",
+      "theta": 5.799863,
+      "plot_center": [
+        -61.34,
+        -116.88
+      ],
+      "rotation_y": -5.799863,
+      "footprint": [
+        28,
+        28
+      ],
+      "door_node": "D12",
+      "sign_url": "/generated/signs/chief-of-staff.png",
+      "module": "fallback"
+    }
+  ],
+  "npcs": [
+    {
+      "agent_id": "concierge",
+      "building_id": "plaza",
+      "slot": "concierge",
+      "display_name": "Nova",
+      "title": "Concierge",
+      "department_id": "chief-of-staff",
+      "portrait_url": "/generated/portraits/concierge.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "intake.brief-lead",
+      "building_id": "b-intake",
+      "slot": "s1",
+      "display_name": "Iris",
+      "title": "Brief Lead",
+      "department_id": "intake",
+      "portrait_url": "/generated/portraits/intake.brief-lead.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "intake.spec-writer",
+      "building_id": "b-intake",
+      "slot": "s2",
+      "display_name": "Theo",
+      "title": "Spec Writer",
+      "department_id": "intake",
+      "portrait_url": "/generated/portraits/intake.spec-writer.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "oh.skeptic",
+      "building_id": "b-office-hours",
+      "slot": "s1",
+      "display_name": "Mara",
+      "title": "Skeptic",
+      "department_id": "office-hours",
+      "portrait_url": "/generated/portraits/oh.skeptic.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "oh.clarifier",
+      "building_id": "b-office-hours",
+      "slot": "s2",
+      "display_name": "Jun",
+      "title": "Clarifier",
+      "department_id": "office-hours",
+      "portrait_url": "/generated/portraits/oh.clarifier.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "mr.research-lead",
+      "building_id": "b-market-research",
+      "slot": "s1",
+      "display_name": "Priya",
+      "title": "Research Lead",
+      "department_id": "market-research",
+      "portrait_url": "/generated/portraits/mr.research-lead.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "mr.competitor-analyst",
+      "building_id": "b-market-research",
+      "slot": "s2",
+      "display_name": "Leo",
+      "title": "Competitor Analyst",
+      "department_id": "market-research",
+      "portrait_url": "/generated/portraits/mr.competitor-analyst.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "out.interview-designer",
+      "building_id": "b-outreach",
+      "slot": "s1",
+      "display_name": "Sofia",
+      "title": "Interview Designer",
+      "department_id": "outreach",
+      "portrait_url": "/generated/portraits/out.interview-designer.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "out.outreach-drafter",
+      "building_id": "b-outreach",
+      "slot": "s2",
+      "display_name": "Kofi",
+      "title": "Outreach Drafter",
+      "department_id": "outreach",
+      "portrait_url": "/generated/portraits/out.outreach-drafter.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "sp.sim-strategist",
+      "building_id": "b-synthetic-population",
+      "slot": "s1",
+      "display_name": "Noor",
+      "title": "Simulation Strategist",
+      "department_id": "synthetic-population",
+      "portrait_url": "/generated/portraits/sp.sim-strategist.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "sp.panel-analyst",
+      "building_id": "b-synthetic-population",
+      "slot": "s2",
+      "display_name": "Ravi",
+      "title": "Panel Analyst",
+      "department_id": "synthetic-population",
+      "portrait_url": "/generated/portraits/sp.panel-analyst.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "pv.decision-analyst",
+      "building_id": "b-pivot",
+      "slot": "s1",
+      "display_name": "Elena",
+      "title": "Decision Analyst",
+      "department_id": "pivot",
+      "portrait_url": "/generated/portraits/pv.decision-analyst.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "pv.risk-assessor",
+      "building_id": "b-pivot",
+      "slot": "s2",
+      "display_name": "Omar",
+      "title": "Risk Assessor",
+      "department_id": "pivot",
+      "portrait_url": "/generated/portraits/pv.risk-assessor.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "eng.tech-lead",
+      "building_id": "b-engineering",
+      "slot": "s1",
+      "display_name": "Kai",
+      "title": "Tech Lead",
+      "department_id": "engineering",
+      "portrait_url": "/generated/portraits/eng.tech-lead.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "eng.builder",
+      "building_id": "b-engineering",
+      "slot": "s2",
+      "display_name": "Zara",
+      "title": "Builder",
+      "department_id": "engineering",
+      "portrait_url": "/generated/portraits/eng.builder.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "eng.reviewer",
+      "building_id": "b-engineering",
+      "slot": "s3",
+      "display_name": "Mina",
+      "title": "Code Reviewer",
+      "department_id": "engineering",
+      "portrait_url": "/generated/portraits/eng.reviewer.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "eng.qa",
+      "building_id": "b-engineering",
+      "slot": "s4",
+      "display_name": "Ben",
+      "title": "QA Engineer",
+      "department_id": "engineering",
+      "portrait_url": "/generated/portraits/eng.qa.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "gr.positioning-lead",
+      "building_id": "b-growth",
+      "slot": "s1",
+      "display_name": "Lucia",
+      "title": "Positioning Lead",
+      "department_id": "growth",
+      "portrait_url": "/generated/portraits/gr.positioning-lead.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "gr.growth-planner",
+      "building_id": "b-growth",
+      "slot": "s2",
+      "display_name": "Sam",
+      "title": "Growth Planner",
+      "department_id": "growth",
+      "portrait_url": "/generated/portraits/gr.growth-planner.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "li.lead-researcher",
+      "building_id": "b-lead-intel",
+      "slot": "s1",
+      "display_name": "Ines",
+      "title": "Lead Researcher",
+      "department_id": "lead-intel",
+      "portrait_url": "/generated/portraits/li.lead-researcher.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "li.account-mapper",
+      "building_id": "b-lead-intel",
+      "slot": "s2",
+      "display_name": "Tariq",
+      "title": "Account Mapper",
+      "department_id": "lead-intel",
+      "portrait_url": "/generated/portraits/li.account-mapper.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "sa.proposal-writer",
+      "building_id": "b-sales",
+      "slot": "s1",
+      "display_name": "Grace",
+      "title": "Proposal Writer",
+      "department_id": "sales",
+      "portrait_url": "/generated/portraits/sa.proposal-writer.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "sa.pipeline-manager",
+      "building_id": "b-sales",
+      "slot": "s2",
+      "display_name": "Diego",
+      "title": "Pipeline Manager",
+      "department_id": "sales",
+      "portrait_url": "/generated/portraits/sa.pipeline-manager.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "fp.cfo",
+      "building_id": "b-finance-people",
+      "slot": "s1",
+      "display_name": "Hana",
+      "title": "CFO",
+      "department_id": "finance-people",
+      "portrait_url": "/generated/portraits/fp.cfo.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "fp.people-ops",
+      "building_id": "b-finance-people",
+      "slot": "s2",
+      "display_name": "Felix",
+      "title": "People Ops",
+      "department_id": "finance-people",
+      "portrait_url": "/generated/portraits/fp.people-ops.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "su.triager",
+      "building_id": "b-support",
+      "slot": "s1",
+      "display_name": "Yuki",
+      "title": "Support Triager",
+      "department_id": "support",
+      "portrait_url": "/generated/portraits/su.triager.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "su.liaison",
+      "building_id": "b-support",
+      "slot": "s2",
+      "display_name": "Ana",
+      "title": "Customer Liaison",
+      "department_id": "support",
+      "portrait_url": "/generated/portraits/su.liaison.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    },
+    {
+      "agent_id": "cos.orchestrator",
+      "building_id": "b-chief-of-staff",
+      "slot": "s1",
+      "display_name": "Rhea",
+      "title": "Chief of Staff",
+      "department_id": "chief-of-staff",
+      "portrait_url": "/generated/portraits/cos.orchestrator.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": true,
+      "generated": false
+    },
+    {
+      "agent_id": "cos.improvement",
+      "building_id": "b-chief-of-staff",
+      "slot": "s2",
+      "display_name": "Max",
+      "title": "Improvement Engineer",
+      "department_id": "chief-of-staff",
+      "portrait_url": "/generated/portraits/cos.improvement.png",
+      "face": null,
+      "voice_ready": false,
+      "is_lead": false,
+      "generated": false
+    }
+  ]
+}

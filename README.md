@@ -1,16 +1,19 @@
-# BuildWithArgon
+# BuildWithArgon — Foundry × Gemini 4 Argon
 
-**Foundry × Gemini 4 Argon** — a zero-human software company you can walk into: thirteen AI
-departments (an Argon Chief of Staff directing department leads and sub-agents) build and run a
-product, while you watch on a dashboard or enter a 3D town and talk to any agent by voice, with
-every answer cited and verified.
+**Foundry: the zero-human company you can walk into.** A founder gives Foundry an idea; an
+Argon-orchestrated company of 13 departments and 29 agents researches, plans, builds, ships and
+supports it — and the founder can step into a 3D town to talk with any agent face to face.
 
-Built for the Gemini 4 Argon hackathon (Cerebral Valley × Google DeepMind).
+Built for the **Gemini 4 Argon hackathon** (Cerebral Valley × Google DeepMind): Problem Statement 1
+(Million Token Engineering), Problem Statement 2 (More Dimensions) and Best use of Managed Agents.
 
-## Start here
+- **Spec (read first):** [`architecture-files/README.md`](architecture-files/README.md)
+- **App:** [`argon-app/`](argon-app/README.md) — a frozen-contract seed: every module exists with its
+  final interface, shared contracts are frozen, and `make test` is green.
+- **Team split:** [`architecture-files/06-execution/07-team-split.md`](architecture-files/06-execution/07-team-split.md)
 
-- [`architecture-files/README.md`](architecture-files/README.md) — the complete build specification: vision,
-  architecture, data model, API, models and integrations, the 13 departments and how agents
-  coordinate, the dashboard, the 3D world, the 12-hour build plan, acceptance criteria and evals.
-- Application code will live in `argon-app/` (see
-  [`architecture-files/01-architecture/02-repo-layout.md`](architecture-files/01-architecture/02-repo-layout.md)).
+| Builder | Branch | Work order |
+|---|---|---|
+| Tanush — kernel core, company & dashboard | `tanush` | `WORKORDER_TANUSH.md` on that branch |
+| Ayan — models, engineering, integrations & worldgen | `ayan` | `WORKORDER_AYAN.md` on that branch |
+| Mahin — the 3D world | `mahin` | `WORKORDER_MAHIN.md` on that branch |

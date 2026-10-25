@@ -179,15 +179,19 @@ world loads offline); update README with run instructions and links to eval resu
 
 ---
 
-## Parallel version (team of 4, each with a coding agent)
+## Parallel version (our team of 3, each with a coding agent)
 
-| Lane | Owner | Phases |
+Phase 0 is already done: `argon-app/` on `main` is a frozen-contract seed (every module exists with
+its final interface; shared contracts are frozen; `make test` is green). Each person works on their
+own branch and the branches merge once. Full ownership map, cross-branch interfaces and the merge
+checklist: [`07-team-split.md`](07-team-split.md).
+
+| Lane | Owner (branch) | Phases |
 |---|---|---|
-| A — Kernel & company | person 1 | 0, 1, 2, 3, kernel side of 7 (conversation, checker), 9 (grounding eval, loops) |
-| B — Engineering & integrations | person 2 | 1 (S6, Composio, ElevenLabs, Cua probes), 5, 9 (engineering eval, Cua computers), voice kernel side |
-| C — World engine | person 3 | 6, web side of 7 (navigation, race, fast travel, HUD), performance |
-| D — Characters, assets & worldgen | person 4 | 3's background asset jobs, characters + lip-sync (7), 8 (worldgen loop), dashboard Metrics charts |
+| A — Kernel core, company & dashboard | **Tanush** (`tanush`) | 2, 3, 4 (whole dashboard), kernel side of 7 (conversation, checker, manifest route), 9 (grounding eval, improvement loop, metrics) |
+| B — Models, engineering, integrations & worldgen | **Ayan** (`ayan`) | 1, 3's background asset jobs (faces → portraits → textures), 5, voice kernel side of 7, kernel/script side of 8, 9 (engineering eval, support loop, Cua computers) |
+| C — The 3D world | **Mahin** (`mahin`) | 6, web side of 7 (characters, lip-sync, conversation UI, race, fast travel, HUD), web side of 8 (capture page, probes), Town Hall playback, performance |
 
-Dashboard (phase 4) is split: A owns data hooks/SSE + Approvals/Chat; C owns layout/styling; D owns
-Agents/Metrics. Shared contracts that must be agreed in the first 30 minutes and then frozen:
-`schema.sql`, the API contract (OpenAPI → generated types), `kit/types.ts`, FaceSpec, the manifest.
+The frozen contracts (agreed up front, edited only in the merge session): `schema.sql`,
+`contracts.py`, `shared/contracts.ts`, `kit/types.ts`, FaceSpec, `probes/types.ts`, the manifest
+(`world_layout.py`).

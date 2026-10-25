@@ -1,0 +1,67 @@
+id: markdown-toc
+title: Markdown table of contents generator
+brief: |
+  A docs site needs a table of contents for each Markdown page. Build heading extraction, slug
+  generation (with duplicate handling) and TOC rendering.
+api:
+  module: src/lib/toc.ts
+  exports: |
+    export interface TocEntry { level: number; text: string; slug: string }
+    export function slugify(text: string): string;
+    export function buildToc(markdown: string): TocEntry[];
+    export function renderToc(entries: TocEntry[], opts?: { maxLevel?: number }): string;
+acceptance_criteria:
+  - id: AC-1
+    text: "`slugify`: lowercase; remove every character that is not a-z, 0-9, whitespace or '-'; trim; replace each run of whitespace with a single '-'."
+  - id: AC-2
+    text: "A heading is a line starting with 1–6 '#' characters followed by a space (ATX). Its text is the rest of the line with any trailing run of '#' characters (and surrounding spaces) removed, then trimmed. '#NoSpace' is not a heading."
+  - id: AC-3
+    text: Lines inside fenced code blocks (opened and closed by lines starting with ``` or ~~~) are never headings.
+  - id: AC-4
+    text: "Duplicate slugs: the first occurrence keeps the base slug; later occurrences get '-1', '-2', … in order."
+  - id: AC-5
+    text: "`renderToc` outputs one line per entry with level ≤ maxLevel (default 6): two spaces of indentation per level above the minimum level present, then '- [text](#slug)'. Lines joined with '\\n'."
+hidden_tests: |
+  import { describe, it, expect } from 'vitest';
+  import { slugify, buildToc, renderToc } from '../../src/lib/toc';
+
+  describe('markdown-toc hidden', () => {
+    it('slugifies', () => {
+      expect(slugify('Hello World!')).toBe('hello-world');
+      expect(slugify('  Multiple   Spaces ')).toBe('multiple-spaces');
+      expect(slugify('A-B c')).toBe('a-b-c');
+    });
+
+    it('extracts headings with levels', () => {
+      expect(buildToc('# Title\n## Intro\n### Details')).toEqual([
+        { level: 1, text: 'Title', slug: 'title' },
+        { level: 2, text: 'Intro', slug: 'intro' },
+        { level: 3, text: 'Details', slug: 'details' },
+      ]);
+    });
+
+    it('ignores fenced code blocks', () => {
+      expect(buildToc('```\n# not\n```\n# Yes')).toEqual([{ level: 1, text: 'Yes', slug: 'yes' }]);
+      expect(buildToc('~~~\n## x\n~~~')).toEqual([]);
+    });
+
+    it('handles duplicate slugs', () => {
+      expect(buildToc('# A\n# A\n# A').map((e) => e.slug)).toEqual(['a', 'a-1', 'a-2']);
+    });
+
+    it('strips closing hashes and requires a space', () => {
+      expect(buildToc('## Setup ##')).toEqual([{ level: 2, text: 'Setup', slug: 'setup' }]);
+      expect(buildToc('#NoSpace')).toEqual([]);
+    });
+
+    it('renders nested lists with maxLevel', () => {
+      const e = buildToc('# T\n## A\n### B\n## C');
+      expect(renderToc(e)).toBe('- [T](#t)\n  - [A](#a)\n    - [B](#b)\n  - [C](#c)');
+      expect(renderToc(e, { maxLevel: 2 })).toBe('- [T](#t)\n  - [A](#a)\n  - [C](#c)');
+    });
+
+    it('indents relative to the minimum level', () => {
+      const e = buildToc('## A\n### B');
+      expect(renderToc(e)).toBe('- [A](#a)\n  - [B](#b)');
+    });
+  });

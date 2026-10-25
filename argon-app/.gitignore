@@ -1,0 +1,12 @@
+data/*
+!data/.gitkeep
+.env
+**/node_modules
+web/dist
+kernel/.venv
+**/__pycache__
+**/.pytest_cache
+**/.ruff_cache
+test-results/
+playwright-report/
+web/src/world/buildings/staging/*.ts

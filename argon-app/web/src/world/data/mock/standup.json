@@ -1,0 +1,37 @@
+{
+  "root_message_id": "msg_MOCK_ROOT",
+  "created_at": "2026-10-26T14:30:00Z",
+  "updates": [
+    {
+      "agent_id": "mr.research-lead",
+      "text": "Done: market sizing and 5 competitor profiles. Doing: nothing. Blocked: nothing.",
+      "refs": [
+        {
+          "kind": "artifact",
+          "id": "art_MOCK_PRICING"
+        }
+      ]
+    },
+    {
+      "agent_id": "eng.tech-lead",
+      "text": "Done: architecture. Doing: search feature, 2 of 3 tasks built. Blocked: nothing.",
+      "refs": [
+        {
+          "kind": "ticket",
+          "id": "tkt_MOCK_BUILD"
+        }
+      ]
+    },
+    {
+      "agent_id": "gr.positioning-lead",
+      "text": "Done: nothing yet. Doing: positioning. Blocked: waiting on the pricing decision.",
+      "refs": []
+    }
+  ],
+  "decisions": {
+    "agent_id": "cos.orchestrator",
+    "text": "Positioning is P0; pricing decision unblocks it \u2014 Priya to hand off today.",
+    "refs": []
+  },
+  "audio": []
+}

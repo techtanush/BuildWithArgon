@@ -1,0 +1,39 @@
+{
+  "answer_id": "ans_mock",
+  "text": "We priced it at $4 a month because Whisk is free and Pantry Check charges $6 \u2014 the research put us just under the paid competitor.",
+  "citations": [
+    {
+      "kind": "artifact",
+      "id": "art_MOCK_PRICING",
+      "quote": "Pantry Check: $6/month",
+      "label": "Competitor pricing (Leo)"
+    },
+    {
+      "kind": "artifact",
+      "id": "art_MOCK_DECISION",
+      "quote": "Price at $4/month",
+      "label": "Pricing decision"
+    }
+  ],
+  "check": {
+    "status": "verified",
+    "per_citation": [
+      {
+        "index": 0,
+        "status": "verified",
+        "reason": "exact quote"
+      },
+      {
+        "index": 1,
+        "status": "verified",
+        "reason": "exact quote"
+      }
+    ],
+    "reason": ""
+  },
+  "suggested_agent": {
+    "agent_id": "mr.competitor-analyst",
+    "reason": "Leo captured the competitor pricing pages."
+  },
+  "latency_ms": 900
+}

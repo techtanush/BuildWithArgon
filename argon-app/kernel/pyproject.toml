@@ -1,0 +1,38 @@
+[project]
+name = "foundry-kernel"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic>=2.9",
+  "pydantic-settings>=2.6",
+  "aiosqlite>=0.20",
+  "httpx>=0.27",
+  "google-genai>=2.3.0",
+  "python-multipart>=0.0.12",
+  "python-ulid>=3.0",
+  "pyyaml>=6.0",
+  "sse-starlette>=2.1",
+  "pypdf>=5.0",
+  "pillow>=11.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.3", "pytest-asyncio>=0.24", "ruff>=0.7"]
+computers = ["cua"]
+
+[project.scripts]
+foundry-worldgen = "foundry_kernel.worldgen.cli:main"
+foundry-eval = "foundry_kernel.evals.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["foundry_kernel"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

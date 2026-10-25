@@ -1,0 +1,73 @@
+id: habit-streaks
+title: Habit streak calculator
+brief: |
+  A habit tracker shows the user's current streak and longest streak. Completions are stored as
+  calendar dates ("YYYY-MM-DD", no time zone). Build the streak logic.
+api:
+  module: src/lib/streaks.ts
+  exports: |
+    export function currentStreak(dates: string[], today: string): number;
+    export function longestStreak(dates: string[]): number;
+acceptance_criteria:
+  - id: AC-1
+    text: Dates are calendar days in "YYYY-MM-DD" format. Duplicates and input order do not matter.
+  - id: AC-2
+    text: "`currentStreak` counts consecutive completed days ending today; if today is not completed but yesterday is, the streak ends yesterday and is still counted. Otherwise it is 0."
+  - id: AC-3
+    text: Dates after `today` are ignored by `currentStreak`.
+  - id: AC-4
+    text: "`longestStreak` returns the longest run of consecutive days among all dates (0 for none)."
+  - id: AC-5
+    text: Month, year and leap-day boundaries are handled correctly; date math must not be affected by daylight saving time.
+  - id: AC-6
+    text: Both functions throw an Error for any string that is not a real calendar date in the format (e.g. "2026-13-01", "2026-02-30", "26-1-1").
+hidden_tests: |
+  import { describe, it, expect } from 'vitest';
+  import { currentStreak, longestStreak } from '../../src/lib/streaks';
+
+  describe('habit-streaks hidden', () => {
+    it('empty input', () => {
+      expect(currentStreak([], '2026-10-25')).toBe(0);
+      expect(longestStreak([])).toBe(0);
+    });
+
+    it('streak ending today', () => {
+      expect(currentStreak(['2026-10-24', '2026-10-25'], '2026-10-25')).toBe(2);
+    });
+
+    it('streak ending yesterday still counts', () => {
+      expect(currentStreak(['2026-10-23', '2026-10-24'], '2026-10-25')).toBe(2);
+    });
+
+    it('broken streak is zero; longest still found', () => {
+      const d = ['2026-10-20', '2026-10-21', '2026-10-23'];
+      expect(currentStreak(d, '2026-10-25')).toBe(0);
+      expect(longestStreak(d)).toBe(2);
+    });
+
+    it('ignores duplicates and order', () => {
+      expect(currentStreak(['2026-10-25', '2026-10-24', '2026-10-25'], '2026-10-25')).toBe(2);
+    });
+
+    it('crosses month and leap-day boundaries', () => {
+      expect(currentStreak(['2026-09-30', '2026-10-01'], '2026-10-01')).toBe(2);
+      expect(currentStreak(['2028-02-28', '2028-02-29', '2028-03-01'], '2028-03-01')).toBe(3);
+      expect(longestStreak(['2026-12-31', '2027-01-01', '2027-01-02'])).toBe(3);
+    });
+
+    it('crosses a DST change without breaking', () => {
+      expect(longestStreak(['2026-03-07', '2026-03-08', '2026-03-09', '2026-11-01', '2026-11-02'])).toBe(3);
+    });
+
+    it('ignores future dates for the current streak', () => {
+      const d = ['2026-10-25', '2026-10-26'];
+      expect(currentStreak(d, '2026-10-25')).toBe(1);
+      expect(longestStreak(d)).toBe(2);
+    });
+
+    it('rejects invalid dates', () => {
+      expect(() => longestStreak(['2026-13-01'])).toThrow();
+      expect(() => longestStreak(['2026-02-30'])).toThrow();
+      expect(() => currentStreak(['26-1-1'], '2026-10-25')).toThrow();
+    });
+  });

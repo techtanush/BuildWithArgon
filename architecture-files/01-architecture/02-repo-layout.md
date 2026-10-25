@@ -356,3 +356,22 @@ kernel/.venv
 test-results/
 playwright-report/
 ```
+
+## Seed additions (team build)
+
+The frozen-contract seed on `main` adds a few files that are not in the tree above, so the three
+branches can share contracts from hour zero (see [`../06-execution/07-team-split.md`](../06-execution/07-team-split.md)):
+
+| File | Purpose |
+|---|---|
+| `kernel/foundry_kernel/contracts.py` | All cross-module protocols and records (LLM client, handler context, handler result, executor, conversation, voice, manifest, FaceSpec, computers) |
+| `kernel/foundry_kernel/security.py` | `redact()` |
+| `kernel/foundry_kernel/world_layout.py` | Deterministic city layout + manifest builder used by `api/world.py` and `make manifest` |
+| `kernel/foundry_kernel/llm/fake.py`, `kernel/tests/fakes.py` | `FakeLLM` (fixture-driven) and `FakeHandlerContext` |
+| `kernel/foundry_kernel/migrations/` | Per-person migrations on top of `schema.sql` |
+| `web/src/shared/contracts.ts` | TypeScript mirror of the API objects, manifest and SSE events |
+| `web/src/shared/worldApi.ts` | The world's only kernel client, with a `?mock=1` fixture mode |
+| `web/src/world/probes/types.ts` | Capture page ↔ capture script handshake |
+| `web/src/world/buildings/example/house.example.ts` | Reference building module |
+| `web/src/world/data/mock/*.json` | Fixtures for mock mode |
+| `scripts/check_ownership.py`, `docs/{build-logs,decisions,verified,contract-requests}/<name>.md` | Ownership check and per-person logs |
