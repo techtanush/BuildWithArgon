@@ -1,5 +1,5 @@
 # OWNER: tanush
-"""Approved testnet wallet provisioning; no signing, funding or transfer surface."""
+"""Approved wallet provisioning; payments use a separate standing-policy service."""
 from __future__ import annotations
 
 import hashlib
@@ -30,7 +30,7 @@ class AgentWallet(BaseModel):
     wallet_id: str | None
     address: str | None
     approval_id: str
-    network: Literal["base-sepolia"]
+    network: Literal["base-sepolia", "base"]
     created_at: str
     error: str | None
 
@@ -38,10 +38,10 @@ class AgentWallet(BaseModel):
 class WalletsView(BaseModel):
     provider: Literal["privy"] = "privy"
     configured: bool
-    network: Literal["base-sepolia"] = "base-sepolia"
-    chain_id: Literal[84532] = 84532
-    mainnet_enabled: Literal[False] = False
-    spending_enabled: Literal[False] = False
+    network: Literal["base-sepolia", "base"] = "base-sepolia"
+    chain_id: Literal[84532, 8453] = 84532
+    mainnet_enabled: bool = False
+    spending_enabled: bool = False
     wallet_limit: int
     wallets: list[AgentWallet] = Field(default_factory=list)
 
@@ -82,7 +82,7 @@ async def provision_wallet(*, db, provider, configured: bool, wallet_limit: int,
             if not row:
                 await tx.execute("INSERT INTO agent_wallets(id,venture_id,agent_id,external_id,status,network,created_at,updated_at) VALUES(?,?,?,?,'pending_approval',?,?,?)", (wid, venture_id, agent_id, external_identity(venture_id, agent_id), NETWORK, now, now))
             aid = await gates.request_approval(tx, venture_id=venture_id, gate_type="integration", title=f"Create testnet wallet for {agent['display_name']}",
-                summary="Create a Privy wallet for Base Sepolia. Mainnet, funding, signing and spending remain disabled.",
+                summary="Create a Privy EVM wallet. Autonomous payments require a separate founder-approved spending policy and wallet funding.",
                 payload={"purpose": "agent_wallet_create", "provider": "privy", "agent_id": agent_id, "wallet_intent_id": wid, "network": NETWORK}, requested_by_agent_id=agent_id)
             await tx.execute("UPDATE agent_wallets SET approval_id=?,status='pending_approval',error=NULL,updated_at=? WHERE id=?", (aid, now, wid))
             return wallet_view(await tx.fetch_one("SELECT * FROM agent_wallets WHERE id=?", (wid,)))
@@ -124,12 +124,15 @@ async def get_wallets(vid: str, request: Request):
         await get_row(tx, "ventures", vid)
         await recover_claims(tx)
         rows = await tx.fetch_all("SELECT * FROM agent_wallets WHERE venture_id=? ORDER BY created_at,id", (vid,))
-    return {"data": WalletsView(configured=settings.configured and settings.wallet_mode == "testnet", wallet_limit=min(settings.wallet_limit, 50), wallets=[wallet_view(row) for row in rows]).model_dump()}
+    return {"data": WalletsView(configured=settings.configured and settings.wallet_mode != "off",
+        network=settings.network, chain_id=settings.chain_id, mainnet_enabled=settings.wallet_mode == "mainnet",
+        spending_enabled=settings.configured and settings.payments_enabled and settings.wallet_mode != "off",
+        wallet_limit=min(settings.wallet_limit, 50), wallets=[wallet_view(row) for row in rows]).model_dump()}
 
 
 @router.post("/v1/ventures/{vid}/agents/{agent_id}/wallet", response_model=Envelope[AgentWallet])
 async def create_wallet(vid: str, agent_id: str, body: WalletRequest, request: Request):
     settings, provider = dependencies(request)
-    if settings.wallet_mode != "testnet":
+    if settings.wallet_mode == "off":
         raise KernelError(503, "wallet_disabled", "Agent wallet provisioning is disabled on the server")
     return {"data": await provision_wallet(db=request.app.state.db, provider=provider, configured=settings.configured, wallet_limit=settings.wallet_limit, venture_id=vid, agent_id=agent_id)}

@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
-from . import agent_wallets, scheduler, treasury
+from . import agent_wallets, scheduler, treasury, wallet_monitor, wallet_payments
 from .api import ROUTERS
 from .computers import manager as computer_manager
 from .config import Settings, get_settings
@@ -87,10 +87,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app.state.db = db
             app.state.llm = build_llm_client(cfg, db)
             app.state.wallet_settings = WalletSettings()
+            if app.state.wallet_settings.wallet_mode == "mainnet" and not cfg.kernel_token:
+                raise RuntimeError("KERNEL_TOKEN is required before enabling Base mainnet wallet payments")
             app.state.wallet_provider = PrivyClient(app.state.wallet_settings)
+            db._wallet_settings = app.state.wallet_settings
+            db._wallet_provider = app.state.wallet_provider
             await seed_roster(db, cfg)
             await recover_interrupted(db)
-            for hook in (scheduler, github_watch, computer_manager):
+            for hook in (scheduler, github_watch, computer_manager, wallet_monitor):
                 # Register first so a partially started hook also gets cleaned up.
                 cleanup.push_async_callback(hook.stop, app)
                 await hook.start(app)
@@ -144,6 +148,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         app.include_router(module.router)
     app.include_router(treasury.router)
     app.include_router(agent_wallets.router)
+    app.include_router(wallet_payments.router)
     return app
 
 

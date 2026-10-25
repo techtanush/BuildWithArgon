@@ -18,13 +18,13 @@ Read this document first, then [contract requests](../contract-requests/tanush.m
 | Dashboard wiring | All required pages including World Lab, runtime badges/Org, Call adapter/fallback, live logs/chat/mentions/threads, approvals/evidence, settings, metrics and portrait fallbacks | Dashboard unit tests and six real browser scenarios |
 | Evaluation | Fixed fixture loaded through the real venture initializer, injectable answerer, separate gold scorer, every failure retained, raw reports/DB rows, measured metrics and rolling latency | `test_grounding_eval.py`, `test_metrics.py`, committed grounding reports |
 | Treasury | Integer-cent USD proposals, per-payment/day limits, atomic reservations, idempotency, exact approval binding, rejection release; approved proposals remain awaiting a provider | `test_treasury.py`; no payout/charge execution exists |
-| Agent wallets | Optional Privy provisioning, one stable external identity per venture/agent, approval-first creation, global capacity reservations, concurrent/retry/cancellation recovery, strict provider response validation | `test_agent_wallets.py`, `test_wallet_provider.py`, `test_wallet_config.py` |
+| Agent wallets and payments | Privy provisioning plus live balances, founder-approved standing grants, autonomous USDC transfers, exact idempotency/reservations, revocation and background receipt verification | `test_agent_wallets.py`, `test_wallet_payments.py`, `test_wallet_chain.py`, `test_wallet_provider.py`, `test_wallet_config.py`, `test_agent_payment_tools.py` |
 
 The pasted responsibility checklist is covered: agent “Runs on” badges, reporting lines, channels, mentions, threads, typed delegation/ask/handoff/request/standup/escalation, and the dashboard Call panel. Live ElevenLabs sessions/voice/lip-sync remain Karthik's lane; world C-key handling and Town Hall playback remain Mahin's. Engineering/support handlers use this lane's public coordination toolkit when Ayan merges them. Agents coordinate through typed work actions, rather than invented background chatter.
 
 ## Final validation
 
-Final combined `make test`: **339 kernel tests**, frontend typecheck, **91 web tests** passed. **All six browser scenarios** passed against the updated running backend. Scoped fatal-error lint and `git diff --check` passed. Configured-secret scanning and `make ownership WHO=tanush` are required before push, with **zero violations**. Both frozen seed suites remain unchanged. The final build-log entry records the command/environment details; the containing commit is the handoff revision.
+Final combined `make test`: **423 kernel tests**, frontend typecheck, **98 web tests** passed. **All six browser scenarios** passed against the updated running backend. Scoped fatal-error lint and `git diff --check` passed. Configured-secret scanning and `make ownership WHO=tanush` are required before push, with **zero violations**. Both frozen seed suites remain unchanged. The final build-log entry records the command/environment details; the containing commit is the handoff revision.
 
 A local low-disk condition intermittently affected SQLite test setup. Use unique `--basetemp` paths for simultaneous pytest invocations; pytest's shared retention cleanup can also interfere with concurrent runs. The final full suite is run serially. Do not solve disk issues by deleting another person's cache, assets, database or worktree.
 
@@ -57,7 +57,7 @@ These commands are instructions for the session authorized to work on `main`; th
 
 2. Resolve shared dependency additions as a union. Preserve each lane's implementations; do not replace Tanush's scheduler/coordination with seed files. Regenerate lockfiles after all dependency additions. This lane added no dependency for wallet provisioning: it uses the existing `httpx` dependency.
 3. Review every `docs/contract-requests/*.md`. Apply frozen/shared changes only in this merge session. The remaining Lane A requests are listed below. Run the ownership **audit** after merging; per-person branch ownership checks are not meaningful on the combined branch.
-4. Migrations apply automatically on database connection. Back up any useful local database before merging. Keep `schema.sql` frozen. Tanush migrations are `0001_tanush_composio_user_scope.sql`, `0002_tanush_treasury.sql`, `0003_tanush_agent_wallets.sql`; preserve the other lanes' number ranges. Namespaced Composio IDs are `foundry:<venture_id>`.
+4. Migrations apply automatically on database connection. Back up any useful local database before merging. Keep `schema.sql` frozen. Tanush migrations are `0001_tanush_composio_user_scope.sql`, `0002_tanush_treasury.sql`, `0003_tanush_agent_wallets.sql`, `0004_tanush_wallet_payments.sql`; preserve the other lanes' number ranges. Namespaced Composio IDs are `foundry:<venture_id>`.
 5. Add credentials only to the ignored local environment. Rebuild assets, regenerate OpenAPI types, run the full suites and provider smoke tests, then rerun the unchanged live grounding benchmark. Keep older reports.
 6. Rehearse: create venture/upload → brief/plan → concurrent departments → actual engineering review/QA/merge gate → chat/mentions/asks → world route/talk/call → World Lab recorded curve/live round → treasury approval. For wallet provisioning, approve its integration gate and retry the same agent intent; inspect the provider-returned address.
 7. Walk the acceptance criteria and fallback drills. Push the combined branch only after the merge session's checks and review are complete.
@@ -116,15 +116,37 @@ Composio supports [Stripe](https://docs.composio.dev/kb/guide/toolkits-stripe). 
 
 This branch implements `GET /v1/ventures/{vid}/treasury` and `POST .../treasury/proposals`. Amounts are integer USD cents. Defaults are $25 per proposal and $100 per UTC day; pending/approved proposals reserve the allowance atomically. The API returns `available_balance:null` and `status:not_connected` until a verified adapter supplies real account state. An approved proposal ends at `approved_pending_provider`. There is no charge, payout or transfer route. The integration lane must bind a real account, verify exact tool schemas/receipts/idempotency, and retain approvals before adding execution.
 
-### Free-tier Privy agent wallets
+### Privy agent wallets and autonomous payments
 
-Privy's [published Developer tier](https://www.privy.io/pricing) is free at 0–499 MAU, with stated signature/volume allowances. This is a conditional provider tier, not a promise of free mainnet gas or permanent unlimited service. The app defaults to a global 50-wallet provisioning cap, creates no signatures/transactions, and never buys funds, enables a paid plan or sponsors gas. Confirm the chosen Privy app's pricing before providing credentials.
+Privy's [published Developer tier](https://www.privy.io/pricing) is free at 0–499 MAU, with stated usage allowances. The app never activates a paid plan, uses gas sponsorship, purchases funds or collects card details. This is not a promise that mainnet gas or unlimited provider use is free. Testnet tokens have no real monetary value.
 
-- `GET /v1/ventures/{vid}/wallets` exposes public provisioning state only.
-- `POST /v1/ventures/{vid}/agents/{agent_id}/wallet` first requests an integration approval; after approval, retrying the same agent creates/recovers its wallet.
-- Privy REST uses fixed HTTPS endpoints, server Basic auth, stable hashed external IDs, and provider idempotency. Ambiguous creation recovers by external-ID lookup instead of creating another wallet. No private key or provider credential is returned to the browser or model.
-- EVM addresses are **network-agnostic**. `base-sepolia`/chain 84532 describes this app's intended test usage, not a provider-enforced restriction on an address. This app exposes **no funding, signing, RPC, export, mainnet or transfer method**. Do not send real funds to a prototype address.
-- Tests use HTTP mocks and verify exact requests, error recovery, scoping, concurrency, approvals and redaction. After credentials were supplied, one real approval → creation → retry smoke test also passed. The real wallet remains represented in the local preview database; its address was provider-returned, not a fixture.
+The new payment capability supersedes the earlier creation-only scope. The founder creates a wallet, funds its address with **USDC and native ETH on the selected chain**, and approves a standing spending policy once. Agents can then spend inside that exact grant without another human click per payment.
+
+- **Networks:** Base Sepolia (84532) by default; Base mainnet (8453) requires the explicit server setting `WALLET_MODE=mainnet`, a nonempty `KERNEL_TOKEN` (startup rejects unauthenticated mainnet mode), and a separately approved policy for 8453. EVM addresses are network-agnostic; policy and server mode select the network. Do not confuse test USDC with real USDC. `WALLET_MODE=off` stops provisioning and payments; `WALLET_PAYMENTS_ENABLED=false` stops new payments while preserving read-only reconciliation.
+- **Asset and transaction scope:** only Circle's fixed USDC contract, exact ERC20 `transfer` calldata and zero native value. There is no arbitrary smart-contract call, raw signature/private-key export, token approval, swap, fiat/card purchase or fiat bank payout endpoint. Stripe proposals remain separate and do not execute.
+- **Standing grant:** exact venture/agent/wallet, allowed recipient addresses, chain, positive integer USD-cent amounts, per-payment/daily/lifetime limits, maximum gas estimate, and UTC expiry within 30 days. Hard maxima are $25/payment, $100/day and $1,000/grant. The integration approval includes every term and its canonical hash. `gates.require_approved` is rechecked at dispatch. Revocation stops new dispatches; already dispatched transfers cannot be undone. Gas is paid separately in ETH.
+- **Agent path:** `RuntimeContext.pay(policy_id, recipient, amount_minor, purpose, idempotency_key)` binds to the current agent/venture/running run. Artifact handlers can return up to three `payment_requests` with stable merchant invoice references; the server derives retry identity. `wallet.pay` also runs as scheduled CFO work. Its owned extension registry preserves the frozen seed's exact `REGISTRY`; no new frozen type was needed. Fake-mode agents cannot send payments.
+- **Dispatch and retry:** atomic cents reservations span concurrent requests and all policies for a wallet's daily cap; each grant has its own lifetime cap. One unresolved payment per wallet prevents nonce races. Exact repeated requests return the existing intent; changed data under the same key conflicts. Preparation failures release their reservation. Once durable dispatch begins, a timeout, cancellation or crash is treated as uncertain and **never blindly rebroadcast**. Its reservation remains held.
+- **Settlement:** a provider broadcast hash means `submitted`, not paid. A five-second read-only monitor reconciles hashes automatically. `confirmed` requires at least two confirmations, matching chain/from/to/calldata/value/nonce/gas fields, a stable canonical block/receipt, and the matching USDC Transfer event. A proved revert releases the USDC hold; network gas can still have been spent. `POST .../refresh` may accept a candidate `tx_hash` for an uncertain send with no recorded hash; it is stored only after exact on-chain proof, never on an unverified/pending guess. Inspect the provider dashboard if an ambiguous send loses its hash.
+- **Fee checks:** preparation checks real pending balances and nonce, EIP-1559 execution gas, plus conservative Base L1-data/operator fee estimates. Base's additional fees can change after dispatch and have no absolute EVM fee cap; the gas policy is a preflight estimate bound, not a mathematical cap on all future network fees. Actual receipt fees are stored separately from the model API budget.
+- **Funding and evidence:** one real Privy wallet creation/retry passed. Using the user's Comet browser, Circle returned “Tokens sent” for 20 free Base Sepolia test USDC, and an actual chain read confirmed 20,000,000 units. At that check its ETH balance was zero; funded transaction confirmation remains a separate live verification step. The free ETH pages tried in the native browser did not provide a usable claim form; no purchase or paid alternative was used. Provider/chain HTTP mocks cover real request shape, balances, limits, nonce races, cancellation, uncertainty, receipts and tampering. Do not describe mocks as a live transfer.
+
+### Wallet API contract
+
+Prefix: `/v1/ventures/{vid}/agents/{agent_id}/wallet`.
+
+| Method/path | Behavior |
+|---|---|
+| `GET /v1/ventures/{vid}/wallets` | Provisioning records plus configured server network and payment capability flags |
+| `POST <prefix>` | `{}` requests creation approval, then retries approved provisioning |
+| `GET <prefix>/balance` | Live native ETH and USDC units, token contract and chain-specific deposit instructions; unknown/error never becomes a fabricated zero |
+| `GET <prefix>/payments` | Wallet, live balance, policies and latest 100 payment records |
+| `POST <prefix>/policies` | `{chain_id,recipients,per_payment_minor,daily_limit_minor,total_limit_minor,max_gas_fee_wei,expires_at}` creates the exact standing approval |
+| `POST <prefix>/policies/{policy_id}/revoke` | `{}` disables that grant immediately for new dispatch |
+| `POST <prefix>/payments` | `{policy_id,recipient,amount_minor,purpose,idempotency_key}` reserves and executes inside an approved grant |
+| `POST <prefix>/payments/{payment_id}/refresh` | `{}` verifies known hashes; optional `{tx_hash}` proves an unknown-hash recovery |
+
+All responses use the normal `{data: ...}` / error envelope. Amounts are **USDC cents**, converted to six-decimal token units (`amount_minor * 10000`) without floats. Native balances/fees and token unit balances are decimal strings. Statuses are `preparing`, `dispatching`, `submitted`, `confirmed`, `reverted`, `failed`, `uncertain`; failed is not a receipt of payment. Durable events use `wallet.policy.updated` / `wallet.payment.updated`.
 
 ## Credentials — names only
 
@@ -136,7 +158,8 @@ Privy's [published Developer tier](https://www.privy.io/pricing) is free at 0–
 | `ELEVENLABS_AGENT_ID` | Karthik's setup script creates/returns this; not a secret |
 | `PRIVY_APP_ID` | Supplied locally; real approved creation/retry passed |
 | `PRIVY_APP_SECRET` | Supplied locally, server only; real approved creation/retry passed |
-| `WALLET_MODE` | `testnet` by default; `off` disables provisioning |
+| `WALLET_MODE` | `testnet` by default; `mainnet` explicitly selects Base; `off` disables provisioning/payments |
+| `WALLET_PAYMENTS_ENABLED` | Defaults true; false stops new payments while allowing receipt verification |
 | `WALLET_MAX_COUNT` | 50 by default; runtime caps provisioning at 50 globally |
 | `GITHUB_SANDBOX_TOKEN` | Optional private-repo sandbox access |
 | `KERNEL_TOKEN` | Optional local bearer auth; use the owned proxy config |

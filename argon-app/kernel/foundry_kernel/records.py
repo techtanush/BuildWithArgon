@@ -37,6 +37,7 @@ TICKET_DEFAULTS = {
     "leads.icp": ("lead-intel", "li.lead-researcher"),
     "sales.proposal": ("sales", "sa.proposal-writer"),
     "finance.budget": ("finance-people", "fp.cfo"),
+    "wallet.pay": ("finance-people", "fp.cfo"),
     "people.hire": ("finance-people", "fp.people-ops"),
     "support.issue": ("support", "su.triager"),
     "capability.gap": ("chief-of-staff", "cos.improvement"),

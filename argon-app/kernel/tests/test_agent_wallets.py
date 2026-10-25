@@ -1,7 +1,6 @@
 # OWNER: tanush
 """Provider calls require exact approvals; test stubs never represent funded wallets."""
 import asyncio
-from types import SimpleNamespace
 
 import httpx
 import pytest
@@ -15,6 +14,7 @@ from foundry_kernel.agent_wallets import (
     router,
 )
 from foundry_kernel.errors import ConflictError, KernelError
+from foundry_kernel.wallet_config import WalletSettings
 from tests.tanush.helpers import insert_venture
 
 
@@ -131,12 +131,12 @@ async def test_routes_expose_honest_status_and_strict_creation_only_body(db):
     vid, provider = await insert_venture(db), ProviderStub()
     app = FastAPI()
     app.state.db, app.state.wallet_provider = db, provider
-    app.state.wallet_settings = SimpleNamespace(configured=True, wallet_mode="testnet", wallet_limit=50)
+    app.state.wallet_settings = WalletSettings(_env_file=None, privy_app_id="route-test", privy_app_secret="route-secret")
     app.include_router(router)
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
         view = (await client.get(f"/v1/ventures/{vid}/wallets")).json()["data"]
         assert view == {"provider": "privy", "configured": True, "network": "base-sepolia", "chain_id": 84532,
-                        "mainnet_enabled": False, "spending_enabled": False, "wallet_limit": 50, "wallets": []}
+                        "mainnet_enabled": False, "spending_enabled": True, "wallet_limit": 50, "wallets": []}
         path = f"/v1/ventures/{vid}/agents/fp.cfo/wallet"
         assert (await client.post(path, json={"send": 1})).status_code == 422
         pending = (await client.post(path, json={})).json()["data"]

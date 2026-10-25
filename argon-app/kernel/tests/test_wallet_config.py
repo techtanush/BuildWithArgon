@@ -22,9 +22,15 @@ def test_wallet_count_hard_limit(value):
         WalletSettings(_env_file=None, wallet_max_count=value)
 
 
-def test_mainnet_not_an_available_mode():
+def test_mainnet_requires_explicit_mode_and_other_chains_are_not_available():
+    defaults = WalletSettings(_env_file=None)
+    assert defaults.chain_id == 84532 and defaults.network == "base-sepolia" and defaults.payments_enabled
+    mainnet = WalletSettings(_env_file=None, wallet_mode="mainnet")
+    assert mainnet.chain_id == 8453 and mainnet.network == "base" and mainnet.payments_enabled
+    assert not WalletSettings(_env_file=None, wallet_mode="off").payments_enabled
+    assert not WalletSettings(_env_file=None, wallet_payments_enabled=False).payments_enabled
     with pytest.raises(ValidationError):
-        WalletSettings(_env_file=None, wallet_mode="mainnet")
+        WalletSettings(_env_file=None, wallet_mode="ethereum")
 
 
 def test_secret_is_masked_and_nested_storage_redacts_raw_basic_and_encoded():

@@ -5,6 +5,7 @@ import { get, post } from "../../api/client";
 import { invalidateQueries, useQuery } from "../../api/hooks";
 import type { Agent, ListPage } from "../../shared/contracts";
 import { useCompany } from "../context";
+import WalletPayments from "./WalletPayments";
 import {
   Card,
   Empty,
@@ -19,24 +20,24 @@ export interface AgentWallet {
   wallet_id: string | null;
   address: string | null;
   approval_id: string;
-  network: "base-sepolia";
+  network: "base-sepolia" | "base";
   created_at: string;
   error: string | null;
 }
 export interface AgentWalletsData {
   provider: "privy";
   configured: boolean;
-  network: "base-sepolia";
-  chain_id: 84532;
-  mainnet_enabled: false;
-  spending_enabled: false;
+  network: "base-sepolia" | "base";
+  chain_id: 84532 | 8453;
+  mainnet_enabled: boolean;
+  spending_enabled: boolean;
   wallet_limit: number;
   wallets: AgentWallet[];
 }
 const labels = {
   pending_approval: "Approval / setup pending",
   provisioning: "Provisioning wallet…",
-  ready: "Test wallet ready",
+  ready: "Wallet ready",
   error: "Setup failed · retry available",
 };
 export default function AgentWallets() {
@@ -79,12 +80,23 @@ export default function AgentWallets() {
     });
   }
   return (
-    <Card title="Agent test wallets · Privy">
+    <Card title="Agent wallets · Privy">
       <div className="notice">
-        <strong>App policy: testnet only · Base Sepolia (chain 84532).</strong>{" "}
-        Mainnet and spending are disabled in this app. Privy creates a
-        network-agnostic EVM address; Base Sepolia is our intended test network.
-        This app does not fund wallets, sign transactions, or send money.
+        <strong>
+          {query.data
+            ? query.data.network === "base"
+              ? "Base mainnet · real funds"
+              : "Base Sepolia · testnet only"
+            : "Wallet network unavailable"}{" "}
+          (chain {query.data?.chain_id ?? "not loaded"}).
+        </strong>{" "}
+        Privy creates a network-agnostic EVM address.{" "}
+        {query.data
+          ? query.data.spending_enabled
+            ? "USDC spending requires a separate founder-approved standing policy."
+            : "Spending is disabled by the server configuration."
+          : "Spending configuration is not available yet."}{" "}
+        Wallet creation approval alone does not authorize payments.
       </div>
       <ErrorNotice
         error={query.error ?? agents.error ?? action.error}
@@ -147,10 +159,10 @@ export default function AgentWallets() {
                     : active?.status === "provisioning"
                       ? "Provisioning wallet…"
                       : active?.status === "ready"
-                        ? "Test wallet ready"
+                        ? "Wallet ready"
                         : active
                           ? "Retry wallet setup"
-                          : "Create test wallet"}
+                          : "Create wallet"}
                 </button>
                 <button
                   className="button"
@@ -196,7 +208,7 @@ export default function AgentWallets() {
                     <tr>
                       <th>Agent</th>
                       <th>Status</th>
-                      <th>Testnet address</th>
+                      <th>Wallet address</th>
                       <th>Approval</th>
                     </tr>
                   </thead>
@@ -246,10 +258,17 @@ export default function AgentWallets() {
                 </table>
               </div>
             ) : (
-              <Empty title="No agent test wallets created">
+              <Empty title="No agent wallets created">
                 A wallet address appears only after approval and successful
                 provisioning by Privy.
               </Empty>
+            )}
+            {active?.status === "ready" && ventureId && (
+              <WalletPayments
+                key={`${ventureId}:${selected}`}
+                ventureId={ventureId}
+                agentId={selected}
+              />
             )}
           </>
         )

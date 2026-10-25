@@ -10,6 +10,9 @@ import AgentWallets, {
   type AgentWallet,
   type AgentWalletsData,
 } from "../../../src/dashboard/pages/AgentWallets";
+vi.mock("../../../src/dashboard/pages/WalletPayments", () => ({
+  default: () => null,
+}));
 const state = vi.hoisted(() => ({
   post: vi.fn(),
   refresh: vi.fn(),
@@ -99,7 +102,7 @@ it("requires server configuration and shows no invented address or unlimited fre
   expect(element.querySelector("code")).toBeNull();
   expect(
     [...element.querySelectorAll("button")].find(
-      (button) => button.textContent === "Create test wallet",
+      (button) => button.textContent === "Create wallet",
     )!.disabled,
   ).toBe(true);
   expect(element.textContent).not.toContain("unlimited");
@@ -120,7 +123,7 @@ it("records a real integration gate, then displays only the provisioned provider
     configurable: true,
   });
   await render();
-  await click("Create test wallet");
+  await click("Create wallet");
   expect(state.post).toHaveBeenCalledWith(
     "/v1/ventures/ven_test/agents/eng.builder/wallet",
     {},
@@ -131,7 +134,9 @@ it("records a real integration gate, then displays only the provisioned provider
   expect(element.querySelector("code")).toBeNull();
   await click("Retry wallet setup");
   expect(element.querySelector("code")!.textContent).toBe(address);
-  expect(element.textContent).toContain("Mainnet and spending are disabled");
+  expect(element.textContent).toContain(
+    "Spending is disabled by the server configuration",
+  );
   await click("Copy address");
   expect(copy).toHaveBeenCalledWith(address);
 });
@@ -141,7 +146,7 @@ it("shows server errors without manufacturing a wallet and offers refresh", asyn
     new Error("Add Privy App ID and App Secret on the server"),
   );
   await render();
-  await click("Create test wallet");
+  await click("Create wallet");
   expect(element.querySelector('[role="alert"]')!.textContent).toContain(
     "Add Privy App ID and App Secret on the server",
   );
@@ -181,11 +186,9 @@ it("makes wallet integration approval limited to testnet provisioning", async ()
       </MemoryRouter>,
     ),
   );
-  expect(element.textContent).toContain("Privy agent test wallet");
+  expect(element.textContent).toContain("Privy agent wallet");
   expect(element.textContent).toContain("Agent: eng.builder");
-  expect(element.textContent).toContain(
-    "Mainnet, funding, signing, and spending are disabled",
-  );
+  expect(element.textContent).toContain("It does not authorize spending");
   expect(element.textContent).toContain(
     "Approval authorizes wallet provisioning only",
   );

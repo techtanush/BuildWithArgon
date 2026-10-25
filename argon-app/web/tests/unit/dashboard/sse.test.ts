@@ -59,9 +59,10 @@ describe('one resumable stream per venture', () => {
     subscribe('ven_one', listener);
     const source = FakeEventSource.instances[0];
     source.emit(event(7)); source.emit(event(7)); source.emit(event(6)); source.emit(event(8, 'worldgen.progress'));
-    expect(listener.mock.calls.map(([data]) => data.id)).toEqual([7, 8]);
+    source.emit(event(9, 'wallet.policy.updated')); source.emit(event(10, 'wallet.payment.updated'));
+    expect(listener.mock.calls.map(([data]) => data.id)).toEqual([7, 8, 9, 10]);
     source.dispatchEvent(new MessageEvent('ticket.updated', { data: 'invalid JSON' }));
-    expect(listener).toHaveBeenCalledTimes(2);
+    expect(listener).toHaveBeenCalledTimes(4);
   });
 
   it('reports connecting/live/reconnecting, resumes at the last id and resets backoff after opening', () => {

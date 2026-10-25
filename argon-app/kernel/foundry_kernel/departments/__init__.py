@@ -39,7 +39,10 @@ REGISTRY: dict[str, str] = {
     "support.issue": P + "support:SupportHandler",
 }
 
+# Preserve the frozen seed's exact registry while permitting user-requested tools.
+EXTENSION_REGISTRY: dict[str, str] = {"wallet.pay": P + "wallet_payment:WalletPaymentHandler"}
+
 
 def load_handler(ticket_type: str) -> Any:
-    module_name, cls = REGISTRY[ticket_type].split(":")
+    module_name, cls = (REGISTRY | EXTENSION_REGISTRY)[ticket_type].split(":")
     return getattr(importlib.import_module(module_name), cls)()

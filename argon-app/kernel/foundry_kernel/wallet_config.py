@@ -1,5 +1,5 @@
 # OWNER: tanush
-"""Optional, creation-only agent wallet settings; no signing credentials reach the UI."""
+"""Optional agent wallet settings; Base mainnet requires an explicit mode change."""
 from __future__ import annotations
 
 import base64
@@ -20,7 +20,8 @@ class WalletSettings(BaseSettings):
     privy_app_id: str | None = None
     privy_app_secret: SecretStr | None = None
     credential_bundle_password: SecretStr | None = None
-    wallet_mode: Literal["off", "testnet"] = "testnet"
+    wallet_mode: Literal["off", "testnet", "mainnet"] = "testnet"
+    wallet_payments_enabled: bool = True
     wallet_max_count: int = Field(default=50, ge=1, le=100)
 
     @field_validator("privy_app_id")
@@ -53,6 +54,18 @@ class WalletSettings(BaseSettings):
     @property
     def wallet_limit(self) -> int:
         return self.wallet_max_count
+
+    @property
+    def chain_id(self) -> int:
+        return 8453 if self.wallet_mode == "mainnet" else 84532
+
+    @property
+    def network(self) -> str:
+        return "base" if self.wallet_mode == "mainnet" else "base-sepolia"
+
+    @property
+    def payments_enabled(self) -> bool:
+        return self.wallet_mode != "off" and self.wallet_payments_enabled
 
 
 @lru_cache(maxsize=1)

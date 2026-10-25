@@ -35,6 +35,8 @@ const eventTypes = [
   "computer.updated",
   "computer.action",
   "standup.posted",
+  "wallet.policy.updated",
+  "wallet.payment.updated",
 ];
 function notify(stream: Stream, status: StreamStatus) {
   stream.status = status;

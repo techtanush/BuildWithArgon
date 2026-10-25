@@ -169,6 +169,42 @@ class RuntimeContext:
         self.llm = TrackedLLM(db, llm, settings, run_id=run_id, venture_id=venture["id"],
                               agent_id=agent["id"], department_id=agent["department_id"])
 
+    async def wallet_status(self) -> dict:
+        """Expose this agent's wallet and approved spending scope, never credentials."""
+        wallet = await self.db.fetch_one(
+            "SELECT status FROM agent_wallets WHERE venture_id=? AND agent_id=?",
+            (self.venture["id"], self.agent["id"]))
+        if not wallet or wallet["status"] != "ready":
+            return {"status": "not_provisioned", "policies": [], "payments_enabled": False}
+        settings = getattr(self.db, "_wallet_settings", None)
+        provider = getattr(self.db, "_wallet_provider", None)
+        if settings is None or provider is None or self.settings.llm_mode != "live":
+            return {"status": "agent_payments_unavailable", "policies": [], "payments_enabled": False}
+        from ..wallet_payments import overview
+        result = await overview(db=self.db, provider=provider, settings=settings,
+                                venture_id=self.venture["id"], agent_id=self.agent["id"])
+        # Bounded tool context; historical payment purposes are not new instructions.
+        result["payments"] = result.get("payments", [])[:10]
+        return result
+
+    async def pay(self, *, policy_id: str, recipient: str, amount_minor: int,
+                  purpose: str, idempotency_key: str) -> dict:
+        """Pay USDC autonomously inside a founder-approved standing policy."""
+        from ..errors import KernelError
+        from ..wallet_payments import PaymentRequest, pay
+
+        if self.settings.llm_mode != "live":
+            raise KernelError(503, "wallet_agent_fake_mode", "Fake-mode agents cannot send wallet payments")
+        settings = getattr(self.db, "_wallet_settings", None)
+        provider = getattr(self.db, "_wallet_provider", None)
+        if settings is None or provider is None:
+            raise KernelError(503, "wallet_runtime_unavailable", "Wallet payment tools are not configured for this runtime")
+        return await pay(db=self.db, provider=provider, settings=settings,
+                         venture_id=self.venture["id"], agent_id=self.agent["id"], run_id=self.run_id,
+                         request=PaymentRequest(policy_id=policy_id, recipient=recipient,
+                                                amount_minor=amount_minor, purpose=purpose,
+                                                idempotency_key=idempotency_key))
+
     async def log(self, level: str, message: str) -> None:
         if level not in {"debug", "info", "warn", "error"}:
             raise ValueError("Unknown log level")
