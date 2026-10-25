@@ -3,7 +3,8 @@
 **Lane A: kernel core, the company, and the dashboard.** You build the company's brain and its
 source-of-truth UI: database, API, event stream, scheduler, approvals, ledger, 11 of the 13
 departments' handlers, agent coordination and group chat, grounded conversation (talk, concierge,
-citation checker), the world manifest route, the grounding eval, and every dashboard page.
+citation checker), the world manifest route, and every dashboard page. (The grounding eval moved to
+Karthik — keep `conversation.talk.talk` / `conversation.concierge.ask` signatures so it can call them.)
 
 ---
 
@@ -22,7 +23,8 @@ Read these in order (they are on every branch, under `architecture-files/`):
 6. Your sections: `03-company-kernel/01`, `04`–`09` and `departments/*` (skim 02/03 — Ayan's),
    `04-dashboard/01-dashboard-spec.md`, `04-dashboard/02-onboarding.md`,
    `05-world/03-city-layout.md` §Manifest, `05-world/07-npc-conversation.md`, `05-world/08-concierge.md`,
-   `06-execution/04-evals.md` (grounding), `02-models-and-integrations/01-model-routing.md`.
+   `06-execution/04-evals.md` §2 (grounding — Karthik runs it against your talk/concierge),
+   `02-models-and-integrations/01-model-routing.md`.
 7. `argon-app/AGENTS.md` and every seed file you own (they start with `# OWNER: tanush`).
 
 The spec is the contract. If this work order and the spec ever disagree, follow the spec and log it
@@ -47,33 +49,33 @@ cd .. && make dev                                         # kernel :8787, web :5
 (create the ones that don't exist); `departments/prompts/*.md` for every agent **except** `eng.*`
 and `su.*`; `conversation/*`; `api/system.py`, `ventures.py`, `departments.py`, `agents.py`,
 `tickets.py`, `runs.py`, `artifacts.py`, `approvals.py`, `channels.py`, `activity.py`, `stream.py`,
-`conversation.py`, `world.py`, `metrics.py`, `org.py`; `evals/grounding_eval.py`,
-`evals/fixtures/*`; migrations `0001`–`0099` named `NNNN_tanush_<what>.sql`; any **new top-level**
+`conversation.py`, `world.py`, `metrics.py`, `org.py`; migrations `0001`–`0099` named `NNNN_tanush_<what>.sql`; any **new top-level**
 kernel module you need.
 
-**Kernel tests:** everything under `kernel/tests/` except the frozen files and Ayan's
+**Kernel tests:** everything under `kernel/tests/` except the frozen files, Ayan's
 (`tests/ayan/`, `test_fileblocks.py`, `test_computer_guard.py`, `test_worldgen_*`,
-`test_engineering*`, `test_executor*`, `test_voice*`, `test_llm*`, `test_composio*`,
-`test_support*`). FakeLLM fixtures `kernel/tests/fixtures/fake_llm/<job>.json` for every job not
-owned by Ayan (e.g. `orchestrate_plan`, `dept_artifact`, `talk`, `concierge`, `check_citation`,
+`test_engineering*`, `test_executor*`, `test_llm*`, `test_composio*`, `test_support*`) and
+Karthik's (`tests/karthik/`, `test_voice*`, `test_grounding*`). FakeLLM fixtures
+`kernel/tests/fixtures/fake_llm/<job>.json` for every job not owned by Ayan or Karthik (e.g. `orchestrate_plan`, `dept_artifact`, `talk`, `concierge`, `check_citation`,
 `standup_update`, `agent_request`, `spec_write`, `decision_review`, `capability_design`,
 `cos_report`, `summarize`, `route_rank`, `panel_simulation`).
 
 **Web** (`argon-app/web/`): `src/dashboard/**`, `src/api/**` (client, sse, hooks; `schema.d.ts` is
 generated at merge), `src/styles/app.css`, `tests/unit/dashboard/**`, `tests/e2e/dashboard.spec.ts`.
 
-**Results/docs:** `evals/results/grounding-*.json`, `docs/{build-logs,decisions,verified,contract-requests}/tanush.md`.
+**Docs:** `docs/{build-logs,decisions,verified,contract-requests}/tanush.md`.
 
 ## 3. Never touch
 
 Frozen: `schema.sql`, `contracts.py`, `config.py`, `ids.py`, `errors.py`, `security.py`,
 `world_layout.py`, `api/__init__.py`, `evals/cli.py`, `tests/conftest.py`, `tests/fakes.py`,
 `tests/test_seed_contracts.py`, `kernel/data/roster.json`, `web/src/App.tsx`, `main.tsx`,
-`src/shared/contracts.ts`, `styles/tokens.css`, everything under `src/world/` (Mahin's or frozen),
+`src/shared/contracts.ts`, `styles/tokens.css`, everything under `src/world/` (Mahin's, Karthik's or frozen),
 `Makefile`, `AGENTS.md`, `docs/*.md`, `architecture-files/**`.
 Ayan's: `models.py`, `llm/*`, `departments/engineering.py`/`qa.py`/`support.py`, `executors/*`,
-`integrations/*`, `computers/*`, `voice/*`, `worldgen/*`, `api/voice.py`/`integrations.py`/
-`computers.py`/`preview.py`. Need a change there? → `docs/contract-requests/tanush.md`.
+`integrations/*`, `computers/*`, `worldgen/*`, `api/integrations.py`/`computers.py`/`preview.py`.
+Karthik's: `voice/*`, `api/voice.py`, `evals/grounding_eval.py`, `evals/fixtures/*` (read the fixture
+freely in your tests), `kernel/data/voices.json`. Need a change there? → `docs/contract-requests/tanush.md`.
 
 Check before every push: `make ownership WHO=tanush`.
 
@@ -84,7 +86,8 @@ Check before every push: `make ownership WHO=tanush`.
 | LLM calls | `app.state.llm` / `ctx.llm` from `llm.client.build_llm_client(settings, db)`; `generate`, `generate_json(job, prompt, Schema)`; job names in `models.JOBS` | Minimal **working** live client (S1-level); `FakeLLM` in `LLM_MODE=fake` (scriptable: `FakeLLM().script(job, [outputs])`, fixtures by job name) |
 | Engineering + QA + support handlers | `departments.REGISTRY` → `engineering:EngineeringHandler`, `support:SupportHandler` (don't rename those entries) | Fake mode: `eng.design` → creates `eng.build`(ref `build:T1`) → `eng.review` → `qa.verify` → **merge gate** → done. Live mode raises `NotImplementedError` until Ayan's branch lands |
 | Cloud computers | `computers.loop.run_task(settings=, db=, llm=, venture_id=, agent_id=, ticket_id=, goal=, allowed_domains=, start_url=, max_steps=)` | Always returns `status="skipped"` → your caller must fall back (CU-05) |
-| TTS for standup audio | `voice.tts.synthesize(settings=, db=, agent_id=, text=)` → `TtsResponse` | `provider="browser"`, no audio URL |
+| TTS for standup audio (Karthik) | `voice.tts.synthesize(settings=, db=, agent_id=, text=)` → `TtsResponse` | `provider="browser"`, no audio URL |
+| Voice availability per agent (Karthik) | `kernel/data/voices.json` (`agent_id → voice_id`) → manifest `voice_ready` | Missing → all `false` |
 | Startup hooks | `integrations.github_watch.start/stop(app)`, `computers.manager.start/stop(app)` | No-ops — keep calling them from `app.py` lifespan |
 | Layout math | `world_layout.build_manifest(roster, registry=, faces=, voices=, extra_agents=)` | Final; identical to the web's fallback manifest |
 | Redaction | `security.redact(text)` | Final |
@@ -103,8 +106,11 @@ Check before every push: `make ownership WHO=tanush`.
 - `departments.REGISTRY` keys (the seed test checks it equals the spec's ticket types) and the
   `HandlerContext` protocol from `contracts.py`, implemented by your scheduler/coordination.
 - `seed.seed_roster(db, settings)`, `app.create_app(settings)`, module-level `app`.
-- Every route in `01-architecture/04-api-contract.md` (except voice/integrations/computers/preview,
-  which are Ayan's), with the exact response shapes in `web/src/shared/contracts.ts` — Mahin's world
+- `conversation.talk.talk(*, db, llm, settings, venture_id, agent_id, req) -> TalkResponse` and
+  `conversation.concierge.ask(*, db, llm, settings, venture_id, req) -> ConciergeResponse` — Karthik's
+  grounding eval calls them directly (seed stubs already have these signatures).
+- Every route in `01-architecture/04-api-contract.md` (except integrations/computers/preview, which
+  are Ayan's, and voice, which is Karthik's), with the exact response shapes in `web/src/shared/contracts.ts` — Mahin's world
   calls `/v1/world/manifest`, `/agents/{id}/talk`, `/concierge/ask`, `/answers/{id}`,
   `/standups/latest`, `/telemetry/latency`, and the SSE stream (`answer.checked`).
 
@@ -187,17 +193,15 @@ without refresh; approving a gate unblocks its ticket.
    `Manifest` in `contracts.py`; 13 buildings, 52 nodes, 65 edges).
 
 ### Step E — Evals, loops, metrics (Phase 9)
-1. `evals/grounding_eval.py`: load `evals/fixtures/grounding_state.json` into a temp DB, ask every
-   question in `../evals/grounding/questions.yaml` through talk/concierge, score answer + citation
-   accuracy + routing (C-06), write `evals/results/grounding-<timestamp>.json` and `eval_results`
-   rows (V-02). Runs in fake mode for CI; live with a key.
+1. Make sure talk/concierge answer correctly over the Pantry Pal fixture
+   (`evals/fixtures/grounding_state.json`) — Karthik's grounding eval scores them (C-06, V-02).
 2. `api/metrics.py`: `/v1/ventures/{vid}/metrics`, `/v1/evals/latest`, `POST /v1/telemetry/latency`
    (rolling 500 in `kv`, p50/p90).
 3. Improvement loop end to end; hardening; `make test` green.
 
 ## 7. Definition of done
 
-- Acceptance: **K-01…K-11, CO-01…CO-06, D-01…D-05, C-05…C-07 (kernel side), E-09, V-02, V-03**
+- Acceptance: **K-01…K-11, CO-01…CO-06, D-01…D-05, C-05…C-07 (kernel side), E-09, V-03**
   (`06-execution/02-acceptance-criteria.md`).
 - `cd kernel && uv run pytest -q` green (seed tests included); `cd web && pnpm typecheck && pnpm test` green.
 - `make ownership WHO=tanush` clean. Branch pushed.
