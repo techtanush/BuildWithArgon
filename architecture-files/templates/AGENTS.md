@@ -6,14 +6,14 @@ autonomous engineering loop and its baseline eval, **Problem Statement 2 (More D
 the generated 3D town and its render → critique → fix loop, and the **Best use of Managed Agents**
 prize with the Argon-orchestrated department agents (Antigravity sandboxes, Cua computers). Judges
 score working, live demos against Google's four tests (named user, needed Argon, people in control,
-live in under 3 minutes) — build for that. Details: `argon-spec/README.md` §Why we're building this.
+live in under 3 minutes) — build for that. Details: `architecture-files/README.md` §Why we're building this.
 
 You are building **Foundry: the zero-human company you can walk into**. The full specification is
-in `../argon-spec/`. Start with `../argon-spec/README.md`.
+in `../architecture-files/`. Start with `../architecture-files/README.md`.
 
 ## Rules
 
-1. Read `argon-spec/README.md`, `00-overview/` and `01-architecture/` before writing code; read
+1. Read `architecture-files/README.md`, `00-overview/` and `01-architecture/` before writing code; read
    your phase's section before each file.
 2. The spec is the contract: exact paths, IDs, endpoints, tables, values. Deviations go in
    `docs/DECISIONS.md` with a reason.
@@ -31,7 +31,7 @@ in `../argon-spec/`. Start with `../argon-spec/README.md`.
 11. Commit worldgen runs, eval results and the build log — they are evidence.
 12. Use they/them for agents and people in generated copy unless told otherwise.
 13. The old Foundry code in this repo (`../backend`, `../src`, `../api`) is **not** a dependency. Follow
-    `argon-spec/reference/foundry-existing-repo-notes.md` for the few helpers you may adapt and the
+    `architecture-files/reference/foundry-existing-repo-notes.md` for the few helpers you may adapt and the
     many things you must not take (Simit/Sim Francisco, Port, Bright Data, SigNoz, OpenAI code).
 
 ## Commands

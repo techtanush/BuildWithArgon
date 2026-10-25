@@ -1,5 +1,5 @@
 # Grounding eval questions over templates/grounding-fixture.json ("Pantry Pal").
-# Scoring rules: argon-spec/06-execution/04-evals.md §2.
+# Scoring rules: architecture-files/06-execution/04-evals.md §2.
 # must_include_any: every inner list is a group of alternatives; each group must match (case-insensitive).
 
 - id: G-01

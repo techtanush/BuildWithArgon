@@ -96,7 +96,7 @@ These identifiers are used across all files. If you see a conflict, this table w
 
 | Thing | Value |
 |---|---|
-| Spec folder | `argon-spec/` |
+| Spec folder | `architecture-files/` |
 | App folder | `argon-app/` |
 | Kernel (backend) | Python 3.11+, FastAPI, package `foundry_kernel`, port **8787** |
 | Web (dashboard + world) | Vite 6 + React 18 + TypeScript 5 + Three.js, port **5173** |

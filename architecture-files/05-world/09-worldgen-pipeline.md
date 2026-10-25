@@ -169,7 +169,7 @@ one at a time with job `worldgen_building` (same prompt, one building, plus the 
 files' exterior sections as consistency context).
 
 The reference image is attached as an image part (VERIFY V2). Convert
-`argon-spec/assets/reference-bedroom.webp` to PNG with Pillow first (`worldgen/assets.py`).
+`architecture-files/assets/reference-bedroom.webp` to PNG with Pillow first (`worldgen/assets.py`).
 
 ## Validation (`worldgen/validate.py` + `web/src/world/kit/validateModule.ts`)
 

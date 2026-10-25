@@ -9,8 +9,8 @@ Built for the Gemini 4 Argon hackathon (Cerebral Valley × Google DeepMind).
 
 ## Start here
 
-- [`argon-spec/README.md`](argon-spec/README.md) — the complete build specification: vision,
+- [`architecture-files/README.md`](architecture-files/README.md) — the complete build specification: vision,
   architecture, data model, API, models and integrations, the 13 departments and how agents
   coordinate, the dashboard, the 3D world, the 12-hour build plan, acceptance criteria and evals.
 - Application code will live in `argon-app/` (see
-  [`argon-spec/01-architecture/02-repo-layout.md`](argon-spec/01-architecture/02-repo-layout.md)).
+  [`architecture-files/01-architecture/02-repo-layout.md`](architecture-files/01-architecture/02-repo-layout.md)).

@@ -40,4 +40,4 @@ stub modules so the architecture shows where they plug in:
 | Additional Composio toolkits (Slack, Gmail, Linear) | `integrations/composio.py` `ALLOWED_TOOLKITS = {"github"}` | Expand the allowlist only with a recorded decision |
 | MCP servers for agents | `executors/antigravity.py` `MCP_SERVERS: list[dict] = []` | Antigravity can call MCP tools (guide); none configured in this build |
 
-Each stub raises `NotImplementedError("planned: see argon-spec/02-models-and-integrations/08")`.
+Each stub raises `NotImplementedError("planned: see architecture-files/02-models-and-integrations/08")`.

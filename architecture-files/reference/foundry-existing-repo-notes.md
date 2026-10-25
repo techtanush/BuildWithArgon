@@ -21,7 +21,7 @@ from the old code, how, and what they must not take.
 5. **Never copy secrets, URLs or account-specific values** (e.g. the old Vercel bridge host, old
    tokens, old default model names).
 6. When you reuse something, add a one-line comment at the top of the new file:
-   `# Adapted from foundry (Zero Downtime build): <old path> — see argon-spec/reference/foundry-existing-repo-notes.md`.
+   `# Adapted from foundry (Zero Downtime build): <old path> — see architecture-files/reference/foundry-existing-repo-notes.md`.
 
 ## TAKE — adapt these (with the changes listed)
 

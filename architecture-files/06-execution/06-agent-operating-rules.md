@@ -3,7 +3,7 @@
 These rules are also in [`../templates/AGENTS.md`](../templates/AGENTS.md), which is copied to
 `argon-app/AGENTS.md` so any coding agent working in the app reads them first.
 
-1. **Read before you build.** Read `argon-spec/README.md`, all of `00-overview/` and
+1. **Read before you build.** Read `architecture-files/README.md`, all of `00-overview/` and
    `01-architecture/`, then the section for your phase. Re-read the relevant section before each
    file you write.
 2. **The spec is the contract.** Use the exact paths, IDs, endpoint shapes, table names and values

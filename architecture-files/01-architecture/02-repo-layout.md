@@ -1,17 +1,17 @@
 # 02 — Repository Layout (exact)
 
 Create exactly this tree under `argon-app/`. Files marked *(gen)* are produced by a tool, not
-hand-written. Files marked *(copy)* are copied verbatim from `argon-spec/templates/`.
+hand-written. Files marked *(copy)* are copied verbatim from `architecture-files/templates/`.
 
 ```
 argon-app/
 ├── Makefile
-├── README.md                      # how to run; links to argon-spec/
+├── README.md                      # how to run; links to architecture-files/
 ├── AGENTS.md                      # (copy) templates/AGENTS.md — rules for coding agents
 ├── .gitignore
 ├── .env.example                   # (copy) templates/env.example
 ├── docs/
-│   ├── DECISIONS.md               # ADRs from argon-spec/00-overview/04-decisions.md + new ones
+│   ├── DECISIONS.md               # ADRs from architecture-files/00-overview/04-decisions.md + new ones
 │   ├── VERIFIED_API_SHAPES.md     # every VERIFY item, confirmed shape + date + source
 │   ├── BUILD_LOG.md               # phase checkpoints, timings, failures, fixes
 │   └── DESIGN.md                  # (copy) templates/DESIGN.md — visual rules for the world

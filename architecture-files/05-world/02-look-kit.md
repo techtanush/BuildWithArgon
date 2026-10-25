@@ -8,7 +8,7 @@ The look kit is the fixed rendering setup, materials and primitive API that ever
 
 ![Reference render](../assets/reference-bedroom.webp)
 
-`argon-spec/assets/reference-bedroom.webp` — the target look for every **interior**. What makes it
+`architecture-files/assets/reference-bedroom.webp` — the target look for every **interior**. What makes it
 work, and what we replicate:
 
 | Quality | How |
