@@ -48,7 +48,8 @@ class LLMResult:
     estimated_cost: bool = True
     latency_ms: int = 0
     raw_status: str = "completed"
-    images: list[tuple[bytes, str]] = field(default_factory=list)
+    images: list[tuple[bytes, str]] = field(default_factory=list)  # (bytes, mime) — Nano Banana
+    audio: list[tuple[bytes, str]] = field(default_factory=list)  # (bytes, mime) — Gemini TTS (job tts_fallback)
 
 
 ProgressFn = Callable[[str], Awaitable[None]]
