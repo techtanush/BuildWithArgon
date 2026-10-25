@@ -1,5 +1,8 @@
 # 07 — Talking to Agents in the World
 
+> **Also:** while engaged, **C** switches to a live voice call with the agent (ElevenLabs Agents,
+> `02-models-and-integrations/12-elevenlabs-voice-agents.md`); push-to-talk stays the default and the fallback.
+
 ## State machine (`conversation/ConversationController.ts`)
 
 ```

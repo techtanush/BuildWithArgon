@@ -96,6 +96,9 @@ verify it. Record results in `argon-app/docs/BUILD_LOG.md` as a table (ID, statu
 | C-07 | Agents refuse to take gated actions and point to the dashboard approval | grounding eval items G-15, G-16 |
 | C-08 | Voice fallbacks: no ElevenLabs key → Gemini TTS or browser voice, mouth still moves | drill |
 | C-09 | Latency p50 (release V → first audio) ≤ 2.5 s, p90 ≤ 4 s | Metrics latency panel |
+| C-10 | Live voice call with any agent from the world (C) and the dashboard (Call): interruptible, the agent's own voice, factual answers via `ask_company` with source cards and checks, mouth moves | manual, live keys |
+| C-11 | Voice calls unavailable (no key/agent id, token failure, mic denied) → clear message and push-to-talk/typing still work | drill |
+| C-12 | Agents and Org pages show each agent's runtime (jobs → models, managed agents, tools, gates) from `agent_capabilities.json` | e2e |
 
 ## Worldgen
 
