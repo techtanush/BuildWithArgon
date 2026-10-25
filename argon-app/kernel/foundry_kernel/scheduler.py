@@ -134,6 +134,30 @@ class Scheduler:
             venture = await get_row(tx, "ventures", ticket["venture_id"])
             if ticket["status"] != "open" or venture["status"] != "running":
                 return
+            # Candidate reads in tick() can become stale before this transaction.
+            # Recheck durable dispatch guards atomically with claiming the ticket;
+            # public/manual dispatch must follow the same constraints as the loop.
+            if venture["spent_usd"] >= venture["budget_usd"]:
+                await ledger.ensure_spend_approval(tx, venture["id"])
+                return
+            dependency = await tx.fetch_one("SELECT d.depends_on_id FROM ticket_deps d JOIN tickets p ON p.id=d.depends_on_id WHERE d.ticket_id=? AND p.status NOT IN ('done','cancelled') LIMIT 1", (ticket_id,))
+            payload = json_loads_or(ticket["payload_json"], {})
+            retry_at = payload.get("_retry_at")
+            if dependency or (retry_at and retry_at > utc_now()):
+                return
+            pause = await tx.fetch_one("SELECT value_json FROM kv WHERE key=?", (f"dept.paused.{venture['id']}.{ticket['department_id']}",))
+            if pause and json_loads_or(pause["value_json"], False):
+                return
+            active = await tx.fetch_all("SELECT venture_id,department_id,assigned_agent_id,type FROM tickets WHERE status='in_progress'")
+            if len(active) >= self.settings.scheduler_concurrency:
+                return
+            own = [row for row in active if row["venture_id"] == venture["id"]]
+            if sum(row["department_id"] == ticket["department_id"] for row in own) >= 2:
+                return
+            if any(row["assigned_agent_id"] == ticket["assigned_agent_id"] for row in own):
+                return
+            if ticket["type"] in {"eng.build", "eng.fix"} and any(row["type"] in {"eng.build", "eng.fix"} for row in own):
+                return
             agent = await get_row(tx, "agents", ticket["assigned_agent_id"])
             run_id, now = new_id("run"), utc_now()
             name = ticket_job(ticket, agent)
@@ -351,7 +375,7 @@ class Scheduler:
                     await tx.execute("UPDATE tickets SET parent_ticket_id=? WHERE id=?", (current["id"], gap_ticket["id"]))
             if result.approval:
                 approval = result.approval
-                pending_spend = await tx.fetch_one("SELECT * FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' ORDER BY created_at LIMIT 1", (current["venture_id"],)) if approval.gate_type == "spend" else None
+                pending_spend = await tx.fetch_one("SELECT * FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' AND COALESCE(json_extract(payload_json,'$.purpose'),'')<>'treasury_payment' ORDER BY created_at LIMIT 1", (current["venture_id"],)) if approval.gate_type == "spend" else None
                 if pending_spend:
                     existing_payload = json_loads_or(pending_spend["payload_json"], {})
                     amount = max(existing_payload.get("requested_increase_usd", 0), approval.payload.get("requested_increase_usd", 0))

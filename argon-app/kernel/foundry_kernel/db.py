@@ -15,6 +15,7 @@ import aiosqlite
 
 from .config import Settings, get_settings
 from .security import SECRET_FIELDS, redact
+from .wallet_config import secret_literals as wallet_secret_literals
 
 SCHEMA = Path(__file__).with_name("schema.sql")
 MIGRATIONS = Path(__file__).with_name("migrations")
@@ -41,6 +42,8 @@ def redact_value(value: Any, settings: Settings | None = None) -> Any:
             literal = secret.get_secret_value() if secret else ""
             if literal:
                 value = value.replace(literal, "[REDACTED]")
+        for literal in wallet_secret_literals():
+            value = value.replace(literal, "[REDACTED]")
         return value
     if isinstance(value, dict):
         return {redact_value(k, cfg): redact_value(v, cfg) for k, v in value.items()}
@@ -107,11 +110,23 @@ class Database:
         if self._conn is not None:
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self._conn = await aiosqlite.connect(self.path, isolation_level=None, timeout=10.0)
-        self._conn.row_factory = aiosqlite.Row
-        for pragma in ("foreign_keys = ON", "busy_timeout = 5000", "journal_mode = WAL", "synchronous = NORMAL"):
-            await self._conn.execute(f"PRAGMA {pragma}")
-        await self._migrate()
+        connection = aiosqlite.connect(self.path, isolation_level=None, timeout=10.0)
+        try:
+            self._conn = await connection
+            self._conn.row_factory = aiosqlite.Row
+            for pragma in ("foreign_keys = ON", "busy_timeout = 5000", "journal_mode = WAL", "synchronous = NORMAL"):
+                await self._conn.execute(f"PRAGMA {pragma}")
+            await self._migrate()
+        except BaseException:
+            # Failed startup never leaves a worker thread or a half-ready handle.
+            # In particular disk I/O errors occur before lifespan can reach close().
+            self._conn = None
+            closing = asyncio.create_task(connection.close())
+            try:
+                await asyncio.shield(closing)
+            except asyncio.CancelledError:
+                await closing
+            raise
 
     async def close(self) -> None:
         async with self._lock:

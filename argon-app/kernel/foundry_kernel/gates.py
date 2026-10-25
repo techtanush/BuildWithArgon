@@ -82,7 +82,10 @@ async def decide(db: Any, approval_id: str, *, decision: str, decided_by: str,
         await tx.execute("UPDATE approvals SET status=?,decided_by=?,decision_note=?,decided_at=? WHERE id=?",
                          (status, decided_by, note, utc_now(), approval_id))
         if approval["gate_type"] == "spend":
-            if decision == "approve":
+            if json.loads(approval["payload_json"]).get("purpose") == "treasury_payment":
+                from .treasury import apply_decision
+                await apply_decision(tx, approval, decision)
+            elif decision == "approve":
                 await ledger.raise_cap(tx, approval_id)
             else:
                 await tx.execute("UPDATE ventures SET status='paused',updated_at=? WHERE id=?",

@@ -146,3 +146,23 @@ it("renders baseline comparisons only from recorded hidden-test evidence and pre
     "false",
   );
 });
+
+it("labels failed live evaluations without claiming fake answers or live capability", async () => {
+  responses.set("/v1/ventures/ven_test/metrics", {
+    grounding: {
+      n: 30,
+      accuracy: 0,
+      answerer: "live",
+      capability_evidence: false,
+    },
+  });
+  await render();
+  expect(element.textContent).toContain("Live evidence unavailable");
+  expect(element.textContent).toContain(
+    "No successful live model call was recorded.",
+  );
+  expect(element.textContent).not.toContain("Implementation check only");
+  expect(element.textContent).toContain(
+    "This is not live model quality evidence.",
+  );
+});

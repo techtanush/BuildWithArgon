@@ -85,6 +85,7 @@ function Composer({
       <label>
         {root ? "Reply to thread" : "Message the team"}
         <textarea
+          disabled={action.working}
           value={body}
           onChange={(event) => setBody(event.target.value)}
           rows={root ? 2 : 3}
@@ -175,10 +176,40 @@ function MessageItem({
 function Thread({ channelId, root }: { channelId: string; root: string }) {
   const key = `/v1/channels/${channelId}/messages?thread_root_id=${encodeURIComponent(root)}`;
   const query = useQuery<ListPage<Message>>(key, () => get(key));
+  const [older, setOlder] = useState<Message[]>([]),
+    [cursor, setCursor] = useState<string | null>(null),
+    action = useAction();
+  async function loadOlder() {
+    const next = cursor ?? query.data?.next_cursor;
+    if (!next) return;
+    await action.run(async () => {
+      const page = await get<ListPage<Message>>(
+        `${key}&cursor=${encodeURIComponent(next)}`,
+      );
+      setOlder((old) => [...page.items, ...old]);
+      setCursor(page.next_cursor ?? "");
+    });
+  }
   return (
     <div className="thread-panel">
-      <ErrorNotice error={query.error} retry={query.refetch} />
-      {query.data?.items.map((message) => (
+      <ErrorNotice error={query.error ?? action.error} retry={query.refetch} />
+      {(cursor === null ? query.data?.next_cursor : cursor) && (
+        <button
+          className="button small"
+          disabled={action.working}
+          onClick={() => void loadOlder()}
+        >
+          Load earlier replies
+        </button>
+      )}
+      {[
+        ...new Map(
+          [...older, ...(query.data?.items ?? [])].map((message) => [
+            message.id,
+            message,
+          ]),
+        ).values(),
+      ].map((message) => (
         <MessageItem
           key={message.id}
           message={message}
@@ -251,18 +282,20 @@ export function ChannelView({ channelId }: { channelId: string }) {
                 Load earlier messages
               </button>
             )}
-            {[...older, ...(query.data?.items ?? [])]
-              .filter(
-                (message, index, all) =>
-                  all.findIndex((m) => m.id === message.id) === index,
-              )
-              .map((message) => (
-                <MessageItem
-                  key={message.id}
-                  message={message}
-                  channelId={channelId}
-                />
-              ))}
+            {[
+              ...new Map(
+                [...older, ...(query.data?.items ?? [])].map((message) => [
+                  message.id,
+                  message,
+                ]),
+              ).values(),
+            ].map((message) => (
+              <MessageItem
+                key={message.id}
+                message={message}
+                channelId={channelId}
+              />
+            ))}
             {!query.data?.items.length && (
               <Empty title="The conversation starts here">
                 Updates, handoffs and your messages will appear in this channel.

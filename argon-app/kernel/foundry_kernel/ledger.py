@@ -17,7 +17,7 @@ async def record(tx: Any, *, venture_id: str | None, kind: str, cost_usd: float,
                  units_in: int = 0, units_out: int = 0, estimated: bool = True) -> None:
     if not math.isfinite(cost_usd) or cost_usd < 0 or units_in < 0 or units_out < 0:
         raise ConflictError("Cost and usage must be finite and non-negative")
-    if run_id and venture_id:
+    if run_id:
         run = await tx.fetch_one("SELECT venture_id FROM runs WHERE id=?", (run_id,))
         if run is None or run["venture_id"] != venture_id:
             raise ConflictError("Ledger entry and run must belong to the same venture")
@@ -42,7 +42,7 @@ async def over_budget(db: Any, venture_id: str) -> bool:
 
 async def ensure_spend_approval(tx: Any, venture_id: str) -> str:
     """Serialize callers through db.tx(): one open budget decision per venture."""
-    pending = await tx.fetch_one("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending'",
+    pending = await tx.fetch_one("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' AND COALESCE(json_extract(payload_json,'$.purpose'),'')<>'treasury_payment'",
                                  (venture_id,))
     if pending:
         return pending["id"]

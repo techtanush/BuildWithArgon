@@ -12,6 +12,7 @@ from ..errors import ConflictError, NotFoundError
 from ..ids import new_id, utc_now
 
 MAX_RECORDS, MAX_CHARACTERS = 24, 30_000
+MAX_RECORD_CHARACTERS = 6_000
 STOPWORDS = frozenset({"what", "which", "where", "when", "with", "about", "this", "that", "have", "been", "from", "were", "your", "they", "their", "does", "there", "company", "could", "would", "please"})
 
 
@@ -57,7 +58,7 @@ async def build_context_pack(*, db: Any, venture_id: str, agent_id: str, questio
         available = MAX_CHARACTERS - length - len(header) - (2 if rendered else 0)
         if available < 100:
             return
-        text = str(redact_value(text if text is not None else record_text(row), getattr(db, "settings", None)))[:available]
+        text = str(redact_value(text if text is not None else record_text(row), getattr(db, "settings", None)))[:min(available, MAX_RECORD_CHARACTERS)]
         records.append({"ref": ref, "kind": kind, "id": identifier, "title": title, "text": text})
         rendered.append(header + text)
         length += len(header) + len(text) + (2 if len(rendered) > 1 else 0)

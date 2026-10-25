@@ -16,7 +16,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from starlette.exceptions import HTTPException
 
-from . import scheduler
+from . import agent_wallets, scheduler, treasury
 from .api import ROUTERS
 from .computers import manager as computer_manager
 from .config import Settings, get_settings
@@ -26,6 +26,8 @@ from .ids import utc_now
 from .integrations import github_watch
 from .llm.client import build_llm_client
 from .seed import seed_roster
+from .wallet_config import WalletSettings
+from .wallet_provider import PrivyClient
 
 
 class HealthData(BaseModel):
@@ -84,6 +86,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             app.state.settings = cfg
             app.state.db = db
             app.state.llm = build_llm_client(cfg, db)
+            app.state.wallet_settings = WalletSettings()
+            app.state.wallet_provider = PrivyClient(app.state.wallet_settings)
             await seed_roster(db, cfg)
             await recover_interrupted(db)
             for hook in (scheduler, github_watch, computer_manager):
@@ -138,6 +142,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     for module in ROUTERS:
         app.include_router(module.router)
+    app.include_router(treasury.router)
+    app.include_router(agent_wallets.router)
     return app
 
 

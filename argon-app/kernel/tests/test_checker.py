@@ -153,3 +153,24 @@ async def test_model_check_cancellation_propagates_and_lifespan_cleanup_cancels_
     db._answer_checks = {task}
     await stop_answer_checks(db)
     assert task.cancelled()
+
+
+async def test_interrupted_background_check_marks_pending_answer_error(db,settings):
+    vid,_,pack,source=await evidence(db,settings)
+    text="Pantry pricing is $2 per month."
+    citations,deterministic=await check_deterministic(db=db,pack=pack,text=text,citations=[{"ref":source["ref"],"quote":text}])
+    aid=await answer_row(db,vid,pack,text,citations,deterministic)
+    async with db.tx() as tx:
+        await tx.execute("UPDATE answers SET check_status='pending' WHERE id=?",(aid,))
+    entered=asyncio.Event()
+    class Blocking(FakeLLM):
+        async def generate_json(self,*args,**kwargs):
+            entered.set()
+            await asyncio.Event().wait()
+    task=asyncio.create_task(check_model(db=db,pack=pack,text=text,citations=citations,llm=Blocking(),settings=settings,venture_id=vid,answer_id=aid))
+    await asyncio.wait_for(entered.wait(),2)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):await task
+    row=await db.fetch_one("SELECT check_status,check_json,checked_at FROM answers WHERE id=?",(aid,))
+    assert row["check_status"]=="error" and row["checked_at"] and "interrupted" in row["check_json"]
+    assert await db.fetch_one("SELECT id FROM events WHERE type='answer.checked' AND entity_id=?",(aid,))

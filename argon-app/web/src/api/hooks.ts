@@ -66,8 +66,8 @@ async function refresh<T>(value: Entry<T>): Promise<void> {
 }
 
 export function useQuery<T>(key: string | null, fetcher: () => Promise<T>) {
-  const latest = useRef(fetcher);
-  latest.current = fetcher;
+  const latest = useRef({ key, fetcher });
+  latest.current = { key, fetcher };
   const value = key === null ? null : entry<T>(key);
   const snapshot = useSyncExternalStore(
     (listener) => {
@@ -82,7 +82,10 @@ export function useQuery<T>(key: string | null, fetcher: () => Promise<T>) {
   ) as Snapshot<T>;
   useEffect(() => {
     if (!value) return;
-    value.fetcher = () => latest.current();
+    // A shared old-key entry can outlive this consumer switching keys. Keep its
+    // request bound to its original key, while allowing current-key closures to update.
+    value.fetcher = () =>
+      latest.current.key === key ? latest.current.fetcher() : fetcher();
     void refresh(value);
   }, [value]);
   return {

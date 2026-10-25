@@ -10,6 +10,8 @@ import { ErrorNotice, Status, useAction } from "./Shared";
 
 function GateEvidence({approval}:{approval:Approval}){
   const payload=approval.payload;
+  if(approval.gate_type==='integration' && payload.purpose==='agent_wallet_create') return <div className="notice"><strong>Privy agent test wallet</strong><p>Agent: {String(payload.agent_id)}</p><p>Intended test network: Base Sepolia (chain 84532) · Privy addresses are network-agnostic EVM addresses</p><p>Mainnet, funding, signing, and spending are disabled in this app. Approval authorizes wallet provisioning only. After approval, retry wallet setup in Treasury.</p><Link to="/treasury">Review agent wallets →</Link></div>;
+  if(approval.gate_type==='spend' && payload.purpose==='treasury_payment') return <div className="notice"><strong>Agent payment proposal · {currency(Number(payload.amount_minor)/100)}</strong><p>Recipient: {String(payload.recipient??'Not recorded')}</p><p>{String(payload.purpose_text??'No purpose recorded')}</p><p>Approval does not move money. Stripe is not connected; an approved proposal waits for the payment provider.</p><Link to="/treasury">Review Treasury →</Link></div>;
   if(['outreach','send','public_post'].includes(approval.gate_type)){
     const drafts=(Array.isArray(payload.drafts)?payload.drafts:[payload]).filter(value=>value&&typeof value==='object') as Record<string,unknown>[];
     return <div>{drafts.map((draft,index)=><div className="conversation-turn" key={index}>{Boolean(draft.to)&&<p><strong>To:</strong> {String(draft.to)}</p>}{Boolean(draft.subject)&&<h4>{String(draft.subject)}</h4>}<p>{String(draft.body??'No message body was provided.')}</p></div>)}</div>;
@@ -73,7 +75,7 @@ export function ApprovalCard({
       </div>
       <h3>{approval.title}</h3>
       <p>{approval.summary}</p>
-      {compact&&approval.gate_type==='spend'&&<p><strong>Requested increase: {currency(Number(payload.requested_increase_usd??0))}</strong></p>}
+      {compact&&approval.gate_type==='spend'&&<p><strong>{payload.purpose==='treasury_payment' ? `Payment proposal: ${currency(Number(payload.amount_minor)/100)}` : `Requested increase: ${currency(Number(payload.requested_increase_usd??0))}`}</strong>{payload.purpose==='treasury_payment' && <span> · Approval does not move money.</span>}</p>}
       {!compact && (
         <div className="approval-payload">
           <GateEvidence approval={approval}/>
@@ -95,7 +97,7 @@ export function ApprovalCard({
               )}
             </label>
           ))}
-          {approval.gate_type === "spend" && (
+          {approval.gate_type === "spend" && payload.purpose !== "treasury_payment" && (
             <dl className="detail-grid">
               <div>
                 <dt>Current budget</dt>

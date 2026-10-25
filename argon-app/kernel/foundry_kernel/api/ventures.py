@@ -248,7 +248,7 @@ async def settings_view(db, venture, cfg):
     saved = json_loads(venture["settings_json"], {})
     override = await db.fetch_one("SELECT value_json FROM kv WHERE key='executor.override'")
     executor = json_loads(override["value_json"], None) if override else None
-    pending = await db.fetch_one("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' ORDER BY created_at,id LIMIT 1", (venture["id"],))
+    pending = await db.fetch_one("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' AND COALESCE(json_extract(payload_json,'$.purpose'),'')<>'treasury_payment' ORDER BY created_at,id LIMIT 1", (venture["id"],))
     return {"founder_name": venture["founder_name"], "budget_usd": venture["budget_usd"],
             "autopilot_next": saved.get("autopilot_next") is True,
             "quality_default": saved.get("quality_default") if saved.get("quality_default") in ("low", "medium", "high") else "high",
@@ -271,7 +271,7 @@ async def update_settings(vid: str, body: UpdateSettings, request: Request):
         saved = json_loads(venture["settings_json"], {})
         cap = venture["budget_usd"]
         desired = values.get("budget_usd", cap)
-        pending = await tx.fetch_one("SELECT * FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' ORDER BY created_at,id LIMIT 1", (vid,))
+        pending = await tx.fetch_one("SELECT * FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' AND COALESCE(json_extract(payload_json,'$.purpose'),'')<>'treasury_payment' ORDER BY created_at,id LIMIT 1", (vid,))
         if desired < venture["spent_usd"]:
             raise KernelError(400, "budget_below_spend", "Budget cannot be lower than recorded spend")
         if desired != cap and pending:

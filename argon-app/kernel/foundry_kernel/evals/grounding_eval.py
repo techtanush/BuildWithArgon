@@ -117,7 +117,9 @@ async def persist_results(db: Database, report: dict) -> None:
 async def run_evaluation(*, mode: str = 'fake', only: list[str] | None = None,
                          answerer: Callable | None = None, settings: Settings | None = None,
                          questions: list[dict] | None = None, out: Path | None = None,
-                         result_db: Database | None = None) -> dict:
+                         result_db: Database | None = None, concurrency: int = 1) -> dict:
+    if not 1 <= concurrency <= 8:
+        raise ValueError("Evaluation concurrency must be between 1 and 8")
     settings = settings or Settings(llm_mode=mode)
     questions = questions if questions is not None else yaml.safe_load(QUESTIONS.read_text())
     selected = [q for q in questions if not only or q['id'] in only]
@@ -141,27 +143,31 @@ async def run_evaluation(*, mode: str = 'fake', only: list[str] | None = None,
                     return await concierge_ask(db=db, llm=llm, settings=settings, venture_id=venture_id, req=req)
                 return await talk(db=db, llm=llm, settings=settings, venture_id=venture_id, agent_id=ask, req=req)
             fn = answerer or default_answerer
-            rows = []
-            for q in selected:
+            async def evaluate_case(q):
                 try:
                     # Only the question and destination reach the answerer; gold expectations stay here.
                     answer = fn(ask=q['ask'], question=q['question'], db=db, venture_id=vid, settings=cfg)
                     if inspect.isawaitable(answer):
                         answer = await answer
                     data = answer.model_dump() if hasattr(answer, 'model_dump') else dict(answer)
-                    tasks = list(getattr(db, '_answer_checks', set()))
-                    if tasks:
-                        await asyncio.gather(*tasks, return_exceptions=True)
+                    task = getattr(db, "_answer_check_tasks", {}).get(data.get("answer_id"))
+                    if task:
+                        await asyncio.gather(task, return_exceptions=True)
                     if data.get('answer_id'):
                         record = await db.fetch_one('SELECT check_json FROM answers WHERE id=?', (data['answer_id'],))
                         if record:
                             data['check'] = json.loads(record['check_json'])
-                    rows.append(score_answer(q, data))
+                    return score_answer(q, data)
                 except Exception as exc:  # noqa: BLE001 - each failed provider case is retained in the report
                     row = score_answer(q, {'text': '', 'check': {'status': 'error'}, 'citations': []})
                     row.update(error=redact_value(str(exc), cfg), fact_pass=False, citation_pass=False,
                                route_pass=False, checker_agreement=False, fact_citation_pass=False)
-                    rows.append(row)
+                    return row
+            semaphore = asyncio.Semaphore(concurrency)
+            async def limited_case(q):
+                async with semaphore:
+                    return await evaluate_case(q)
+            rows = await asyncio.gather(*(limited_case(q) for q in selected))
             provider_runs = await db.fetch_one(
                 "SELECT COUNT(*) AS n FROM runs WHERE status='succeeded' AND job IN ('talk','concierge') "
                 "AND model NOT LIKE 'fake:%'")
@@ -171,7 +177,7 @@ async def run_evaluation(*, mode: str = 'fake', only: list[str] | None = None,
                     'No successful live conversation calls; no model capability evidence.' if mode == 'live' and answerer is None else
                     'Plumbing/scoring check only; fake or injected answers are not model capability evidence.')
             report = {'id': new_id('evl'), 'suite': 'grounding', 'created_at': utc_now(),
-                      'answerer': 'injected' if answerer else mode,
+                      'answerer': 'injected' if answerer else mode, 'concurrency': concurrency,
                       'capability_evidence': capability_evidence, 'provider_success_n': provider_success_n,
                       'note': note,
                       'summary': summarize(rows), 'cases': rows}
@@ -197,6 +203,7 @@ def main(argv: list[str]) -> None:
     parser.add_argument('--only', action='append', help='Question ID; repeat or comma-separate')
     parser.add_argument('--out', type=Path)
     parser.add_argument('--answerer', choices=('live', 'fake'), default='fake')
+    parser.add_argument('--concurrency', type=int, default=1, choices=range(1, 9), help='Independent concurrent questions (default 1)')
     args = parser.parse_args(argv)
     only = [item for value in args.only or [] for item in value.split(',')]
     timestamp = datetime.now(UTC).strftime('%Y%m%dT%H%M%S%fZ')
@@ -206,7 +213,7 @@ def main(argv: list[str]) -> None:
         results = Database(settings.db_path, settings)
         await results.connect()
         try:
-            return await run_evaluation(mode=args.answerer, only=only or None, settings=settings, out=out, result_db=results)
+            return await run_evaluation(mode=args.answerer, only=only or None, settings=settings, out=out, result_db=results, concurrency=args.concurrency)
         finally:
             await results.close()
     report = asyncio.run(execute())

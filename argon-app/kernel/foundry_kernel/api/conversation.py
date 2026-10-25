@@ -44,4 +44,6 @@ async def get_answer(answer_id: str,request: Request):
         raise NotFoundError("answer",answer_id)
     check=AnswerCheck.model_validate(json_loads(row["check_json"],{"status":row["check_status"]}))
     check.status=row["check_status"]
+    if check.status == "pending":
+        check.reason = "Exact sources checked; claim support is being checked."
     return {"data":{"id":row["id"],"text":row["answer"],"citations":json_loads(row["citations_json"],[]),"check":check}}

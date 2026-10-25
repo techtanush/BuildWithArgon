@@ -93,3 +93,118 @@ def test_unknown_venture_agent_answer_routes_return404(client):
         response=client.post(path,json={"text":"What is happening?"})
         assert response.status_code==404 and "error" in response.json()
     assert client.get("/v1/answers/ans_missing").status_code==404
+
+
+@pytest.mark.parametrize("question",[
+    "Could you please merge this change?", "Would you mind sending the invitation?",
+    "Go ahead and publish this update.", "I need you to hire a specialist.",
+    "I'd like you to approve the purchase.", "Please just connect GitHub.",
+    "Now email the customer.", "Can you kindly deploy the project?",
+    "Increase our spending budget.", "Please raise the budget.",
+    "Let's contact the vendor.", "Will you go ahead and register the agent?",
+])
+def test_action_detection_handles_general_request_grammar(question):
+    from foundry_kernel.conversation.talk import action_requested
+    assert action_requested(question)
+
+
+@pytest.mark.parametrize("question",[
+    "Who approved the change?", "What happened after the merge?", "How much have we spent?",
+    "Can you tell me who sent the invitation?", "Please explain the deployment plan.",
+    "Would you summarize the hiring proposal?", "Why is the purchase blocked?",
+    "Please do not send anything.",
+])
+def test_action_detection_preserves_questions_about_recorded_work(question):
+    from foundry_kernel.conversation.talk import action_requested
+    assert not action_requested(question)
+
+
+def test_refusing_a_concierge_action_needs_no_provider_even_when_budget_exhausted(client):
+    vid=venture(client)
+    write(client,"UPDATE ventures SET spent_usd=budget_usd WHERE id=?",(vid,))
+    response=client.post(f"/v1/ventures/{vid}/concierge/ask",json={"text":"Could you kindly send this invitation?"})
+    assert response.status_code==200,response.text
+    assert "Approvals" in response.json()["data"]["text"]
+    assert not client.app.state.llm.calls
+    stored=rows(client,"SELECT model,status FROM runs WHERE venture_id=? AND kind='concierge'",(vid,))
+    assert stored==[{"model":"deterministic","status":"succeeded"}]
+
+
+def test_conversation_supplies_original_json_schema_and_routing_has_own_run(client):
+    from foundry_kernel.llm.fake import FakeLLM
+    class SchemaAware(FakeLLM):
+        async def generate_json(self,name,prompt,schema,**kwargs):
+            if name=="concierge":
+                assert '"$defs"' in kwargs["system"] and '"SourceQuote"' in kwargs["system"]
+            return await super().generate_json(name,prompt,schema,**kwargs)
+    client.app.state.llm=SchemaAware()
+    vid=venture(client)
+    response=client.post(f"/v1/ventures/{vid}/concierge/ask",json={"text":"What is recorded?"})
+    assert response.status_code==200,response.text
+    runs=rows(client,"SELECT id,job,output_text FROM runs WHERE venture_id=?",(vid,))
+    router=next(row for row in runs if row["job"]=="route_rank")
+    spoken=next(row for row in runs if row["job"]=="concierge")
+    assert router["id"]!=spoken["id"] and spoken["output_text"]==response.json()["data"]["text"]
+
+
+def test_directory_only_provider_fallback_cites_real_role_and_is_explicitly_unverified(client):
+    from foundry_kernel.llm.fake import FakeLLM
+    class Unavailable(FakeLLM):
+        async def generate_json(self,name,*args,**kwargs):
+            if name=="concierge":raise ValueError("Provider did not return JSON")
+            return await super().generate_json(name,*args,**kwargs)
+    client.app.state.llm=Unavailable()
+    vid=venture(client)
+    response=client.post(f"/v1/ventures/{vid}/concierge/ask",json={"text":"Who should I ask about security review?"})
+    assert response.status_code==200,response.text
+    result=response.json()["data"];route=result["route_card"]
+    assert result["check"]["status"]=="unsupported" and "provider failed" in result["check"]["reason"].lower()
+    agent=rows(client,"SELECT display_name,title FROM agents WHERE id=?",(route["agent_id"],))[0]
+    assert agent["display_name"] in result["text"] and agent["title"] in result["text"]
+    assert result["citations"][0]["kind"]=="agent" and result["citations"][0]["id"]==route["agent_id"]
+    assert "couldn't generate" in result["text"]
+
+
+def test_provider_failure_does_not_infer_who_performed_work(client):
+    from foundry_kernel.llm.fake import FakeLLM
+    class Unavailable(FakeLLM):
+        async def generate_json(self,name,*args,**kwargs):
+            if name=="concierge":raise ValueError("Provider unavailable")
+            return await super().generate_json(name,*args,**kwargs)
+    client.app.state.llm=Unavailable()
+    vid=venture(client)
+    response=client.post(f"/v1/ventures/{vid}/concierge/ask",json={"text":"Who shipped the last release?"})
+    assert response.status_code==502 and "error" in response.json()
+    assert not rows(client,"SELECT id FROM answers WHERE venture_id=?",(vid,))
+
+
+async def test_cancelled_conversation_closes_its_run_and_tracking_lock(db,settings):
+    from foundry_kernel.contracts import TalkRequest
+    from foundry_kernel.conversation.talk import talk
+    from foundry_kernel.llm.fake import FakeLLM
+    from tests.test_scheduler import company
+    vid,_=await company(db,settings)
+    entered=asyncio.Event()
+    class Blocking(FakeLLM):
+        async def generate_json(self,*args,**kwargs):
+            entered.set()
+            await asyncio.Event().wait()
+    task=asyncio.create_task(talk(db=db,llm=Blocking(),settings=settings,venture_id=vid,agent_id="eng.builder",req=TalkRequest(text="What is the current work?")))
+    await asyncio.wait_for(entered.wait(),2)
+    task.cancel()
+    with pytest.raises(asyncio.CancelledError):await task
+    row=await db.fetch_one("SELECT id,status,error FROM runs WHERE venture_id=? AND kind='talk'",(vid,))
+    assert row["status"]=="cancelled" and "cancelled" in row["error"]
+    assert row["id"] not in db._llm_tracking_locks
+    assert not await db.fetch_all("SELECT id FROM answers WHERE venture_id=?",(vid,))
+
+
+def test_dashboard_talk_to_nova_preserves_the_concierge_model_matrix(client):
+    vid=venture(client)
+    client.app.state.llm.script("concierge",[{"text":"Please ask the research lead.","citations":[],"route":{"agent_id":"mr.research-lead","reason":"They own market research."}}])
+    response=client.post(f"/v1/ventures/{vid}/agents/concierge/talk",json={"text":"Who handles market research?"})
+    assert response.status_code==200,response.text
+    data=response.json()["data"]
+    assert data["suggested_agent"]["agent_id"]=="mr.research-lead"
+    assert {name for name,_ in client.app.state.llm.calls}>={"concierge","route_rank"}
+    assert not any(name=="talk" for name,_ in client.app.state.llm.calls)

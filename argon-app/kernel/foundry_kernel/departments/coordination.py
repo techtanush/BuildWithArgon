@@ -13,7 +13,6 @@ from ..contracts import AnswerCheck, AskAnswer, Citation, CitationCheck, TalkReq
 from ..db import json_dumps, json_loads_or
 from ..errors import ConflictError, NotImplementedYet
 from ..ids import new_id, utc_now
-from ..llm.jsonout import parse_model
 from ..models import job as get_job
 from ..records import create_ticket, get_row, serialize_message, serialize_run
 
@@ -62,6 +61,10 @@ class TrackedLLM:
         lock = self.db._llm_tracking_locks.setdefault(run_id, asyncio.Lock())
         try:
             async with lock:
+                if not automatic:
+                    source_run = await get_row(self.db, "runs", run_id)
+                    if source_run["venture_id"] != context["venture_id"]:
+                        raise ConflictError("LLM call and run must belong to the same venture")
                 if context["venture_id"] and await ledger.over_budget(self.db, context["venture_id"]):
                     async with self.db.tx() as tx:
                         await ledger.ensure_spend_approval(tx, context["venture_id"])
@@ -74,9 +77,11 @@ class TrackedLLM:
                         row = serialize_run(await get_row(tx, "runs", run_id))
                         row.pop("output_text", None)
                         await bus.emit(tx, venture_id=context["venture_id"], type="run.started", entity_kind="run", entity_id=run_id, data=row)
-                before = {row["id"] for row in await self.db.fetch_all("SELECT id FROM ledger WHERE run_id=?", (run_id,))}
+                charge_kind = "image" if method == "generate_images" else "model"
+                before = {row["id"] for row in await self.db.fetch_all(
+                    "SELECT id FROM ledger WHERE run_id=? AND kind=?", (run_id, charge_kind))}
                 call_kwargs = dict(kwargs)
-                if method == "generate":
+                if method in {"generate", "generate_json"}:
                     call_kwargs = {**{k: v for k, v in context.items() if v is not None}, **call_kwargs}
                 elif method == "run_agent":
                     for key in ("run_id", "venture_id"):
@@ -84,14 +89,24 @@ class TrackedLLM:
                             call_kwargs.setdefault(key, context[key])
                     call_kwargs.pop("agent_id", None)
                     call_kwargs.pop("department_id", None)
-                result = await getattr(self.raw, method)(*args, **call_kwargs)
+                response = await getattr(self.raw, method)(*args, **call_kwargs)
+                result = response[1] if method == "generate_json" else response
                 async with self.db.tx() as tx:
-                    after = await tx.fetch_all("SELECT id FROM ledger WHERE run_id=?", (run_id,))
-                    if not ({row["id"] for row in after} - before):
+                    after = await tx.fetch_all("SELECT id FROM ledger WHERE run_id=? AND kind=?", (run_id, charge_kind))
+                    client_accounted = bool({row["id"] for row in after} - before)
+                    if not client_accounted:
                         await ledger.record(tx, venture_id=context["venture_id"], run_id=run_id,
                             agent_id=context["agent_id"], department_id=context["department_id"],
-                            kind="image" if method == "generate_images" else "model", model=result.model,
-                            cost_usd=result.cost_usd, units_in=result.tokens_in, units_out=result.tokens_out, estimated=result.estimated_cost)
+                            kind=charge_kind, model=result.model,
+                            cost_usd=result.cost_usd, units_in=result.tokens_in, units_out=result.tokens_out,
+                            estimated=result.estimated_cost or method == "generate_json")
+                        if method == "generate_json":
+                            # The public tuple contains only the final call. Native repair
+                            # calls must be accounted by the adapter at each provider call.
+                            warning = "JSON adapter supplied no per-call ledger entries; only final response usage is available, so repair usage may be missing"
+                            await tx.execute("INSERT INTO run_logs(run_id,ts,level,message) VALUES(?,?,'warn',?)", (run_id, utc_now(), warning))
+                            await bus.emit(tx, venture_id=context["venture_id"], type="run.log", entity_kind="run", entity_id=run_id,
+                                           data={"run_id": run_id, "level": "warn", "message": warning})
                     total = await tx.fetch_one("SELECT COALESCE(SUM(units_in),0) AS units_in,COALESCE(SUM(units_out),0) AS units_out,COALESCE(SUM(cost_usd),0) AS cost FROM ledger WHERE run_id=?", (run_id,))
                     prompt = kwargs.get("prompt", args[1] if len(args) > 1 else "")
                     await tx.execute("UPDATE runs SET model=?,interaction_id=?,tokens_in=?,tokens_out=?,cost_usd=?,output_text=?,input_text=CASE WHEN input_text='' THEN ? ELSE input_text END WHERE id=?",
@@ -106,7 +121,7 @@ class TrackedLLM:
                     row.pop("output_text", None)
                     if automatic:
                         await bus.emit(tx, venture_id=context["venture_id"], type="run.finished", entity_kind="run", entity_id=run_id, data=row)
-                return result
+                return response
         except BaseException as exc:
             if automatic:
                 async with self.db.tx() as tx:
@@ -126,13 +141,9 @@ class TrackedLLM:
         return await self._invoke("generate", (job, prompt), kwargs, job)
 
     async def generate_json(self, job: str, prompt: Any, schema: type[BaseModel], **kwargs: Any) -> tuple[BaseModel, Any]:
-        result = await self.generate(job, prompt, **kwargs)
-        try:
-            return parse_model(result.text, schema), result
-        except ValueError as exc:
-            repair = f"Return ONLY corrected JSON matching this schema: {schema.model_json_schema()}. Validation failure: {exc}. Original task: {prompt}. Invalid output: {result.text}"
-            repaired = await self.generate(job, repair, **{**kwargs, "previous_interaction_id": result.interaction_id})
-            return parse_model(repaired.text, schema), repaired
+        # Preserve native structured output, validation and repair semantics at the
+        # public adapter boundary rather than rebuilding them through generate().
+        return await self._invoke("generate_json", (job, prompt, schema), kwargs, job)
 
     async def run_agent(self, **kwargs: Any) -> Any:
         # The provider agent configuration names the model; job metadata stays in models.py.

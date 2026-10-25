@@ -22,6 +22,7 @@ export default function Onboarding() {
     { selectVenture } = useCompany(),
     input = useRef<HTMLInputElement>(null);
   function chooseFiles(selected: File[]) {
+    if (action.working) return;
     setValidation("");
     if (files.length + selected.length > 8) {
       setValidation("Choose up to 8 context files.");
@@ -258,6 +259,7 @@ export default function Onboarding() {
                 ref={input}
                 className="sr-only"
                 type="file"
+                disabled={action.working}
                 aria-label="Context files"
                 multiple
                 accept=".md,.txt,.pdf,.csv,.json"
@@ -269,6 +271,7 @@ export default function Onboarding() {
               <button
                 className="upload-zone"
                 type="button"
+                disabled={action.working}
                 onClick={() => input.current?.click()}
                 onDragOver={(event) => event.preventDefault()}
                 onDrop={(event) => {
@@ -290,6 +293,7 @@ export default function Onboarding() {
                     {item.status !== "Uploaded" && (
                       <button
                         type="button"
+                        disabled={action.working}
                         className="icon-button"
                         aria-label={`Remove ${item.file.name}`}
                         onClick={() =>

@@ -7,6 +7,7 @@ import pytest
 
 from foundry_kernel import gates, ledger
 from foundry_kernel.errors import GateNotApproved, KernelError
+from foundry_kernel.ids import new_id, utc_now
 from tests.tanush.helpers import insert_venture
 
 
@@ -58,6 +59,17 @@ async def test_global_spend_does_not_change_venture_budget(db):
         await ledger.record(tx, venture_id=None, kind="image", cost_usd=5)
     assert (await db.fetch_one("SELECT spent_usd FROM ventures WHERE id=?", (vid,)))["spent_usd"] == 0
     assert (await db.fetch_one("SELECT cost_usd FROM ledger WHERE venture_id IS NULL"))["cost_usd"] == 5
+
+
+async def test_venture_run_cannot_hide_its_charge_in_global_accounting(db):
+    vid = await insert_venture(db, budget=1)
+    rid = new_id("run")
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO runs(id,venture_id,kind,job,model,status,created_at) VALUES(?,?,'talk','talk','fake','running',?)", (rid, vid, utc_now()))
+    with pytest.raises(KernelError, match="same venture"):
+        async with db.tx() as tx:
+            await ledger.record(tx, venture_id=None, run_id=rid, kind="model", cost_usd=5)
+    assert not await db.fetch_all("SELECT id FROM ledger WHERE run_id=?", (rid,))
 
 
 async def test_raise_cap_requires_approved_spend_gate(db):

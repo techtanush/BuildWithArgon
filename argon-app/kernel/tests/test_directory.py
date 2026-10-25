@@ -31,3 +31,9 @@ async def test_model_cannot_route_to_unknown_ids(db,directory_venture):
 async def test_empty_query_routes_to_chief_of_staff_without_fabricating_records(db,directory_venture):
     results=await directory_search("?",db=db,venture_id=directory_venture)
     assert results[0]["id"]=="cos.orchestrator"
+
+
+async def test_unknown_venture_cannot_return_a_directory(db):
+    from foundry_kernel.errors import NotFoundError
+    with pytest.raises(NotFoundError):
+        await directory_search("engineering",db=db,venture_id="ven_missing")

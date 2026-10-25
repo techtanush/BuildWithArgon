@@ -112,6 +112,47 @@ async def test_limits_global_department_agent_and_one_engineering_build(db, sett
         await scheduler.stop()
 
 
+async def test_direct_dispatch_rechecks_dependency_budget_and_pause_before_claiming(db, settings):
+    vid, scheduler = await company(db, settings)
+    parent = await add_ticket(db, vid, "brief")
+    child = await add_ticket(db, vid, "spec.write")
+    async with db.tx() as tx:
+        await tx.execute("INSERT INTO ticket_deps VALUES(?,?)", (child["id"], parent["id"]))
+    await scheduler.dispatch(child["id"])
+    assert (await get_row(db, "tickets", child["id"]))["attempts"] == 0
+    async with db.tx() as tx:
+        await tx.execute("UPDATE tickets SET status='done' WHERE id=?", (parent["id"],))
+        await tx.execute("UPDATE ventures SET spent_usd=budget_usd WHERE id=?", (vid,))
+    await scheduler.dispatch(child["id"])
+    assert (await get_row(db, "tickets", child["id"]))["attempts"] == 0
+    assert await db.fetch_one("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend'", (vid,))
+    async with db.tx() as tx:
+        await tx.execute("UPDATE ventures SET spent_usd=0 WHERE id=?", (vid,))
+        await tx.execute("INSERT INTO kv(key,value_json,updated_at) VALUES(?,'true',?)", (f"dept.paused.{vid}.{child['department_id']}", utc_now()))
+    await scheduler.dispatch(child["id"])
+    assert (await get_row(db, "tickets", child["id"]))["attempts"] == 0
+    assert not scheduler.tasks and not await db.fetch_all("SELECT id FROM runs WHERE ticket_id=?", (child["id"],))
+
+
+async def test_concurrent_direct_dispatch_cannot_claim_two_tickets_for_one_agent(db, settings, monkeypatch):
+    vid, scheduler = await company(db, settings)
+    first = await add_ticket(db, vid)
+    second = await add_ticket(db, vid)
+    wait = asyncio.Event()
+    class Blocking:
+        async def handle(self, ticket, ctx):
+            await wait.wait()
+            return HandlerResult(outcome="done")
+    monkeypatch.setattr(module, "load_handler", lambda kind: Blocking())
+    try:
+        await asyncio.gather(scheduler.dispatch(first["id"]), scheduler.dispatch(second["id"]))
+        rows = await db.fetch_all("SELECT status,attempts FROM tickets WHERE venture_id=?", (vid,))
+        assert sorted(row["status"] for row in rows) == ["in_progress", "open"]
+        assert sum(row["attempts"] for row in rows) == 1
+    finally:
+        await scheduler.stop()
+
+
 async def test_gate_reentry_preserves_result_and_runs_second_pass(db, settings, monkeypatch):
     vid, scheduler = await company(db, settings)
     ticket = await add_ticket(db, vid)

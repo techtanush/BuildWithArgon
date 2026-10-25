@@ -114,7 +114,7 @@ class ModelJudgment(BaseModel):
     reason: str = ""
 
 
-async def check_model(*, db: Any, pack: ContextPack, text: str, citations: list[Citation], llm: Any,
+async def _check_model(*, db: Any, pack: ContextPack, text: str, citations: list[Citation], llm: Any,
                       settings: Any, venture_id: str, answer_id: str) -> AnswerCheck:
     answer = await db.fetch_one("SELECT * FROM answers WHERE id=? AND venture_id=?", (answer_id, venture_id))
     if answer is None or pack.venture_id != venture_id:
@@ -188,3 +188,26 @@ async def check_model(*, db: Any, pack: ContextPack, text: str, citations: list[
             await bus.emit(tx, venture_id=venture_id, type="answer.checked", entity_kind="answer", entity_id=answer_id,
                            data={"answer_id": answer_id, "check": final.model_dump()})
     return final
+
+
+async def check_model(*, db: Any, pack: ContextPack, text: str, citations: list[Citation], llm: Any,
+                      settings: Any, venture_id: str, answer_id: str) -> AnswerCheck:
+    """Interrupted background checks finish visibly instead of staying pending forever."""
+    try:
+        return await _check_model(db=db,pack=pack,text=text,citations=citations,llm=llm,settings=settings,venture_id=venture_id,answer_id=answer_id)
+    except asyncio.CancelledError:
+        async def interrupted():
+            async with db.tx() as tx:
+                row=await tx.fetch_one("SELECT check_status,check_json FROM answers WHERE id=? AND venture_id=?",(answer_id,venture_id))
+                if row and row["check_status"]=="pending":
+                    prior=AnswerCheck.model_validate(json_loads_or(row["check_json"],{"status":"pending"}))
+                    prior.status="error"
+                    prior.reason="Source checking was interrupted; this answer has not been verified."
+                    await tx.execute("UPDATE answers SET check_status='error',check_json=?,checked_at=? WHERE id=? AND venture_id=?",(json_dumps(prior.model_dump()),utc_now(),answer_id,venture_id))
+                    await bus.emit(tx,venture_id=venture_id,type="answer.checked",entity_kind="answer",entity_id=answer_id,data={"answer_id":answer_id,"check":prior.model_dump()})
+        cleanup=asyncio.create_task(interrupted())
+        try:
+            await asyncio.shield(cleanup)
+        except asyncio.CancelledError:
+            await cleanup
+        raise

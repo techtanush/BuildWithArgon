@@ -103,3 +103,27 @@ async def test_capability_evidence_requires_successful_nonfake_conversation_run(
     assert report['capability_evidence'] is capability
     assert report['provider_success_n'] == int(capability)
     assert report['summary']['success_n'] == 1 and report['summary']['error_n'] == 0
+
+
+@pytest.mark.asyncio
+async def test_concurrent_cases_are_bounded_and_remain_in_question_order(settings):
+    import asyncio
+    active, peak, entered = 0, 0, 0
+    ready = asyncio.Event()
+    async def answerer(**kw):
+        nonlocal active, peak, entered
+        active += 1
+        entered += 1
+        peak = max(active, peak)
+        if entered >= 2:
+            ready.set()
+        await ready.wait()
+        active -= 1
+        return {'text': kw['question'], 'check': {'status': 'verified'}}
+    questions = [{'id': str(i), 'ask': 'concierge', 'question': 'Known fact', 'must_include_any': [['Known']]} for i in range(6)]
+    report = await run_evaluation(answerer=answerer, questions=questions, settings=settings, concurrency=2)
+    assert peak == 2
+    assert [row['case_id'] for row in report['cases']] == [str(i) for i in range(6)]
+    assert report['summary']['fact_accuracy'] == 1 and report['concurrency'] == 2
+    with pytest.raises(ValueError, match='concurrency'):
+        await run_evaluation(settings=settings, concurrency=9)

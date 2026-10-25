@@ -92,3 +92,14 @@ async def test_snapshot_uses_existing_conversation_run_and_rejects_foreign_run(d
 
 def test_question_keywords_drop_stopwords_and_keep_meaningful_terms():
     assert keywords("What does their pantry pricing research cost?") == {"pantry", "pricing", "research", "cost"}
+
+
+async def test_oversized_agent_persona_cannot_crowd_out_department_and_summary(db,settings):
+    from tests.test_scheduler import company
+    vid,_=await company(db,settings)
+    async with db.tx() as tx:
+        await tx.execute("UPDATE agents SET persona=? WHERE id='eng.builder'",("Long role description. "*3000,))
+    pack=await build_context_pack(db=db,venture_id=vid,agent_id="eng.builder",question="Budget and current work?")
+    assert any(row["kind"]=="department" for row in pack.records)
+    assert any(row["kind"]=="run" and "budget_usd" in row["text"] for row in pack.records)
+    assert len(pack.rendered)<=30_000 and all(len(row["text"])<=6000 for row in pack.records)

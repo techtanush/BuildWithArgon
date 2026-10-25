@@ -34,6 +34,7 @@ import {
   Settings,
 } from "./pages/Company";
 import WorldLab from "./pages/WorldLab";
+import Treasury from "./pages/Treasury";
 import "./dashboard.css";
 
 const navigation = [
@@ -49,6 +50,7 @@ const navigation = [
   ["/artifacts", "Artifacts", "artifacts"],
   ["/world-lab", "World Lab", "world"],
   ["/metrics", "Metrics", "metrics"],
+  ["/treasury", "Treasury", "integrations"],
   ["/integrations", "Integrations", "integrations"],
   ["/settings", "Settings", "settings"],
 ];
@@ -251,6 +253,7 @@ function Dashboard() {
             <Route path="artifacts/:id" element={<ArtifactPage />} />
             <Route path="world-lab" element={<WorldLab />} />
             <Route path="metrics" element={<Metrics />} />
+            <Route path="treasury" element={<Treasury />} />
             <Route path="integrations" element={<Integrations />} />
             <Route path="settings" element={<Settings />} />
             <Route

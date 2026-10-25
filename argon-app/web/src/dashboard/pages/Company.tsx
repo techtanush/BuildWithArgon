@@ -1,5 +1,5 @@
 // OWNER: tanush
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError, get, post } from "../../api/client";
 import { invalidateQueries, useQuery } from "../../api/hooks";
@@ -125,6 +125,12 @@ export function Org() {
         }
       />
       <ErrorNotice error={action.error} />
+      <ErrorNotice
+        error={org.error ?? agents.error ?? departments.error}
+        retry={() =>
+          Promise.all([org.refetch(), agents.refetch(), departments.refetch()])
+        }
+      />
       {agents.loading ? (
         <Loading />
       ) : (
@@ -226,6 +232,7 @@ export function Org() {
         </>
       )}
       <Card title="Latest standup">
+        <ErrorNotice error={standup.error} retry={standup.refetch} />
         {standup.data?.root_message_id ? (
           <>
             <p className="muted">
@@ -248,10 +255,12 @@ export function Org() {
             )}
           </>
         ) : (
-          <Empty title="No standup recorded yet">
-            A recorded standup will show department updates and the Chief of
-            Staff’s decisions.
-          </Empty>
+          !standup.error && (
+            <Empty title="No standup recorded yet">
+              A recorded standup will show department updates and the Chief of
+              Staff’s decisions.
+            </Empty>
+          )
         )}
       </Card>
       {calling && ventureId && (
@@ -576,8 +585,9 @@ function EvaluationTable({ suite }: { suite: EvaluationSuite }) {
       </p>
       {suite.capability_evidence === false && (
         <p className="notice">
-          Fake or injected evaluation. These results test the implementation and
-          do not measure live model capability.
+          {suite.answerer === "live"
+            ? "No successful live model call was recorded for this evaluation. These results do not measure live model capability."
+            : "Fake or injected evaluation. These results test the implementation and do not measure live model capability."}
         </p>
       )}
       <div className="table-scroll">
@@ -704,7 +714,6 @@ export function Metrics() {
   const evals = useQuery<LatestEvaluations>("/v1/evals/latest", () =>
     get("/v1/evals/latest"),
   );
-  const missing = query.error instanceof ApiError && query.error.status === 404;
   return (
     <>
       <PageHeader
@@ -717,8 +726,8 @@ export function Metrics() {
         }
       />
       <ErrorNotice
-        error={!missing ? query.error : null}
-        retry={query.refetch}
+        error={query.error ?? budget.error}
+        retry={() => Promise.all([query.refetch(), budget.refetch()])}
       />
       <div className="kpi-grid">
         <Card>
@@ -736,7 +745,9 @@ export function Metrics() {
           <span className="overline">Grounding accuracy</span>
           {query.data?.grounding?.capability_evidence === false && (
             <span className="fake-badge">
-              {query.data.grounding.answerer ?? "Fake"} evaluation
+              {query.data.grounding.answerer === "live"
+                ? "Live evidence unavailable"
+                : `${query.data.grounding.answerer ?? "Fake"} evaluation`}
             </span>
           )}
           <strong className="kpi-value">
@@ -830,8 +841,9 @@ export function Metrics() {
           </p>
           {query.data?.grounding?.capability_evidence === false && (
             <p className="notice">
-              Implementation check only ·{" "}
-              {query.data.grounding.answerer ?? "fake or injected"} answers.
+              {query.data.grounding.answerer === "live"
+                ? "No successful live model call was recorded. "
+                : `Implementation check only · ${query.data.grounding.answerer ?? "fake or injected"} answers. `}
               This is not live model quality evidence.
             </p>
           )}
@@ -1000,8 +1012,9 @@ export function Settings() {
     [budget, setBudget] = useState("25"),
     [autopilot, setAutopilot] = useState(false),
     [quality, setQuality] = useState("high");
+  const dirty = useRef(false);
   useEffect(() => {
-    if (query.data) {
+    if (query.data && !dirty.current) {
       setFounder(query.data.founder_name);
       setBudget(String(query.data.budget_usd));
       setAutopilot(query.data.autopilot_next);
@@ -1020,6 +1033,11 @@ export function Settings() {
           quality_default: quality,
         },
       );
+      dirty.current = false;
+      setFounder(result.founder_name);
+      setBudget(String(result.budget_usd));
+      setAutopilot(result.autopilot_next);
+      setQuality(result.quality_default);
       setApproval(result.approval_id ?? null);
       setSaved(
         result.approval_id
@@ -1051,7 +1069,11 @@ export function Settings() {
               Founder name
               <input
                 value={founder}
-                onChange={(event) => setFounder(event.target.value)}
+                disabled={action.working}
+                onChange={(event) => {
+                  dirty.current = true;
+                  setFounder(event.target.value);
+                }}
                 minLength={2}
                 maxLength={60}
                 required
@@ -1064,7 +1086,11 @@ export function Settings() {
                 min="0.01"
                 step="0.01"
                 value={budget}
-                onChange={(event) => setBudget(event.target.value)}
+                disabled={action.working}
+                onChange={(event) => {
+                  dirty.current = true;
+                  setBudget(event.target.value);
+                }}
                 required
               />
               <small>
@@ -1076,7 +1102,11 @@ export function Settings() {
               <input
                 type="checkbox"
                 checked={autopilot}
-                onChange={(event) => setAutopilot(event.target.checked)}
+                disabled={action.working}
+                onChange={(event) => {
+                  dirty.current = true;
+                  setAutopilot(event.target.checked);
+                }}
               />
               Plan the next cycle automatically
             </label>
@@ -1084,7 +1114,11 @@ export function Settings() {
               World quality default
               <select
                 value={quality}
-                onChange={(event) => setQuality(event.target.value)}
+                disabled={action.working}
+                onChange={(event) => {
+                  dirty.current = true;
+                  setQuality(event.target.value);
+                }}
               >
                 {["low", "medium", "high"].map((value) => (
                   <option key={value} value={value}>
@@ -1143,6 +1177,7 @@ export function Integrations() {
   );
   const gate = approvals.data?.items.find((a) => a.gate_type === "integration");
   async function connect() {
+    setNotice("");
     await action.run(async () => {
       try {
         const response = await post<{ redirect_url: string }>(
@@ -1150,10 +1185,24 @@ export function Integrations() {
           { callback_url: `${location.origin}/integrations?connected=github` },
         );
         const url = safeUrl(response.redirect_url);
-        if (url) location.assign(url);
+        if (!url)
+          throw new Error(
+            "The connection provider did not return a safe sign-in link.",
+          );
+        location.assign(url);
       } catch (error) {
         invalidateQueries();
-        setNotice("Check Approvals for the GitHub connection request.");
+        const pending = await get<ListPage<Approval>>(
+          `/v1/ventures/${ventureId}/approvals?status=pending`,
+        ).catch(() => null);
+        if (
+          pending?.items.some(
+            (approval) => approval.gate_type === "integration",
+          )
+        ) {
+          setNotice("Check Approvals for the GitHub connection request.");
+          return;
+        }
         throw error;
       }
     });
@@ -1165,7 +1214,19 @@ export function Integrations() {
         description="Connections that give the team a place to work. Credentials stay on the server."
       />
       <ErrorNotice error={action.error} />
+      <ErrorNotice error={query.error} retry={query.refetch} />
       <div className="integration-grid">
+        <Card title="Stripe treasury toolkit">
+          <Status value="not_connected" />
+          <p>
+            Record agent payment proposals and review founder approvals. No
+            funded wallet or payment provider is connected.
+          </p>
+          <p className="muted">Approval does not move money.</p>
+          <Link to="/treasury" className="button">
+            Open Treasury →
+          </Link>
+        </Card>
         <Card title="GitHub">
           <p>
             Repositories, pull requests, and verified changes through Composio.
@@ -1173,7 +1234,12 @@ export function Integrations() {
           <Status
             value={
               query.data?.items.find((item) => item.provider === "github")
-                ?.status ?? "not_connected"
+                ?.status ??
+              (query.error
+                ? "unavailable"
+                : query.loading
+                  ? "loading"
+                  : "not_connected")
             }
           />
           {query.data?.items.find((item) => item.provider === "github")

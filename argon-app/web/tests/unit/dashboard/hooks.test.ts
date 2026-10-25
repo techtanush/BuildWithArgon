@@ -120,4 +120,24 @@ describe('cache-and-revalidate hooks', () => {
     expect(fetcher).toHaveBeenCalledTimes(2);
     expect(host.textContent).toBe('latest status');
   });
+
+  it("keeps shared old-key refetches bound to their key after another consumer switches", async () => {
+    const fetcher = vi.fn(async (key: string) => `data:${key}`);
+    function Consumer({ queryKey }: { queryKey: string }) {
+      const query = useQuery(queryKey, () => fetcher(queryKey));
+      return createElement("span", null, query.data);
+    }
+    const view = (dynamic: string) =>
+      createElement(
+        "div",
+        null,
+        createElement(Consumer, { queryKey: "venture:one", key: "static" }),
+        createElement(Consumer, { queryKey: dynamic, key: "dynamic" }),
+      );
+    await act(async () => root.render(view("venture:one")));
+    await act(async () => root.render(view("venture:two")));
+    await act(async () => invalidateQueries("venture:one"));
+    expect(host.textContent).toBe("data:venture:onedata:venture:two");
+    expect(fetcher.mock.calls.at(-1)?.[0]).toBe("venture:one");
+  });
 });

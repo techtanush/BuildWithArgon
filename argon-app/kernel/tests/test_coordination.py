@@ -152,18 +152,65 @@ async def test_standup_posts_each_active_lead_and_rhea_decisions_with_exact_jobs
     assert len(messages) == 3
 
 
-async def test_tracked_llm_records_each_call_and_repair_without_double_accounting(db, settings):
-    llm = FakeLLM()
-    ctx, _ = await context(db, settings, llm=llm)
+async def test_tracked_json_delegates_native_schema_and_preserves_each_adapter_charge(db, settings):
+    ctx, _ = await context(db, settings)
     class Output(BaseModel):
         title: str
-    llm.script("dept_artifact", ["not JSON", {"title": "Repaired"}])
-    output, _ = await ctx.llm.generate_json("dept_artifact", "Original task", Output)
-    assert output.title == "Repaired" and len(llm.calls) == 2
-    assert "not JSON" in llm.calls[1][1] and "Original task" in llm.calls[1][1]
-    assert len(await db.fetch_all("SELECT id FROM ledger WHERE run_id=?", (ctx.run_id,))) == 2
+    calls = []
+    class NativeJSONClient:
+        async def generate(self, *args, **kwargs):
+            raise AssertionError("Native JSON generation must not be replaced by text generation")
+
+        async def generate_json(self, job, prompt, schema, **kwargs):
+            calls.append((job, prompt, schema, kwargs))
+            # A real adapter owns every provider attempt, including invalid output
+            # and a repair. Its public return value describes only the final call.
+            for cost in (0.2, 0.3):
+                async with db.tx() as tx:
+                    await ledger.record(tx, venture_id=kwargs["venture_id"], run_id=kwargs["run_id"],
+                        kind="model", model="native", cost_usd=cost, units_in=4, units_out=2, estimated=False)
+            result = LLMResult(text='{"title":"Native"}', interaction_id="native-repair", model="native", cost_usd=0.3, tokens_in=4, tokens_out=2)
+            return schema(title="Native"), result
+
+    tracked = TrackedLLM(db, NativeJSONClient(), settings, run_id=ctx.run_id, venture_id=ctx.venture["id"])
+    output, result = await tracked.generate_json("dept_artifact", "Original task", Output, system="Use native schema")
+    assert output.title == "Native" and result.interaction_id == "native-repair"
+    assert calls[0][:3] == ("dept_artifact", "Original task", Output)
+    assert calls[0][3]["system"] == "Use native schema"
+    rows = await db.fetch_all("SELECT * FROM ledger WHERE run_id=?", (ctx.run_id,))
+    assert len(rows) == 2 and sum(r["cost_usd"] for r in rows) == 0.5
     run = await get_row(db, "runs", ctx.run_id)
-    assert run["interaction_id"] == "fake-2" and run["tokens_out"] > 0
+    assert run["interaction_id"] == "native-repair" and run["tokens_in"] == 8 and run["tokens_out"] == 4
+    assert run["cost_usd"] == 0.5 and json_loads_or(run["output_text"], {}) == {"title": "Native"}
+
+
+async def test_tracked_json_without_adapter_accounting_marks_final_only_usage_estimated(db, settings):
+    ctx, _ = await context(db, settings)
+    class Output(BaseModel):
+        title: str
+    llm = FakeLLM()
+    llm.script("dept_artifact", [{"title": "Fake"}])
+    tracked = TrackedLLM(db, llm, settings, run_id=ctx.run_id, venture_id=ctx.venture["id"])
+    output, _ = await tracked.generate_json("dept_artifact", "Task", Output)
+    assert output.title == "Fake"
+    row = await db.fetch_one("SELECT * FROM ledger WHERE run_id=?", (ctx.run_id,))
+    assert row["estimated"] == 1 and row["cost_usd"] == 0
+    warning = await db.fetch_one("SELECT message FROM run_logs WHERE run_id=? AND level='warn'", (ctx.run_id,))
+    assert "repair usage may be missing" in warning["message"]
+
+
+async def test_tracked_model_accounting_ignores_tool_rows_but_preserves_adapter_charges(db, settings):
+    ctx, _ = await context(db, settings)
+    class ToolAccountingClient:
+        async def generate(self, job, prompt, **kwargs):
+            async with db.tx() as tx:
+                await ledger.record(tx, venture_id=ctx.venture["id"], run_id=ctx.run_id, kind="tool", cost_usd=0.1)
+            return LLMResult(text="ok", interaction_id="tool-call", model="native", cost_usd=0.2, tokens_in=3, tokens_out=2)
+    tracked = TrackedLLM(db, ToolAccountingClient(), settings, run_id=ctx.run_id, venture_id=ctx.venture["id"])
+    await tracked.generate("dept_artifact", "Tool and model cost separately")
+    rows = await db.fetch_all("SELECT * FROM ledger WHERE run_id=?", (ctx.run_id,))
+    assert len(rows) == 2 and {r["kind"] for r in rows} == {"tool", "model"}
+    assert (await get_row(db, "runs", ctx.run_id))["cost_usd"] == pytest.approx(0.3)
 
     class AccountingClient:
         async def generate(self, job, prompt, **kwargs):
@@ -173,7 +220,7 @@ async def test_tracked_llm_records_each_call_and_repair_without_double_accountin
     tracked = TrackedLLM(db, AccountingClient(), settings, run_id=ctx.run_id, venture_id=ctx.venture["id"])
     await tracked.generate("dept_artifact", "accounted")
     rows = await db.fetch_all("SELECT * FROM ledger WHERE run_id=?", (ctx.run_id,))
-    assert len(rows) == 3 and sum(r["cost_usd"] for r in rows) == 1
+    assert len(rows) == 3 and sum(r["cost_usd"] for r in rows) == pytest.approx(1.3)
 
 
 async def test_tracked_llm_guard_prevents_raw_calls_after_cap_and_one_spend_gate(db, settings):
@@ -189,6 +236,16 @@ async def test_tracked_llm_guard_prevents_raw_calls_after_cap_and_one_spend_gate
         await tracked.generate("dept_artifact", "must not reach provider")
     assert calls == ["first"]
     assert len(await db.fetch_all("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend'", (ctx.venture["id"],))) == 1
+
+
+async def test_tracked_llm_rejects_misattributed_run_before_contacting_provider(db, settings):
+    ctx, _ = await context(db, settings)
+    llm = FakeLLM()
+    tracked = TrackedLLM(db, llm, settings, run_id=ctx.run_id)
+    with pytest.raises(ConflictError, match="same venture"):
+        await tracked.generate("dept_artifact", "Cannot charge a venture run globally")
+    assert not llm.calls
+    assert not await db.fetch_all("SELECT id FROM ledger WHERE run_id=?", (ctx.run_id,))
 
 
 async def test_standalone_calls_publish_started_and_finished_on_success_and_failure(db, settings):
