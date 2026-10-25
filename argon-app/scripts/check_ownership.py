@@ -52,6 +52,7 @@ RULES: list[tuple[str, str]] = [
     *[(W + "src/world/" + n, "karthik") for n in ("npc/visemes.ts", "npc/LipSync.ts", "conversation/Mic.ts",
                                                   "conversation/Stt.ts", "conversation/Speech.ts")],
     (W + "tests/unit/voice/*", "karthik"),
+    (W + "tests/voice-lab/*", "karthik"),  # dev-only harness page: http://localhost:5173/tests/voice-lab/index.html
     (A + "evals/results/grounding-*", "karthik"),
     # --- ayan: models, engineering, integrations, computers, worldgen
     *[(FK + n, "ayan") for n in ("models.py", "llm/*", "departments/engineering.py", "departments/qa.py",
