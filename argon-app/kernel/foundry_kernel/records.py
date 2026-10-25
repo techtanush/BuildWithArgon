@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import base64
 import json
+from functools import lru_cache
 from typing import Any
 
 from . import bus
+from .config import KERNEL_DIR
+from .contracts import AgentRuntime, AgentRuntimeJob
 from .errors import KernelError, NotFoundError
 from .ids import new_id, utc_now
 from .models import job
@@ -114,12 +117,35 @@ def serialize_event(row: dict) -> dict:
     return result
 
 
+@lru_cache(maxsize=1)
+def capability_matrix() -> dict:
+    """The frozen matrix is authoritative for every roster agent."""
+    return json.loads((KERNEL_DIR / "data" / "agent_capabilities.json").read_text())
+
+
+def serialize_runtime(row: dict) -> dict:
+    capability = capability_matrix()["agents"].get(row["id"])
+    if capability is None:
+        # Approved hires use the safe default job and only their approved tools.
+        capability = {"work_jobs": ["dept_artifact"], "conversation_jobs": ["talk", "check_citation"],
+                      "coordination_jobs": [], "managed_agents": [],
+                      "tools": json_loads(row.get("tools_json"), []), "gates": [], "voice_call": True}
+    jobs = []
+    for purpose in ("work", "conversation", "coordination"):
+        for name in capability[f"{purpose}_jobs"]:
+            routed = job(name)
+            jobs.append(AgentRuntimeJob(job=name, model=routed.model, thinking_level=routed.thinking_level, purpose=purpose))
+    return AgentRuntime(jobs=jobs, managed_agents=capability["managed_agents"], tools=capability["tools"],
+                        gates=capability["gates"], voice_call=capability.get("voice_call", True)).model_dump()
+
+
 async def serialize_agent(db: Any, row: dict, vid: str) -> dict:
     result = select_fields(row, "id department_id display_name title role_summary persona voice_id npc_slot")
     state = await db.fetch_one("SELECT status,current_ticket_id,last_active_at FROM agent_state WHERE venture_id=? AND agent_id=?", (vid, row["id"]))
     result.update(model=job(row["model_job"]).model, tools=json_loads(row.get("tools_json"), []),
                   portrait_url=row.get("portrait_path"), face=json_loads(row.get("face_json"), None), is_lead=bool(row["is_lead"]),
                   state=state or {"status": "idle", "current_ticket_id": None, "last_active_at": None})
+    result["runtime"] = serialize_runtime(row)
     return result
 
 

@@ -6,7 +6,7 @@ from typing import Any, Generic, Literal, TypeVar
 
 from pydantic import BaseModel
 
-from .contracts import ArtifactKind, FaceSpec, GateType, TicketStatus
+from .contracts import AgentRuntime, ArtifactKind, FaceSpec, GateType, TicketStatus
 
 T = TypeVar("T")
 
@@ -85,6 +85,7 @@ class Agent(BaseModel):
     npc_slot: str | None
     is_lead: bool
     state: AgentState
+    runtime: AgentRuntime
 
 
 class Ticket(BaseModel):

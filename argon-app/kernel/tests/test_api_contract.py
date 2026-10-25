@@ -8,10 +8,13 @@ import pytest
 from fastapi.testclient import TestClient
 from pydantic import SecretStr
 from pypdf import PdfWriter
+from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from foundry_kernel import gates
 from foundry_kernel.app import create_app
+from foundry_kernel.config import KERNEL_DIR
 from foundry_kernel.ids import new_id, utc_now
+from foundry_kernel.models import JOBS
 from tests.tanush.helpers import execute
 
 
@@ -143,6 +146,30 @@ def test_agent_list_and_detail_serialize_roster_and_state(client, records):
     detail = data(client.get(f"{base}/intake.brief-lead"))
     assert records["rid"] in [r["id"] for r in detail["recent_runs"]]
     assert "current_ticket" in detail
+
+
+def test_agent_runtime_matches_frozen_model_and_capability_contract(client, venture):
+    capabilities = json.loads((KERNEL_DIR / "data" / "agent_capabilities.json").read_text())["agents"]
+    base = f"/v1/ventures/{venture['id']}/agents"
+    agents = data(client.get(base))["items"]
+    assert {agent["id"] for agent in agents} == set(capabilities)
+    for agent in agents:
+        expected = capabilities[agent["id"]]
+        runtime = agent["runtime"]
+        expected_jobs = []
+        for key, purpose in (("work_jobs", "work"), ("conversation_jobs", "conversation"), ("coordination_jobs", "coordination")):
+            expected_jobs.extend({"job": name, "model": JOBS[name].model, "thinking_level": JOBS[name].thinking_level, "purpose": purpose} for name in expected[key])
+        assert runtime["jobs"] == expected_jobs, agent["id"]
+        for key in ("managed_agents", "tools", "gates", "voice_call"):
+            assert runtime[key] == expected[key], (agent["id"], key)
+        detail = data(client.get(f"{base}/{agent['id']}"))
+        assert detail["runtime"] == runtime
+    builder = next(a["runtime"] for a in agents if a["id"] == "eng.builder")
+    assert {"antigravity", "github"} <= set(builder["tools"])
+    assert builder["managed_agents"] == ["antigravity"]
+    assert any(j["job"] == "engineering_build" and j["thinking_level"] == "high" for j in builder["jobs"])
+    qa = next(a["runtime"] for a in agents if a["id"] == "eng.qa")
+    assert {"merge", "computer_action"} <= set(qa["gates"])
 
 
 def test_create_ticket_list_filters_and_detail_relations(client, records):
@@ -300,16 +327,22 @@ def test_upload_text_and_pdf_extracts_context_and_redacts_storage(client, ventur
     secret = "ghp_" + "b" * 30
     pdf = io.BytesIO()
     writer = PdfWriter()
-    writer.add_blank_page(width=100, height=100)
+    page = writer.add_blank_page(width=300, height=100)
+    font = DictionaryObject({NameObject("/Type"): NameObject("/Font"), NameObject("/Subtype"): NameObject("/Type1"), NameObject("/BaseFont"): NameObject("/Helvetica")})
+    page[NameObject("/Resources")] = DictionaryObject({NameObject("/Font"): DictionaryObject({NameObject("/F1"): font})})
+    content = DecodedStreamObject()
+    content.set_data(b"BT /F1 12 Tf 10 50 Td (Pantry PDF context) Tj ET")
+    page[NameObject("/Contents")] = content
     writer.write(pdf)
-    result = data(client.post(f"/v1/ventures/{venture['id']}/files", files=[("files[]", ("notes.md", f"Pantry context {secret}".encode(), "text/markdown")), ("files[]", ("blank.pdf", pdf.getvalue(), "application/pdf"))]))
-    assert [f["name"] for f in result["items"]] == ["notes.md", "blank.pdf"]
+    result = data(client.post(f"/v1/ventures/{venture['id']}/files", files=[("files[]", ("notes.md", f"Pantry context {secret}".encode(), "text/markdown")), ("files[]", ("context.pdf", pdf.getvalue(), "application/pdf"))]))
+    assert [f["name"] for f in result["items"]] == ["notes.md", "context.pdf"]
     stored = rows(client, "SELECT * FROM files WHERE venture_id=?", (venture["id"],))
     text = next(f for f in stored if f["name"] == "notes.md")
     assert "Pantry context" in text["excerpt"] and secret not in text["excerpt"]
     assert "[REDACTED]" in text["excerpt"]
     assert Path(text["path"]).is_relative_to(client.app.state.settings.data_dir / "uploads" / venture["id"])
     assert secret not in Path(text["path"]).read_text()
+    assert "Pantry PDF context" in next(f["excerpt"] for f in stored if f["name"] == "context.pdf")
     assert all(Path(f["path"]).exists() for f in stored)
 
 
