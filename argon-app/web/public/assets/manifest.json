@@ -1,12 +1,770 @@
 {
   "version": 1,
-  "generatedAt": null,
-  "textures": [],
-  "materials": {},
-  "models": [],
-  "props": {},
-  "streetFurniture": {},
-  "hdris": [],
+  "generatedAt": "2026-10-25T19:35:32.202Z",
+  "textures": [
+    {
+      "id": "polyhaven/asphalt_02",
+      "tileMeters": 3.000000238418579,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/asphalt_02/color_{res}.webp",
+        "normal": "/assets/textures/asphalt_02/normal_{res}.webp",
+        "roughness": "/assets/textures/asphalt_02/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/asphalt_02",
+        "author": "Rob Tuytel",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/blue_metal_plate",
+      "tileMeters": 2.5,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/blue_metal_plate/color_{res}.webp",
+        "normal": "/assets/textures/blue_metal_plate/normal_{res}.webp",
+        "roughness": "/assets/textures/blue_metal_plate/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/blue_metal_plate",
+        "author": "Rob Tuytel",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/clay_roof_tiles",
+      "tileMeters": 4,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/clay_roof_tiles/color_{res}.webp",
+        "normal": "/assets/textures/clay_roof_tiles/normal_{res}.webp",
+        "roughness": "/assets/textures/clay_roof_tiles/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/clay_roof_tiles",
+        "author": "Amal Kumar",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/cobblestone_floor_01",
+      "tileMeters": 1,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/cobblestone_floor_01/color_{res}.webp",
+        "normal": "/assets/textures/cobblestone_floor_01/normal_{res}.webp",
+        "roughness": "/assets/textures/cobblestone_floor_01/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/cobblestone_floor_01",
+        "author": "Rob Tuytel",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/concrete_pavement",
+      "tileMeters": 1.8000000715255737,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/concrete_pavement/color_{res}.webp",
+        "normal": "/assets/textures/concrete_pavement/normal_{res}.webp",
+        "roughness": "/assets/textures/concrete_pavement/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/concrete_pavement",
+        "author": "Charlotte Baglioni",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/dirt",
+      "tileMeters": 2,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/dirt/color_{res}.webp",
+        "normal": "/assets/textures/dirt/normal_{res}.webp",
+        "roughness": "/assets/textures/dirt/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/dirt",
+        "author": "Charlotte Baglioni",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/grass_ground",
+      "tileMeters": 2.509999990463257,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/grass_ground/color_{res}.webp",
+        "normal": "/assets/textures/grass_ground/normal_{res}.webp",
+        "roughness": "/assets/textures/grass_ground/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/grass_ground",
+        "author": "Charlotte Baglioni",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/grey_roof_tiles",
+      "tileMeters": 3,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/grey_roof_tiles/color_{res}.webp",
+        "normal": "/assets/textures/grey_roof_tiles/normal_{res}.webp",
+        "roughness": "/assets/textures/grey_roof_tiles/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/grey_roof_tiles",
+        "author": "Rob Tuytel",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/oak_wood_planks",
+      "tileMeters": 1.2000000476837158,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/oak_wood_planks/color_{res}.webp",
+        "normal": "/assets/textures/oak_wood_planks/normal_{res}.webp",
+        "roughness": "/assets/textures/oak_wood_planks/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/oak_wood_planks",
+        "author": "Dimitrios Savva",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/red_brick_03",
+      "tileMeters": 1,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/red_brick_03/color_{res}.webp",
+        "normal": "/assets/textures/red_brick_03/normal_{res}.webp",
+        "roughness": "/assets/textures/red_brick_03/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/red_brick_03",
+        "author": "Rob Tuytel",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/rough_linen",
+      "tileMeters": 0.2707081392676629,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/rough_linen/color_{res}.webp",
+        "normal": "/assets/textures/rough_linen/normal_{res}.webp",
+        "roughness": "/assets/textures/rough_linen/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/rough_linen",
+        "author": "colormass, Rico Cilliers",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/white_plaster_02",
+      "tileMeters": 1,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/white_plaster_02/color_{res}.webp",
+        "normal": "/assets/textures/white_plaster_02/normal_{res}.webp",
+        "roughness": "/assets/textures/white_plaster_02/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/white_plaster_02",
+        "author": "Rob Tuytel",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/wood_floor",
+      "tileMeters": 1.6999996900558472,
+      "resolutions": [
+        1024,
+        2048
+      ],
+      "maps": {
+        "color": "/assets/textures/wood_floor/color_{res}.webp",
+        "normal": "/assets/textures/wood_floor/normal_{res}.webp",
+        "roughness": "/assets/textures/wood_floor/roughness_{res}.webp"
+      },
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/wood_floor",
+        "author": "Dimitrios Savva",
+        "license": "CC0"
+      }
+    }
+  ],
+  "materials": {
+    "roof": {
+      "texture": "polyhaven/grey_roof_tiles"
+    },
+    "wood_floor": {
+      "texture": "polyhaven/wood_floor"
+    },
+    "plaster_wall": {
+      "texture": "polyhaven/white_plaster_02"
+    },
+    "wood_dark": {
+      "texture": "polyhaven/oak_wood_planks",
+      "tint": "#655044"
+    },
+    "wood_light": {
+      "texture": "polyhaven/oak_wood_planks"
+    },
+    "brick": {
+      "texture": "polyhaven/red_brick_03"
+    },
+    "plaza_stone": {
+      "texture": "polyhaven/cobblestone_floor_01"
+    },
+    "roof_red": {
+      "texture": "polyhaven/clay_roof_tiles"
+    },
+    "road": {
+      "texture": "polyhaven/asphalt_02"
+    },
+    "fabric_blue": {
+      "texture": "polyhaven/rough_linen",
+      "tint": "#94aec0",
+      "physical": {
+        "sheen": 0.3
+      }
+    },
+    "grass": {
+      "texture": "polyhaven/grass_ground"
+    },
+    "dirt": {
+      "texture": "polyhaven/dirt"
+    },
+    "metal_dark": {
+      "texture": "polyhaven/blue_metal_plate",
+      "roughness": 0.6,
+      "metalness": 0
+    },
+    "sidewalk": {
+      "texture": "polyhaven/concrete_pavement"
+    },
+    "plaster_warm": {
+      "texture": "polyhaven/white_plaster_02",
+      "tint": "#efdfcd"
+    },
+    "stucco": {
+      "texture": "polyhaven/white_plaster_02"
+    },
+    "trim": {
+      "texture": "polyhaven/oak_wood_planks",
+      "tint": "#f4f0e7"
+    },
+    "curb": {
+      "texture": "polyhaven/concrete_pavement"
+    },
+    "fabric_lavender": {
+      "texture": "polyhaven/rough_linen",
+      "tint": "#a99bbd",
+      "physical": {
+        "sheen": 0.3
+      }
+    },
+    "fabric_pink": {
+      "texture": "polyhaven/rough_linen",
+      "tint": "#c79ea9",
+      "physical": {
+        "sheen": 0.3
+      }
+    },
+    "fabric_cream": {
+      "texture": "polyhaven/rough_linen",
+      "tint": "#d9cfb7",
+      "physical": {
+        "sheen": 0.3
+      }
+    },
+    "fabric_coral": {
+      "texture": "polyhaven/rough_linen",
+      "tint": "#c89481",
+      "physical": {
+        "sheen": 0.3
+      }
+    },
+    "fabric_coral_dark": {
+      "texture": "polyhaven/rough_linen",
+      "tint": "#9c6b5f",
+      "physical": {
+        "sheen": 0.3
+      }
+    },
+    "metal_light": {
+      "texture": null,
+      "metalness": 1,
+      "roughness": 0.35
+    },
+    "paper": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "plant": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "pot": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "cable": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "screen": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "glass": {
+      "texture": null,
+      "roughness": 0.05,
+      "physical": {
+        "transmission": 0.95,
+        "ior": 1.5
+      }
+    },
+    "window_glow": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "accent": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "accent_dark": {
+      "texture": null,
+      "roughness": 0.7
+    },
+    "lane_marking": {
+      "texture": null,
+      "roughness": 0.7
+    }
+  },
+  "models": [
+    {
+      "id": "polyhaven/ArmChair_01",
+      "url": "/assets/models/ArmChair_01.glb",
+      "lods": [
+        "/assets/models/ArmChair_01_lod1.glb",
+        "/assets/models/ArmChair_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.8500000000000001,
+        "h": 0.9,
+        "d": 0.8500000000000001
+      },
+      "triangles": 5626,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/ArmChair_01",
+        "author": "Kirill Sannikov",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/book_encyclopedia_set_01",
+      "url": "/assets/models/book_encyclopedia_set_01.glb",
+      "lods": [
+        "/assets/models/book_encyclopedia_set_01_lod1.glb",
+        "/assets/models/book_encyclopedia_set_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.30000000000000004,
+        "h": 0.25,
+        "d": 0.22
+      },
+      "triangles": 14823,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/book_encyclopedia_set_01",
+        "author": "John Malcolm",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/industrial_pipe_lamp",
+      "url": "/assets/models/industrial_pipe_lamp.glb",
+      "lods": [
+        "/assets/models/industrial_pipe_lamp_lod1.glb",
+        "/assets/models/industrial_pipe_lamp_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.2,
+        "h": 0.44999999999999996,
+        "d": 0.2
+      },
+      "triangles": 8626,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/industrial_pipe_lamp",
+        "author": "Mateusz Sadek",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/metal_office_desk",
+      "url": "/assets/models/metal_office_desk.glb",
+      "lods": [
+        "/assets/models/metal_office_desk_lod1.glb",
+        "/assets/models/metal_office_desk_lod2.glb"
+      ],
+      "bbox": {
+        "w": 1.4,
+        "h": 0.75,
+        "d": 0.7
+      },
+      "triangles": 6898,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/metal_office_desk",
+        "author": "Ulan Cabanilla",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/painted_wooden_bench",
+      "url": "/assets/models/painted_wooden_bench.glb",
+      "lods": [
+        "/assets/models/painted_wooden_bench_lod1.glb",
+        "/assets/models/painted_wooden_bench_lod2.glb"
+      ],
+      "bbox": {
+        "w": 1.1649435758590698,
+        "h": 0.8892914750613272,
+        "d": 0.4965430945158005
+      },
+      "triangles": 630,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/painted_wooden_bench",
+        "author": "Kirill Sannikov",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/painted_wooden_table",
+      "url": "/assets/models/painted_wooden_table.glb",
+      "lods": [
+        "/assets/models/painted_wooden_table_lod1.glb",
+        "/assets/models/painted_wooden_table_lod2.glb"
+      ],
+      "bbox": {
+        "w": 3,
+        "h": 0.7600000000000001,
+        "d": 1.1
+      },
+      "triangles": 600,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/painted_wooden_table",
+        "author": "Kirill Sannikov",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/planter_box_01",
+      "url": "/assets/models/planter_box_01.glb",
+      "lods": [
+        "/assets/models/planter_box_01_lod1.glb",
+        "/assets/models/planter_box_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.9126113951206207,
+        "h": 0.42496823612600565,
+        "d": 0.4136679768562317
+      },
+      "triangles": 8094,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/planter_box_01",
+        "author": "James Ray Cock",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/potted_plant_01",
+      "url": "/assets/models/potted_plant_01.glb",
+      "lods": [
+        "/assets/models/potted_plant_01_lod1.glb",
+        "/assets/models/potted_plant_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.3994759465913837,
+        "h": 0.5932152297162226,
+        "d": 0.4
+      },
+      "triangles": 14835,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/potted_plant_01",
+        "author": "Rico Cilliers",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/round_wooden_table_02",
+      "url": "/assets/models/round_wooden_table_02.glb",
+      "lods": [
+        "/assets/models/round_wooden_table_02_lod1.glb",
+        "/assets/models/round_wooden_table_02_lod2.glb"
+      ],
+      "bbox": {
+        "w": 1.2,
+        "h": 0.7500000000000001,
+        "d": 1.2
+      },
+      "triangles": 4254,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/round_wooden_table_02",
+        "author": "Ulan Cabanilla",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/SchoolChair_01",
+      "url": "/assets/models/SchoolChair_01.glb",
+      "lods": [
+        "/assets/models/SchoolChair_01_lod1.glb",
+        "/assets/models/SchoolChair_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.5,
+        "h": 0.9,
+        "d": 0.49999999999999994
+      },
+      "triangles": 5072,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/SchoolChair_01",
+        "author": "Ethan Place",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/Sofa_01",
+      "url": "/assets/models/Sofa_01.glb",
+      "lods": [
+        "/assets/models/Sofa_01_lod1.glb",
+        "/assets/models/Sofa_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 2,
+        "h": 0.8500000000000001,
+        "d": 0.9
+      },
+      "triangles": 4101,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/Sofa_01",
+        "author": "Kirill Sannikov",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/street_lamp_01",
+      "url": "/assets/models/street_lamp_01.glb",
+      "lods": [
+        "/assets/models/street_lamp_01_lod1.glb",
+        "/assets/models/street_lamp_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.7040164172649384,
+        "h": 3.8705554008483887,
+        "d": 0.38649316132068634
+      },
+      "triangles": 14118,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/street_lamp_01",
+        "author": "Josh Dean",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/wall_clock",
+      "url": "/assets/models/wall_clock.glb",
+      "lods": [
+        "/assets/models/wall_clock_lod1.glb",
+        "/assets/models/wall_clock_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.5,
+        "h": 0.5,
+        "d": 0.08000000000000002
+      },
+      "triangles": 3658,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/wall_clock",
+        "author": "PierreB3D",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/wine_barrel_01",
+      "url": "/assets/models/wine_barrel_01.glb",
+      "lods": [
+        "/assets/models/wine_barrel_01_lod1.glb",
+        "/assets/models/wine_barrel_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.6,
+        "h": 0.9,
+        "d": 0.6
+      },
+      "triangles": 10820,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/wine_barrel_01",
+        "author": "James Ray Cock",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/wooden_bookshelf_worn",
+      "url": "/assets/models/wooden_bookshelf_worn.glb",
+      "lods": [
+        "/assets/models/wooden_bookshelf_worn_lod1.glb",
+        "/assets/models/wooden_bookshelf_worn_lod2.glb"
+      ],
+      "bbox": {
+        "w": 1,
+        "h": 1.9999999999999998,
+        "d": 0.35
+      },
+      "triangles": 10106,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/wooden_bookshelf_worn",
+        "author": "Ulan Cabanilla",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/wooden_crate_01",
+      "url": "/assets/models/wooden_crate_01.glb",
+      "lods": [
+        "/assets/models/wooden_crate_01_lod1.glb",
+        "/assets/models/wooden_crate_01_lod2.glb"
+      ],
+      "bbox": {
+        "w": 0.6,
+        "h": 0.6,
+        "d": 0.6
+      },
+      "triangles": 6576,
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/wooden_crate_01",
+        "author": "James Ray Cock",
+        "license": "CC0"
+      }
+    }
+  ],
+  "props": {
+    "armchair": "polyhaven/ArmChair_01",
+    "sofa": "polyhaven/Sofa_01",
+    "chair": "polyhaven/SchoolChair_01",
+    "desk": "polyhaven/metal_office_desk",
+    "table_long": "polyhaven/painted_wooden_table",
+    "bookshelf": "polyhaven/wooden_bookshelf_worn",
+    "table_round": "polyhaven/round_wooden_table_02",
+    "barrel": "polyhaven/wine_barrel_01",
+    "clock": "polyhaven/wall_clock",
+    "lamp_desk": "polyhaven/industrial_pipe_lamp",
+    "crate": "polyhaven/wooden_crate_01",
+    "books": "polyhaven/book_encyclopedia_set_01",
+    "plant_small": "polyhaven/potted_plant_01"
+  },
+  "streetFurniture": {
+    "street_lamp": "polyhaven/street_lamp_01",
+    "planter": "polyhaven/planter_box_01",
+    "bench": "polyhaven/painted_wooden_bench"
+  },
+  "hdris": [
+    {
+      "id": "polyhaven/kloofendal_38d_partly_cloudy",
+      "url": "/assets/hdri/kloofendal_38d_partly_cloudy.hdr",
+      "use": "exterior",
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/kloofendal_38d_partly_cloudy",
+        "author": "Greg Zaal",
+        "license": "CC0"
+      }
+    },
+    {
+      "id": "polyhaven/small_empty_room_1",
+      "url": "/assets/hdri/small_empty_room_1.hdr",
+      "use": "interior",
+      "credit": {
+        "source": "Poly Haven",
+        "url": "https://polyhaven.com/a/small_empty_room_1",
+        "author": "Sergej Majboroda",
+        "license": "CC0"
+      }
+    }
+  ],
   "characters": [],
   "vehicles": []
 }
