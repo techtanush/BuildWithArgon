@@ -95,6 +95,7 @@ Need a change there? → `docs/contract-requests/ayan.md`. Check before every pu
 | DB | `db.Database` (`tx()`, `fetch_one`, `fetch_all`), full schema incl. `computers`, `computer_tasks`, `computer_actions`, `worldgen_runs`, `worldgen_iterations`, `eval_results`, `integrations`, `github_seen`, `kv` (see `schema.sql`) | Working |
 | Redaction | `security.redact(text)` on every LLM output, file block and Composio payload before storage | Working |
 | Capture handshake | `web/src/world/probes/types.ts` (`window.__foundryProbe`, `ProbeResult`, `BuildingProbeReport`, cameras, which probes each mode computes) | Mahin's page; seed page answers `ready: true, error: "not implemented"` |
+| Props library table for the prompt | `web/src/world/kit/props.contract.ts` (`PROP_FOOTPRINTS`, frozen) | Final — generate the prompt's PROPS LIBRARY table from it |
 | Prompt example module | `web/src/world/buildings/example/house.example.ts` | Final (passes the probes by construction). After the merge, switch to the `house` archetype in Mahin's `fallback/archetypes.ts` if it exists |
 
 ## 5. What others rely on from you (keep these names and signatures)
@@ -120,7 +121,9 @@ Need a change there? → `docs/contract-requests/ayan.md`. Check before every pu
   `/v1/ventures/{vid}/computers`, `/v1/computers/*`, `/v1/computer-tasks/*`, `/preview/*` (Tanush's
   dashboard and Mahin's world call them).
 - Worldgen outputs at the exact paths in `05-world/09`: `generated/<dept>.ts` default-exporting a
-  `BuildingModule`, `generated/index.ts` exporting `generatedModules`, `generated/registry.json`.
+  `BuildingModule`, `generated/registry.json`, and `generated/index.ts` keeping the seed's export
+  shape exactly: `export const generatedModules: Partial<Record<string, BuildingModule>> = { engineering, ... };`
+  (Mahin indexes it by department id).
 
 ## 6. Build steps (phases from `06-execution/01-12-hour-build-plan.md`)
 
