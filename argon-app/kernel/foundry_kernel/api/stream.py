@@ -26,13 +26,15 @@ def encode(event: dict[str, Any]) -> str:
 
 
 async def events(db: Any, venture_id: str, last_id: int | None = None, *,
-                 heartbeat_seconds: float = 15) -> AsyncIterator[str]:
+                 heartbeat_seconds: float = 15, announce: bool = False) -> AsyncIterator[str]:
     # Subscribe first: a commit concurrent with the replay query cannot fall into a gap.
     queue = BROKER.subscribe(venture_id)
     try:
         watermark = await db.fetch_one("SELECT COALESCE(MAX(id),0) AS n FROM events")
         high = watermark["n"]
         cursor = high if last_id is None else last_id
+        if announce:
+            yield ": connected\n\n"
         if last_id is not None:
             while cursor < high:
                 rows = await db.fetch_all(
@@ -87,5 +89,5 @@ async def stream(request: Request, vid: str, last_event_id: str | None = Header(
             raise ValueError
     except ValueError:
         raise KernelError(400, "validation", "Last-Event-ID must be a non-negative integer") from None
-    return StreamingResponse(events(db, vid, last_id), media_type="text/event-stream",
+    return StreamingResponse(events(db, vid, last_id, announce=True), media_type="text/event-stream",
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})

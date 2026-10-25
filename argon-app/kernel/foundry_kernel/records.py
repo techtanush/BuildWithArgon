@@ -157,6 +157,8 @@ async def serialize_department(db: Any, row: dict, vid: str) -> dict:
             counts[count["status"]] = count["n"]
     result["counts"] = counts
     result["agents"] = [r["id"] for r in await db.fetch_all("SELECT id FROM agents WHERE department_id=? AND (venture_id IS NULL OR venture_id=?) ORDER BY id", (row["id"], vid))]
+    paused = await db.fetch_one("SELECT value_json FROM kv WHERE key=?", (f"dept.paused.{vid}.{row['id']}",))
+    result["paused"] = json_loads(paused["value_json"], False) is True if paused else False
     return result
 
 

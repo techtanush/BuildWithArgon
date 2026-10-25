@@ -1,5 +1,7 @@
 # OWNER: tanush
 """Provider configuration and genuine world generation status."""
+from typing import Literal
+
 from fastapi import APIRouter, Request
 from pydantic import BaseModel
 
@@ -30,6 +32,7 @@ class SystemStatus(BaseModel):
     providers: Providers
     executor: str
     worldgen: WorldgenStatus
+    mode: Literal["live", "fake"]
 
 
 @router.get("/v1/system/status", response_model=Envelope[SystemStatus])
@@ -41,7 +44,7 @@ async def status(request: Request):
     if executor not in {"local", "antigravity"}:
         executor = cfg.engineering_executor
     gemini = bool(cfg.gemini_api_key and cfg.gemini_api_key.get_secret_value())
-    return {"data": {"providers": {
+    return {"data": {"mode": cfg.llm_mode, "providers": {
         "gemini": {"configured": gemini},
         "antigravity": {"configured": gemini},
         "composio": {"configured": bool(cfg.composio_api_key and cfg.composio_api_key.get_secret_value())},

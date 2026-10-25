@@ -5,14 +5,16 @@ from __future__ import annotations
 
 import asyncio
 import io
+import json
 import re
 from pathlib import Path
+from typing import Literal
 
 from fastapi import APIRouter, Query, Request
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from pypdf import PdfReader
 
-from .. import bus
+from .. import bus, gates
 from ..api_models import Envelope, Page, Venture, VentureDetail
 from ..errors import ConflictError, KernelError
 from ..ids import new_id, utc_now
@@ -21,6 +23,7 @@ from ..records import (
     create_ticket,
     cursor_clause,
     get_row,
+    json_loads,
     page_rows,
     serialize_venture,
 )
@@ -207,3 +210,87 @@ async def budget(vid: str, request: Request):
     return {"data": {"budget_usd": venture["budget_usd"], "spent_usd": venture["spent_usd"],
                      "by_department": await db.fetch_all("SELECT department_id,SUM(cost_usd) AS cost_usd FROM ledger WHERE venture_id=? GROUP BY department_id ORDER BY department_id", (vid,)),
                      "by_model": await db.fetch_all("SELECT model,SUM(cost_usd) AS cost_usd FROM ledger WHERE venture_id=? GROUP BY model ORDER BY model", (vid,))}}
+
+
+class VentureSettings(BaseModel):
+    founder_name: str
+    budget_usd: float
+    autopilot_next: bool
+    quality_default: Literal["low", "medium", "high"]
+    executor: Literal["antigravity", "local"]
+    approval_id: str | None = None
+
+
+class UpdateSettings(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    founder_name: str | None = Field(default=None, min_length=2, max_length=60)
+    budget_usd: float | None = Field(default=None, gt=0, allow_inf_nan=False)
+    autopilot_next: bool | None = Field(default=None, strict=True)
+    quality_default: Literal["low", "medium", "high"] | None = None
+
+    @field_validator("founder_name")
+    @classmethod
+    def founder_has_name(cls, name):
+        if name is not None:
+            name = name.strip()
+            if len(name) < 2:
+                raise ValueError("Founder name must contain at least two non-space characters")
+        return name
+
+    @model_validator(mode="after")
+    def explicit_values(self):
+        if any(getattr(self, name) is None for name in self.model_fields_set):
+            raise ValueError("Settings values cannot be null")
+        return self
+
+
+async def settings_view(db, venture, cfg):
+    saved = json_loads(venture["settings_json"], {})
+    override = await db.fetch_one("SELECT value_json FROM kv WHERE key='executor.override'")
+    executor = json_loads(override["value_json"], None) if override else None
+    pending = await db.fetch_one("SELECT id FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' ORDER BY created_at,id LIMIT 1", (venture["id"],))
+    return {"founder_name": venture["founder_name"], "budget_usd": venture["budget_usd"],
+            "autopilot_next": saved.get("autopilot_next") is True,
+            "quality_default": saved.get("quality_default") if saved.get("quality_default") in ("low", "medium", "high") else "high",
+            "executor": executor if executor in ("antigravity", "local") else cfg.engineering_executor,
+            "approval_id": pending["id"] if pending else None}
+
+
+@router.get("/v1/ventures/{vid}/settings", response_model=Envelope[VentureSettings])
+async def get_settings(vid: str, request: Request):
+    db = request.app.state.db
+    return {"data": await settings_view(db, await get_row(db, "ventures", vid), request.app.state.settings)}
+
+
+@router.post("/v1/ventures/{vid}/settings", response_model=Envelope[VentureSettings])
+async def update_settings(vid: str, body: UpdateSettings, request: Request):
+    db, cfg = request.app.state.db, request.app.state.settings
+    values = clean(body.model_dump(exclude_unset=True), cfg)
+    async with db.tx() as tx:
+        venture = await get_row(tx, "ventures", vid)
+        saved = json_loads(venture["settings_json"], {})
+        cap = venture["budget_usd"]
+        desired = values.get("budget_usd", cap)
+        pending = await tx.fetch_one("SELECT * FROM approvals WHERE venture_id=? AND gate_type='spend' AND status='pending' ORDER BY created_at,id LIMIT 1", (vid,))
+        if desired < venture["spent_usd"]:
+            raise KernelError(400, "budget_below_spend", "Budget cannot be lower than recorded spend")
+        if desired != cap and pending:
+            proposed = json_loads(pending["payload_json"], {})
+            target = proposed.get("budget_usd", cap) + proposed.get("requested_increase_usd", 0)
+            if desired != target:
+                raise ConflictError("Decide the pending budget approval before proposing another budget", {"approval_id": pending["id"]})
+        elif desired > cap:
+            breakdown = await tx.fetch_all("SELECT department_id,SUM(cost_usd) AS cost_usd FROM ledger WHERE venture_id=? GROUP BY department_id", (vid,))
+            await gates.request_approval(tx, venture_id=vid, gate_type="spend", title="Raise the venture budget",
+                summary=f"Raise the approved spending limit from ${cap:.2f} to ${desired:.2f}.",
+                payload={"budget_usd": cap, "spent_usd": venture["spent_usd"], "requested_increase_usd": desired-cap, "breakdown": breakdown}, requested_by_agent_id="fp.cfo")
+        elif desired < cap:
+            cap = desired
+        for field in ("autopilot_next", "quality_default"):
+            if field in values:
+                saved[field] = values[field]
+        await tx.execute("UPDATE ventures SET founder_name=?,budget_usd=?,settings_json=?,updated_at=? WHERE id=?", (values.get("founder_name", venture["founder_name"]), cap, json.dumps(saved), utc_now(), vid))
+        updated = await get_row(tx, "ventures", vid)
+        await bus.emit(tx, venture_id=vid, type="venture.updated", entity_kind="venture", entity_id=vid, data=serialize_venture(updated))
+        result = await settings_view(tx, updated, cfg)
+    return {"data": result}

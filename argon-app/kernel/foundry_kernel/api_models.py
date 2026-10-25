@@ -62,6 +62,7 @@ class Department(BaseModel):
     building_name: str
     counts: TicketCounts
     agents: list[str]
+    paused: bool = False
 
 
 class AgentState(BaseModel):
