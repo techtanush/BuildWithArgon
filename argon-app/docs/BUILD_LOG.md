@@ -6,6 +6,7 @@ to their own file; the merge session appends a combined timeline here.
 - [`build-logs/tanush.md`](build-logs/tanush.md)
 - [`build-logs/ayan.md`](build-logs/ayan.md)
 - [`build-logs/mahin.md`](build-logs/mahin.md)
+- [`build-logs/karthik.md`](build-logs/karthik.md)
 
 ## Merge session
 

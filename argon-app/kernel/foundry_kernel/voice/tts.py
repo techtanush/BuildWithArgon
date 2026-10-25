@@ -1,4 +1,4 @@
-# OWNER: ayan — seed version; replace/extend freely but keep the public signatures.
+# OWNER: karthik — seed version; replace/extend freely but keep the public signatures.
 
 """TTS. Contract: always returns a TtsResponse; provider="browser" means the client speaks it."""
 from __future__ import annotations

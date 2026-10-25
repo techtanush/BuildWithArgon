@@ -62,8 +62,8 @@ Full context: [`00-overview/02-hackathon-context.md`](00-overview/02-hackathon-c
 Read **all of section 00 and 01 before writing any code.** Then read the section for whatever
 phase you are on in [`06-execution/01-12-hour-build-plan.md`](06-execution/01-12-hour-build-plan.md).
 
-**Team build (Tanush, Ayan, Mahin):** `argon-app/` on `main` is a frozen-contract seed, and each
-person builds on their own branch (`tanush`, `ayan`, `mahin`). Read
+**Team build (Tanush, Ayan, Mahin, Karthik):** `argon-app/` on `main` is a frozen-contract seed, and each
+person builds on their own branch (`tanush`, `ayan`, `mahin`, `karthik`). Read
 [`06-execution/07-team-split.md`](06-execution/07-team-split.md) and the `WORKORDER_<NAME>.md` at
 the root of your branch after sections 00 and 01.
 
@@ -75,7 +75,7 @@ the root of your branch after sections 00 and 01.
 | 03 | [`03-company-kernel/`](03-company-kernel/) | The 13 departments and 29 agents (with a **deep dive per department** in `departments/`), how agents **direct each other** (delegation, requests, asks, standups, escalation), group chats, the autonomous engineering loop, support/PR loop, improvement loop, approval gates, prompts, grounding & citations |
 | 04 | [`04-dashboard/`](04-dashboard/) | The web dashboard and onboarding |
 | 05 | [`05-world/`](05-world/) | "Enter the view": the **full game experience** (`00-game-experience.md`), look kit, city layout, 13 buildings, characters & lip-sync, navigation (walk / race / fast travel), NPC conversation, Concierge, Argon world generation, render→critique→fix loop, performance |
-| 06 | [`06-execution/`](06-execution/) | Hour-by-hour build plan, acceptance criteria, tests, evals, risks & fallbacks, operating rules for the coding agent, **the three-person team split and merge plan** |
+| 06 | [`06-execution/`](06-execution/) | Hour-by-hour build plan, acceptance criteria, tests, evals, risks & fallbacks, operating rules for the coding agent, **the four-person team split and merge plan** |
 | — | [`reference/`](reference/) | Google's Argon builder guide (PDF + transcription), the hackathon problem statements, prior-winner research, and the **reuse guide for the old Foundry code in this repo** (what you can and can't take) |
 | — | [`assets/`](assets/) | The reference render that defines the visual target |
 | — | [`templates/`](templates/) | Files to copy verbatim into `argon-app/`: `.env.example`, `AGENTS.md`, `DESIGN.md`, `roster.json`, eval briefs, grounding questions |

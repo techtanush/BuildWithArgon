@@ -179,7 +179,7 @@ world loads offline); update README with run instructions and links to eval resu
 
 ---
 
-## Parallel version (our team of 3, each with a coding agent)
+## Parallel version (our team of 4, each with a coding agent)
 
 Phase 0 is already done: `argon-app/` on `main` is a frozen-contract seed (every module exists with
 its final interface; shared contracts are frozen; `make test` is green). Each person works on their
@@ -188,9 +188,10 @@ checklist: [`07-team-split.md`](07-team-split.md).
 
 | Lane | Owner (branch) | Phases |
 |---|---|---|
-| A — Kernel core, company & dashboard | **Tanush** (`tanush`) | 2, 3, 4 (whole dashboard), kernel side of 7 (conversation, checker, manifest route), 9 (grounding eval, improvement loop, metrics) |
-| B — Models, engineering, integrations & worldgen | **Ayan** (`ayan`) | 1, 3's background asset jobs (faces → portraits → textures), 5, voice kernel side of 7, kernel/script side of 8, 9 (engineering eval, support loop, Cua computers) |
-| C — The 3D world | **Mahin** (`mahin`) | 6, web side of 7 (characters, lip-sync, conversation UI, race, fast travel, HUD), web side of 8 (capture page, probes), Town Hall playback, performance |
+| A — Kernel core, company & dashboard | **Tanush** (`tanush`) | 2, 3, 4 (whole dashboard), kernel side of 7 (conversation, checker, manifest route), 9 (improvement loop, metrics) |
+| B — Models, engineering, integrations & worldgen | **Ayan** (`ayan`) | 1, 3's background asset jobs (faces → portraits → textures), 5, kernel/script side of 8, 9 (engineering eval, support loop, Cua computers) |
+| C — The 3D world | **Mahin** (`mahin`) | 6, web side of 7 (characters, conversation UI, race, fast travel, HUD), web side of 8 (capture page, probes), Town Hall playback, performance |
+| D — Voice & grounding eval (smaller lane, Claude Pro) | **Karthik** (`karthik`) | 7's voice pieces end to end (ElevenLabs/Gemini TTS + cache + voice assignment, STT, `/v1/voice/*`, browser mic/STT/speech, visemes, lip-sync), 9 (grounding eval) |
 
 The frozen contracts (agreed up front, edited only in the merge session): `schema.sql`,
 `contracts.py`, `shared/contracts.ts`, `kit/types.ts`, FaceSpec, `probes/types.ts`, the manifest
