@@ -95,4 +95,11 @@ WEB_URL=http://localhost:5173
 Also once per machine: `cd web && pnpm exec playwright install --only-shell chromium` and
 `cd kernel && uv run python -m foundry_kernel.executors.workspace prepare-cache`.
 
-**Dependencies added:** none.
+**Dependencies added:** none new; the `computers` extra in `kernel/pyproject.toml` is pinned to the matching pair
+`cua==0.5.0` + `cua-sandbox==0.9.1` (newer `cua` 0.9.0 changed `embedded()` and breaks `cua_sandbox`).
+
+**Cua status (2026-10-25):** CLI + Lume installed; with the pinned pair the SDK reaches the local runtime, but the
+one-time built-in Linux runtime download (`~/.cua/runtimes/linux`) failed twice on this network ("error decoding
+response body" at 364 MB and 477 MB). No sandbox has booted yet → `CUA_MODE=off`. On a faster network:
+`uv sync --extra dev --extra computers`, then the sandbox smoke in `docs/verified/ayan.md` §Cua, then
+`CUA_MODE=sandbox`.
