@@ -47,3 +47,11 @@ All departments remain available. Engineering now has an explicitly authorized s
 `pnpm dev:portable` is a loopback-only explicit local demo launcher. Production builds use the portable compiler with local demo disabled and fail-closed account configuration. The demo's new API routes require the matching updated Python backend. Executive HQ includes a separately labeled scripted demo briefing; it is not evidence of live work.
 
 Latest focused release validation: 924 backend tests, frontend TypeScript and production web bundle passed. Vitest startup remains blocked in this macOS environment. Actual microphone audio, a configured OpenAI request, LinkedIn OAuth/publication, and a live full demo still need acceptance after restarting the old local API. Missing provider keys are not simulated connections.
+
+### Latest local acceptance
+
+The idea brief now saves a draft and opens the optional connector catalog before an explicit Start action. Generic briefs produce scoped model-assisted concept copy and real four-role handoffs; unrelated chatbots are not converted into tutor apps. Generic prototypes do not claim arbitrary application functionality.
+
+The AI-tutor Marketing flow was run using `gemini-4-argon`: it retrieved two public source pages, validated exact quotations and source URLs, persisted the Lucia/Sam conversation, and generated a five-page downloadable PDF. The same artifact is available in Marketing chat and Dashboard Artifacts. Other markets receive an explicitly brief-based Argon launch draft, not recycled tutoring evidence or invented citations. Those generic changes were regression-tested with mocked generation, not separately live-provider-tested.
+
+Latest verification: 941 backend tests, TypeScript and production build pass. Browser signup/logout/login, tutor answer and secure key-save actions passed. Microphone audio and live LinkedIn OAuth/publication still require separate acceptance; no social post has been published.

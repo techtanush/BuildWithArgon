@@ -37,7 +37,7 @@ async def test_deterministic_stages(settings, db):
     content=LandingContent(title='App',headline='Actual idea',description='Prototype',features=['One'],plan=['Build'])
     root=root_for(settings,'ven_test');root.mkdir(parents=True)
     (root/'content.json').write_text(content.model_dump_json())
-    ctx=SimpleNamespace(settings=settings,db=db,venture={'id':'ven_test'},run_id='run_test')
+    ctx=SimpleNamespace(settings=settings,db=db,venture={'id':'ven_test','name':'SupplyDesk','idea':'Customer support chatbot'},run_id='run_test',post=AsyncMock())
     build=await StarterHandler().handle({'id':'tkt_test','type':'starter.build'},ctx)
     assert build.outcome=='done' and (root/'index.html').is_file()
     qa=await StarterHandler().handle({'id':'tkt_test','type':'starter.qa'},ctx)
@@ -67,6 +67,7 @@ async def test_real_scheduler_chain_with_fake_provider(db, settings, monkeypatch
             async with db.tx() as tx:
                 await ledger.record(tx, venture_id=kw['venture_id'], run_id=kw['run_id'], kind='model', cost_usd=.001, model=job(name).model)
             return LLMResult(text=LandingContent(title='Pantry',headline='Know your ingredients',description='Pantry concept',features=['Track items'],plan=['Build static prototype']).model_dump_json(), model=job(name).model, interaction_id='unit', cost_usd=.001)
+    monkeypatch.setattr('foundry_kernel.departments.starter.asyncio', SimpleNamespace(sleep=AsyncMock()))
     provider=FakeProvider()
     vid, scheduler=await company(db,settings,llm=provider,status='draft')
     request=SimpleNamespace(app=scheduler.app)
@@ -83,7 +84,17 @@ async def test_real_scheduler_chain_with_fake_provider(db, settings, monkeypatch
     assert data['status']=='ready' and provider.calls==1
     assert len(data['runs'])==4 and len(data['artifacts'])==4
     assert sum(r['model']=='none (deterministic)' for r in data['runs'])==3
-    assert (await preview(vid,request)).status_code==200
+    response = await preview(vid,request)
+    assert response.status_code==200
+    assert '<script>' not in response.body.decode() and 'AI-Tutor' not in response.body.decode()
+    assert "connect-src 'none'" in response.headers['content-security-policy']
+    import json
+    artifacts = await db.fetch_all('SELECT meta_json FROM artifacts WHERE venture_id=?', (vid,))
+    assert len(artifacts)==4 and all(json.loads(a['meta_json'])['tutor_included'] is False for a in artifacts)
+    handoffs = await db.fetch_all("SELECT body,author_kind,author_id FROM messages WHERE venture_id=? AND body LIKE '%Founder brief:%'", (vid,))
+    assert len(handoffs)==4 and all(m['author_kind']=='agent' and m['author_id'] for m in handoffs)
+    assert all('Track ingredients in a pantry' in m['body'] and 'tutor' not in m['body'].lower() for m in handoffs)
+    assert any(job('starter_content').model in m['body'] or job('agent_request').model in m['body'] for m in handoffs)
     msg=await db.fetch_one("SELECT body FROM messages WHERE venture_id=? AND body LIKE 'Landing-page starter built%'",(vid,))
     assert data['preview_url'] in msg['body']
     assert await db.fetch_one("SELECT id FROM events WHERE venture_id=? AND type='artifact.created'",(vid,))
@@ -175,3 +186,10 @@ async def test_prebuilt_real_start_messages_and_runtime_pacing(db, settings, mon
     assert 'no model-generated code or content' in preview['content_md']
     provider.generate.assert_not_awaited()
     await scheduler.stop()
+
+
+def test_generic_renderer_no_tutor_and_escaped():
+    output = render(LandingContent(title='SupplyDesk', headline='Support <script>unsafe</script>', description='Customer support chatbot concept', features=['<iframe>'], plan=['Static concept']), tutor_included=False)
+    assert '<script>' not in output and '<iframe' not in output
+    assert 'AI-Tutor' not in output and 'tutor' not in output.lower()
+    assert '&lt;script&gt;' in output and 'No accounts, payments, chat' in output

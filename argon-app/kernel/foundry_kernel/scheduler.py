@@ -36,6 +36,9 @@ def _since(value: str | None, now: datetime) -> float:
 
 
 def ticket_job(ticket: dict, agent: dict) -> str:
+    research_payload = ticket.get("payload") if isinstance(ticket.get("payload"), dict) else json_loads_or(ticket.get("payload_json"), {})
+    if ticket["type"] == "growth.launch_plan" and research_payload.get("research") is True:
+        return "marketing_research_plan"
     if ticket["type"].startswith("starter."):
         from .departments.starter import selected_job
         return selected_job()

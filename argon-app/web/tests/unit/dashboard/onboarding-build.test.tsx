@@ -16,15 +16,15 @@ vi.mock("../../../src/dashboard/context", () => ({ useCompany: () => ({ ventureI
 let root: Root, element: HTMLDivElement;
 beforeEach(() => {
   (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-  state.responses.clear(); state.post.mockReset(); state.get.mockReset(); state.configured = false; state.selectVenture.mockReset();
+  sessionStorage.clear(); state.responses.clear(); state.post.mockReset(); state.get.mockReset(); state.configured = false; state.selectVenture.mockReset();
   element = document.createElement("div"); document.body.append(element); root = createRoot(element);
 });
 afterEach(async () => { await act(async () => root.unmount()); element.remove(); });
 async function render(node: React.ReactNode, url = "/") { await act(async () => root.render(<MemoryRouter initialEntries={[url]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{node}</MemoryRouter>)); }
 async function fill(selector: string, value: string) { await act(async () => { const node = element.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)!; const proto = node.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(node, value); node.dispatchEvent(new Event("input", { bubbles: true })); }); }
 async function submit() { await act(async () => { element.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }); }
-it("keeps typing local and starts only after the explicit create-and-start submit", async () => {
-  state.post.mockResolvedValueOnce({ id: "ven_created", name: "Untitled project" }).mockResolvedValueOnce({ status: "queued", preview_url: null });
+it("keeps typing local and saves only the draft on explicit continue", async () => {
+  state.post.mockResolvedValueOnce({ id: "ven_created", name: "Untitled project" });
   await render(<Onboarding />);
   await fill('input[autocomplete="given-name"]', "Founder");
   await act(async () => element.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
@@ -34,7 +34,7 @@ it("keeps typing local and starts only after the explicit create-and-start submi
   expect(element.querySelectorAll('textarea')).toHaveLength(1);
   await submit();
   expect(state.post).toHaveBeenNthCalledWith(1, "/v1/ventures", expect.objectContaining({ name: "Untitled project", idea: expect.stringContaining("Founder intent: Discover an idea for me."), budget_usd: 25 }));
-  expect(state.post).toHaveBeenNthCalledWith(2, "/v1/ventures/ven_created/starter/start", { budget_usd: 0.25 });
+  expect(state.post).toHaveBeenCalledTimes(1);
 });
 it("opens a world channel query deep link by ID and shows only recorded participants", async () => {
   state.responses.set("/v1/ventures/ven_test/channels", { items: [{ id: "ch_eng", slug: "dept-engineering", name: "Engineering" }] });
@@ -97,31 +97,99 @@ it("does not show the current company conversation for an unknown deep-linked co
   expect(state.selectVenture).not.toHaveBeenCalled();
 });
 
-function CurrentRoute() { return <output data-current-route>{useLocation().pathname}</output>; }
-it("finishes onboarding in the normal dashboard, not the world", async () => {
-  state.post.mockResolvedValue({ id: "ven_created", name: "My idea" });
-  await render(<><Onboarding /><CurrentRoute /></>, "/onboarding");
-  await fill('input[autocomplete="given-name"]', "Founder");
-  await fill('input[maxlength="200"]', "My idea");
-  await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
+function CurrentRoute() { const location = useLocation(); return <output data-current-route>{location.pathname + location.search}</output>; }
+const connectionsRoute = '/onboarding?step=connections&venture=ven_created';
+async function prepareBrief() {
+  await render(<><Onboarding /><CurrentRoute /></>, '/onboarding');
+  await fill('input[autocomplete="given-name"]', 'Founder');
+  await fill('input[maxlength="200"]', 'My idea');
+  await fill('textarea', 'A useful app for teachers that helps organize lessons and collaborate safely with other educators.');
+}
+async function prepareConnections(idea = 'A useful product for teachers', draftId = 'ven_created') {
+  state.responses.set('/v1/ventures/ven_created', { id: draftId, name: 'Saved company', idea, budget_usd: 25 });
+  state.responses.set('/v1/ventures/ven_created/integrations', { items: [] });
+  await render(<><Onboarding /><CurrentRoute /></>, connectionsRoute);
+}
+async function clickStart() {
+  await act(async () => [...element.querySelectorAll('button')].find(button => button.textContent === 'Start building company')!.click());
+}
+it('saves the brief then navigates to connections without starting work', async () => {
+  state.post.mockResolvedValue({ id: 'ven_created', name: 'My idea' });
+  await prepareBrief();
+  await submit();
+  expect(state.post).toHaveBeenCalledTimes(1);
+  expect(state.post).toHaveBeenCalledWith('/v1/ventures', expect.objectContaining({ name: 'My idea' }));
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe(connectionsRoute);
+  expect(sessionStorage.getItem('foundry.just-launched')).toBeNull();
+});
+it('preserves a saved draft after upload failure and retries upload without duplicate creation', async () => {
+  state.post.mockResolvedValueOnce({ id: 'ven_created', name: 'My idea' }).mockRejectedValueOnce(new Error('Upload failed'));
+  await prepareBrief();
+  await act(async () => {
+    const input = element.querySelector<HTMLInputElement>('input[type="file"]')!;
+    Object.defineProperty(input, 'files', { configurable: true, value: [new File(['context'], 'context.txt', { type: 'text/plain' })] });
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await submit();
+  expect(element.textContent).toContain('Upload failed');
+  expect(element.textContent).toContain('Your project is saved');
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
+  state.post.mockResolvedValueOnce({});
+  await submit();
+  expect(state.post.mock.calls.filter(([url]) => url === '/v1/ventures')).toHaveLength(1);
+  expect(state.post.mock.calls.filter(([url]) => url === '/v1/ventures/ven_created/files')).toHaveLength(2);
+  expect(state.post).toHaveBeenNthCalledWith(3, '/v1/ventures/ven_created/files', expect.any(FormData));
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe(connectionsRoute);
+});
+it('retries a failed draft save without starting anything', async () => {
+  state.post.mockRejectedValueOnce(new Error('Save failed')).mockResolvedValueOnce({ id: 'ven_created' });
+  await prepareBrief();
+  await submit();
+  expect(element.textContent).toContain('Save failed');
   expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
   await submit();
-  expect(state.post).toHaveBeenCalledWith('/v1/ventures/ven_created/starter/start', { budget_usd: 0.25 });
+  expect(state.post.mock.calls.every(([url]) => url === '/v1/ventures')).toBe(true);
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe(connectionsRoute);
+});
+it('resumes the requested company with optional connections and no automatic POST or consent', async () => {
+  await prepareConnections();
+  expect(element.textContent).toContain('Saved company');
+  expect(element.textContent).toContain('No connections? You can still start.');
+  expect(state.selectVenture).toHaveBeenCalledWith('ven_created');
+  expect(state.post).not.toHaveBeenCalled();
+  expect(element.querySelector('a[target="_blank"]')).toBeNull();
+});
+it('starts only on the explicit button and opens the dashboard for that same company', async () => {
+  await prepareConnections('An AI Tutor for students');
+  state.post.mockResolvedValueOnce({ status: 'queued', preview_url: null });
+  expect(state.post).not.toHaveBeenCalled();
+  await clickStart();
+  expect(state.post).toHaveBeenCalledTimes(1);
+  expect(state.post).toHaveBeenCalledWith('/v1/ventures/ven_created/starter/start', { budget_usd: 0.25, scenario: 'ai_tutor_demo' });
   expect(element.querySelector('[data-current-route]')?.textContent).toBe('/dashboard');
   expect(sessionStorage.getItem('foundry.just-launched')).toBe('ven_created');
 });
-
-it("keeps the founder on onboarding if the actual backend start fails", async () => {
-  state.post.mockResolvedValueOnce({ id: "ven_created", name: "My idea" });
-  await render(<><Onboarding /><CurrentRoute /></>, "/onboarding");
-  await fill('input[autocomplete="given-name"]', "Founder");
-  await fill('input[maxlength="200"]', "My idea");
-  await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
-  state.post.mockRejectedValueOnce(new Error('Server authorization required'));
-  await submit();
-  expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
+it('keeps the saved company on a start failure and retries that same company', async () => {
+  await prepareConnections();
+  state.post.mockRejectedValueOnce(new Error('Server authorization required')).mockResolvedValueOnce({ status: 'queued' });
+  await clickStart();
   expect(element.textContent).toContain('Server authorization required');
-  state.post.mockResolvedValueOnce({ status: 'queued', preview_url: null });
-  await submit();
-  expect(state.post.mock.calls.filter(([url]) => url === '/v1/ventures')).toHaveLength(1);
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe(connectionsRoute);
+  await clickStart();
+  expect(state.post).toHaveBeenCalledTimes(2);
+  for (const call of state.post.mock.calls) expect(call).toEqual(['/v1/ventures/ven_created/starter/start', { budget_usd: 0.25 }]);
+  expect(element.querySelector('[data-current-route]')?.textContent).toBe('/dashboard');
+});
+it('never falls back to the current company when the requested draft is missing', async () => {
+  await render(<><Onboarding /><CurrentRoute /></>, connectionsRoute);
+  expect(element.textContent).toContain('Loading your saved company');
+  expect(element.textContent).not.toContain('Start building company');
+  expect(state.selectVenture).not.toHaveBeenCalled();
+  expect(state.post).not.toHaveBeenCalled();
+});
+it('rejects a mismatched company response instead of starting the wrong company', async () => {
+  await prepareConnections('A useful product', 'ven_test');
+  expect(element.textContent).not.toContain('Start building company');
+  expect(state.selectVenture).not.toHaveBeenCalled();
+  expect(state.post).not.toHaveBeenCalled();
 });

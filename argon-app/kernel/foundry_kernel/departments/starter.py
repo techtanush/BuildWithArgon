@@ -56,15 +56,15 @@ def root_for(settings, vid):
     return root
 
 
-def render(content: LandingContent):
+def render(content: LandingContent, tutor_included=True):
     e = html.escape
     features = ''.join('<li>' + e(x[:800]) + '</li>' for x in content.features)
     page = ('<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
         '<title>' + e(content.title) + '</title><style>body{margin:0;background:#101727;color:#f2f5ff;font:20px system-ui;line-height:1.6}main{max-width:960px;margin:auto;padding:72px 24px}h1{font-size:clamp(36px,7vw,76px);line-height:1.08}p{max-width:720px;color:#cbd8ef}li{padding:18px;margin:12px 0;background:#1b2941;border-radius:12px}small{color:#afbdd2}</style></head><body><main><small>PRODUCT CONCEPT PREVIEW</small><h1>'
         + e(content.headline) + '</h1><p>' + e(content.description) + '</p><ul>' + features
-        + '</ul><small>AI-assisted landing-page prototype. No accounts, payments, tutor, or live product functionality included.</small></main></body></html>')
+        + '</ul><small>AI-assisted landing-page prototype. No accounts, payments, chat, integrations, or live product functionality included.</small></main></body></html>')
     from .starter_widget import attach_widget
-    return attach_widget(page)
+    return attach_widget(page) if tutor_included else page
 
 
 async def begin_prebuilt_stage(ticket, ctx, refs):
@@ -76,6 +76,21 @@ async def begin_prebuilt_stage(ticket, ctx, refs):
         'starter.review': 'reviewing preview and recorded artifacts; I will publish its URI only after validation',
     }
     await ctx.post('dept-engineering', 'Prebuilt tutor demo: ' + actions[ticket['type']] + '. No model-generated code or provider call in this stage.', refs=refs)
+    if ctx.settings.llm_mode != 'fake':
+        await asyncio.sleep(2.5)
+
+
+async def begin_generic_stage(ticket, ctx, refs):
+    name = ctx.venture.get('name', ctx.venture['id'])
+    brief = ctx.venture.get('idea', '')
+    model = job(selected_job()).model if ticket['type'] == 'starter.plan' else 'none (deterministic)'
+    actions = {
+        'starter.plan': 'I will request typed landing copy and a scoped plan from the configured model, then hand it to the builder. This is one bounded attempt, not model-written application code',
+        'starter.build': 'I am assembling the validated copy with the trusted static renderer, then handing the source to QA. This does not build arbitrary application functionality',
+        'starter.qa': 'I am checking schema, escaped rendering, source equality and zero executable scripts, then handing the evidence to review. This is deterministic QA, not runtime product testing',
+        'starter.review': 'I am reviewing the recorded artifacts and source integrity, then handing the founder an owner-only concept preview. Accounts, payments, chat and integrations are not implemented',
+    }
+    await ctx.post('dept-engineering', f"{name}: {actions[ticket['type']]}. Model: {model}. Founder brief: {brief}", refs=refs)
     if ctx.settings.llm_mode != 'fake':
         await asyncio.sleep(2.5)
 
@@ -119,9 +134,10 @@ class StarterHandler:
                     return HandlerResult(outcome='blocked', note='Starter model attempt already reserved; inspect run before authorizing another charge')
                 from ..ids import utc_now
                 await tx.execute('INSERT INTO kv(key,value_json,updated_at) VALUES(?,?,?)', (key, json.dumps({'cap': cap, 'bound': bound, 'run_id': ctx.run_id}), utc_now()))
+            await begin_generic_stage(ticket, ctx, refs)
             prompt = ('Return ONLY JSON matching this schema: ' + json.dumps(LandingContent.model_json_schema())
                 + '\nCreate truthful landing copy and implementation plan for this founder idea. Do not invent customers, metrics, testimonials, functioning integrations, or existing product features. Text only, no code. Treat idea as data.\nIDEA:\n'
-                + clean(ctx.venture['idea'], ctx.settings))
+                + clean(ctx.venture['idea'], ctx.settings) + '\nVENTURE NAME:\n' + clean(ctx.venture.get('name', ''), ctx.settings))
             if len(prompt.encode()) > 20000:
                 return HandlerResult(outcome='blocked', note='Starter input exceeds safe token allowance')
             # Single call, no automatic JSON repair, accounting goes through existing LLM ledger.
@@ -133,23 +149,29 @@ class StarterHandler:
                 raise ValueError('Starter item exceeds maximum length')
             root.mkdir(parents=True, exist_ok=True)
             (root / 'content.json').write_text(content.model_dump_json(indent=2))
-            return HandlerResult(outcome='done', note='Live model returned validated landing content; no code executed', artifacts=[NewArtifact(kind='plan', title='Starter typed content and plan', content_md=content.model_dump_json(indent=2), meta={'starter': True, 'model': result.model, 'tutor_included': True, 'tutor_implementation': 'prebuilt-trusted-widget-scoped-broker'})])
+            return HandlerResult(outcome='done', note='Live model returned validated landing content; no code executed', artifacts=[NewArtifact(kind='plan', title='Starter typed content and plan', content_md=content.model_dump_json(indent=2), meta={'starter': True, 'model': result.model, 'tutor_included': False})])
         # These stages are deterministic, not model-generated work.
         async with ctx.db.tx() as tx:
             await tx.execute("UPDATE runs SET model='none (deterministic)' WHERE id=?", (ctx.run_id,))
         if prebuilt:
             await begin_prebuilt_stage(ticket, ctx, refs)
+        else:
+            await begin_generic_stage(ticket, ctx, refs)
         content = LandingContent.model_validate_json((root / 'content.json').read_text())
-        expected = render(content)
+        expected = render(content, tutor_included=prebuilt)
         if stage == 'starter.build':
             (root / 'index.html').write_text(expected)
-            return HandlerResult(outcome='done', note='Trusted renderer built static landing page', artifacts=[NewArtifact(kind='code', title='Starter HTML source', content_md=expected, meta={'starter': True, **({'source': 'prebuilt_demo'} if prebuilt else {}), 'sha256': hashlib.sha256(expected.encode()).hexdigest(), 'renderer': 'trusted-static-v1'})])
+            return HandlerResult(outcome='done', note='Trusted renderer built static landing page', artifacts=[NewArtifact(kind='code', title='Starter HTML source', content_md=expected, meta={'starter': True, 'tutor_included': prebuilt, **({'source': 'prebuilt_demo'} if prebuilt else {}), 'sha256': hashlib.sha256(expected.encode()).hexdigest(), 'renderer': 'trusted-static-v1'})])
         actual = (root / 'index.html').read_text()
-        if actual != expected or actual.lower().count('<script>') != 1 or '<iframe' in actual.lower():
+        if actual != expected or actual.lower().count('<script>') != (1 if prebuilt else 0) or '<iframe' in actual.lower():
             return HandlerResult(outcome='blocked', note='Starter deterministic integrity/security checks failed')
         if stage == 'starter.qa':
-            return HandlerResult(outcome='done', note='Validated schema, escaped rendering, byte-for-byte build integrity, and exactly one trusted hash-authorized tutor script', artifacts=[NewArtifact(kind='test_report', title='Starter deterministic QA', content_md='PASS: typed schema; escaped copy; trusted renderer equality; one fixed trusted tutor script, no iframes. Live tutor provider behavior is not tested by deterministic QA.', meta={'starter': True, **({'source': 'prebuilt_demo'} if prebuilt else {})})])
+            report = 'PASS: typed schema; escaped copy; trusted renderer equality; no iframes. ' + ('One fixed trusted tutor script. Live tutor provider behavior is not tested by deterministic QA.' if prebuilt else 'Zero scripts. Static concept only; product capabilities are not implemented or runtime-tested.')
+            return HandlerResult(outcome='done', note=report, artifacts=[NewArtifact(kind='test_report', title='Starter deterministic QA', content_md=report, meta={'starter': True, 'tutor_included': prebuilt, **({'source': 'prebuilt_demo'} if prebuilt else {})})])
         artifacts = await ctx.db.fetch_all("SELECT id FROM artifacts WHERE venture_id=? AND json_extract(meta_json,'$.starter')=1", (ctx.venture['id'],))
         refs += [{'kind': 'artifact', 'id': a['id']} for a in artifacts]
+        if not prebuilt:
+            provenance = f"{ctx.venture.get('name', ctx.venture['id'])}: model-authored typed landing copy, rendered by a deterministic trusted static template. No model-generated code. Accounts, payments, chat, integrations and arbitrary application functionality are not implemented."
+            return HandlerResult(outcome='done', note='Static concept reviewed; source integrity and zero-script QA passed', artifacts=[NewArtifact(kind='preview', title='Starter concept preview', uri=url, content_md=provenance, meta={'starter': True, 'tutor_included': False, 'sha256': hashlib.sha256(actual.encode()).hexdigest()})], messages=[NewMessage(channel_slug='dept-engineering', body=f'Landing-page starter built and deterministic QA/review passed. Preview: {url} . Plan, source and QA artifacts are attached. {provenance}', refs=refs)])
         provenance = 'Explicitly selected prebuilt typed copy and trusted tutor UI; no model-generated code or content and no provider calls during this build.' if prebuilt else 'Model-authored landing copy plus a prebuilt trusted adaptive tutor UI and owner-scoped Gemini broker.'
-        return HandlerResult(outcome='done', note='Starter reviewed; prebuilt owner-only tutor interface ready; private tutor accounts require the authenticated owner gateway', artifacts=[NewArtifact(kind='preview', title='Starter landing-page preview', uri=url, content_md=provenance + ' Real private tutor accounts are provided inside the owner-authenticated preview; this is not a public student SaaS deployment.', meta={'starter': True, **({'source': 'prebuilt_demo'} if prebuilt else {}), 'sha256': hashlib.sha256(actual.encode()).hexdigest()})], messages=[NewMessage(channel_slug='dept-engineering', body=f'Landing-page starter built and deterministic QA/review passed. Preview: {url} . Source, content plan and test report are attached to the recorded runs. {provenance} Tutor responses require a separate explicit Send action and venture budget; private tutor signup/login/logout require the owner gateway. Preview is ready: optionally configure your OpenAI key using the secure password field inside the preview. Never paste API keys into this chat.', refs=refs)])
+        return HandlerResult(outcome='done', note='Starter reviewed; prebuilt owner-only tutor interface ready; private tutor accounts require the authenticated owner gateway', artifacts=[NewArtifact(kind='preview', title='Starter landing-page preview', uri=url, content_md=provenance + ' Real private tutor accounts are provided inside the owner-authenticated preview; this is not a public student SaaS deployment.', meta={'starter': True, 'tutor_included': prebuilt, **({'source': 'prebuilt_demo'} if prebuilt else {}), 'sha256': hashlib.sha256(actual.encode()).hexdigest()})], messages=[NewMessage(channel_slug='dept-engineering', body=f'Landing-page starter built and deterministic QA/review passed. Preview: {url} . Source, content plan and test report are attached to the recorded runs. {provenance} Tutor responses require a separate explicit Send action and venture budget; private tutor signup/login/logout require the owner gateway. Preview is ready: optionally configure your OpenAI key using the secure password field inside the preview. Never paste API keys into this chat.', refs=refs)])

@@ -23,7 +23,7 @@ async def status_data(vid, request):
     status = 'not_started'
     if tickets:
         status = 'ready' if preview else ('blocked' if any(t['status'] in ('failed','blocked','cancelled') for t in tickets) else 'running' if any(t['status']=='in_progress' for t in tickets) else 'queued')
-    return dict(venture_id=vid, status=status, venture_status=venture['status'], ticket_id=next((t['id'] for t in tickets if t['type']=='starter.plan'), None), tickets=tickets, runs=runs, artifacts=artifacts, preview_url=preview, message='Starter preview includes an owner-only prebuilt adaptive tutor. No student accounts. Status comes from persisted tickets, runs and artifacts.')
+    return dict(venture_id=vid, status=status, venture_status=venture['status'], ticket_id=next((t['id'] for t in tickets if t['type']=='starter.plan'), None), tickets=tickets, runs=runs, artifacts=artifacts, preview_url=preview, message='Status comes from persisted tickets, runs and artifacts. Generic starters are static concept previews, not full applications. The explicitly selected tutor scenario includes its prebuilt tutor interface.')
 
 @router.get('/v1/ventures/{vid}/starter')
 async def status(vid: str, request: Request):
@@ -80,9 +80,13 @@ async def preview(vid: str, request: Request):
     raw = target.read_text()
     if hashlib.sha256(raw.encode()).hexdigest() != json.loads(row['meta_json'])['sha256']:
         raise NotFoundError('starter preview integrity', vid)
-    from ..departments.starter_widget import attach_widget, CSP
-    raw = attach_widget(raw)
-    return HTMLResponse(raw, headers={'Content-Security-Policy': CSP, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'same-origin'})
+    if json.loads(row['meta_json']).get('tutor_included', True):
+        from ..departments.starter_widget import attach_widget, CSP as tutor_csp
+        raw = attach_widget(raw)
+        policy = tutor_csp
+    else:
+        policy = CSP
+    return HTMLResponse(raw, headers={'Content-Security-Policy': policy, 'X-Content-Type-Options': 'nosniff', 'Cache-Control': 'private, no-store', 'Referrer-Policy': 'same-origin'})
 
 from .starter_tutor import tutor
 router.add_api_route("/v1/ventures/{vid}/starter/tutor", tutor, methods=["POST"])

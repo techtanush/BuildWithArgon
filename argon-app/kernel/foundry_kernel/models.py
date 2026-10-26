@@ -33,6 +33,7 @@ JOBS: dict[str, Job] = {
     # Opt-in typed landing starter only; existing planning jobs remain untouched.
     "starter_tutor": Job(ARGON, "low", 1024, timeout_s=45),
     "starter_content": Job(ARGON, "medium", 4096, timeout_s=120),
+    "marketing_research_plan": Job(ARGON, "low", 4096, timeout_s=120),
     # engineering
     "engineering_design": Job(ARGON, "high", 65_536, timeout_s=1200),
     "engineering_build": Job(ARGON, "high", 262_144, background=True),

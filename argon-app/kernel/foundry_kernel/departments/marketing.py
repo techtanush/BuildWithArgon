@@ -11,7 +11,7 @@ from pypdf.generic import DecodedStreamObject, DictionaryObject, NameObject
 
 from ..contracts import NewMessage
 from ..records import clean
-from .base import ArtifactHandler
+from .base import ArtifactHandler, payload
 
 
 def render_plan_pdf(title: str, content: str) -> bytes:
@@ -51,10 +51,16 @@ class MarketingHandler(ArtifactHandler):
 
     async def handle(self, ticket, ctx):
         ticket = {**ticket, "body": ticket.get("body", "") + "\nInclude a final section headed '## LinkedIn post' containing a polished 120-220 word app-specific launch post, plain text only, grounded exclusively in actual venture context and plan. Lead with the customer's problem and specific product value; end with one honest call to action. Never invent traction, launch status, URLs, or users. Draft only; do not publish."}
-        result = await super().handle(ticket, ctx)
+        if payload(ticket).get("research") is True:
+            from .marketing_research import researched_plan
+            result = await researched_plan(ticket, ctx)
+        else:
+            result = await super().handle(ticket, ctx)
         if result.outcome != "done":
             return result
         for artifact in result.artifacts:
+            if artifact.kind != "plan":
+                continue
             artifact.title = clean(artifact.title, ctx.settings)
             artifact.content_md = clean(artifact.content_md, ctx.settings)
             artifact.summary = clean(artifact.summary, ctx.settings)
@@ -69,5 +75,10 @@ class MarketingHandler(ArtifactHandler):
                 "publication_status": "awaiting_github_and_approved_publisher",
                 "publication_branch": "marketing", "publication_paths": ["marketing/plan.md", "marketing/plan.pdf"],
                 "publication_note": "Local PDF ready. GitHub publication is not implemented; requires the venture's connected repository and exact-content approval."})
+        if payload(ticket).get("research") is True:
+            from .marketing_research import post_as
+            plan_artifact = next(a for a in result.artifacts if a.kind == "plan")
+            basis = "No external market research verified; assumptions and validation tasks only. Relevant sources can be added later." if plan_artifact.meta.get("research_mode") == "brief_based" else "Based on retrieved official sources; draft only, nothing published."
+            await post_as(ctx, "gr.growth-planner", "Marketing plan PDF is ready: " + plan_artifact.uri + ". SHA-256: " + plan_artifact.meta["pdf_sha256"] + ". " + basis)
         result.messages.append(NewMessage(channel_slug="dept-growth", body="Marketing plan and PDF are ready. GitHub publication awaits a connected venture repository and an approved scoped publisher; nothing was pushed."))
         return result
