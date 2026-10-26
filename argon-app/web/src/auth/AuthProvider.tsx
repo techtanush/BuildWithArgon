@@ -16,7 +16,7 @@ export default function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const key = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY?.trim();
   const mode = resolveAuthMode({ publishableKey: key, dev: import.meta.env.DEV, demoFlag: import.meta.env.VITE_ENABLE_LOCAL_DEMO, hostname: window.location.hostname });
-  const [demo, setDemo] = useState(false);
+  const [demo, setDemo] = useState(() => { if (mode !== 'demo') return false; try { return sessionStorage.getItem('ycbf.localDemoEntered') === 'true'; } catch { return false; } });
   if (mode === 'clerk') return <ClerkProvider publishableKey={key!} routerPush={(to: string) => navigate(to)} routerReplace={(to: string) => navigate(to, { replace: true })} signInUrl="/signin" signUpUrl="/signup" signInFallbackRedirectUrl="/dashboard" signUpForceRedirectUrl="/onboarding" afterSignOutUrl="/signin"><ClerkSession>{children}</ClerkSession></ClerkProvider>;
-  return <AuthContext.Provider value={{ mode, loaded: true, signedIn: mode === 'demo' && demo, name: mode === 'demo' && demo ? readLocalProfile().name : '', beginDemo: () => { if (mode === 'demo') setDemo(true); }, endDemo: () => setDemo(false) }}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ mode, loaded: true, signedIn: mode === 'demo' && demo, name: mode === 'demo' && demo ? readLocalProfile().name : '', beginDemo: () => { if (mode === 'demo') { try { sessionStorage.setItem('ycbf.localDemoEntered', 'true'); } catch {} setDemo(true); } }, endDemo: () => { try { sessionStorage.removeItem('ycbf.localDemoEntered'); } catch {} setDemo(false); } }}>{children}</AuthContext.Provider>;
 }

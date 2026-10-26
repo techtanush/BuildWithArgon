@@ -1,0 +1,4 @@
+
+## 2026-10-25 marketing workspace
+Added artifacts-page Marketing studio, real-output PDF preservation, exact-source LinkedIn draft/edit/review/Post flow, owner+venture scoped KV drafts and LinkedIn connection metadata, scoped dedicated publisher with exact approval payload and pre-write persistent publishing lock. Published/uncertain/publishing records never automatically retry. Provider metadata GET verification only; no provider POST QA or actual publication. Existing global provider execution allowlist stays unchanged. Unknown tenant routes remain denied; only exact owned marketing and LinkedIn connection endpoints added.
+Verification: focused workspace/PDF/Composio API tests passed. Web typecheck blocked by existing broken @types/node dependency symlink, not a reported successful build. Runtime backend restart left to parent; no live DB fork/kill/start.

@@ -42,6 +42,7 @@ REGISTRY: dict[str, str] = {
 # Preserve the frozen seed's exact registry while permitting user-requested tools.
 EXTENSION_REGISTRY: dict[str, str] = {"wallet.pay": P + "wallet_payment:WalletPaymentHandler"}
 
+EXTENSION_REGISTRY.update({t: P + "starter:StarterHandler" for t in ("starter.plan", "starter.build", "starter.qa", "starter.review")})
 
 def load_handler(ticket_type: str) -> Any:
     module_name, cls = (REGISTRY | EXTENSION_REGISTRY)[ticket_type].split(":")

@@ -9,6 +9,16 @@ from .errors import KernelError
 SUBJECT_RE = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:@|-]{0,254}\Z')
 # Exact audited method/path pairs. Not a wildcard/prefix allowlist.
 ALLOWED = {
+ ('POST','/v1/ventures/{vid}/starter/auth/signup'),
+ ('POST','/v1/ventures/{vid}/starter/auth/login'),
+ ('POST','/v1/ventures/{vid}/starter/auth/logout'),
+ ('GET','/v1/ventures/{vid}/starter/auth/me'),
+ ('GET','/v1/ventures/{vid}/starter/provider'),
+ ('POST','/v1/ventures/{vid}/starter/provider'),
+ ('POST', '/v1/ventures/{vid}/starter/tutor'),
+ ('POST', '/v1/ventures/{vid}/starter/start'),
+ ('GET', '/v1/ventures/{vid}/starter'),
+ ('GET', '/v1/ventures/{vid}/starter/preview'),
  ('GET', '/v1/ventures'), ('POST', '/v1/ventures'),
  ('GET', '/v1/world/manifest'),
  ('GET', '/v1/system/status'),  # Safe hosted bootstrap flags; handler redacts globals.
@@ -34,6 +44,15 @@ ALLOWED = {
  ('GET', '/v1/ventures/{vid}/artifacts'),
  ('GET', '/v1/artifacts/{aid}'),
  ('GET', '/v1/ventures/{vid}/marketing/{digest}.pdf'),
+ ('GET', '/v1/ventures/{vid}/marketing/workspace'),
+ ('POST', '/v1/ventures/{vid}/marketing/generate'),
+ ('POST', '/v1/ventures/{vid}/marketing/drafts'),
+ ('POST', '/v1/ventures/{vid}/marketing/drafts/{did}/edit'),
+ ('POST', '/v1/ventures/{vid}/marketing/drafts/{did}/review'),
+ ('POST', '/v1/ventures/{vid}/marketing/drafts/{did}/post'),
+ ('GET', '/v1/ventures/{vid}/integrations'),
+ ('POST', '/v1/ventures/{vid}/integrations/linkedin/connect'),
+ ('POST', '/v1/ventures/{vid}/integrations/linkedin/refresh'),
  ('GET', '/v1/ventures/{vid}/approvals'),
  ('POST', '/v1/approvals/{aid}/decision'),
  ('GET', '/v1/ventures/{vid}/channels'),

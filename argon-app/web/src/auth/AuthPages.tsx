@@ -13,7 +13,7 @@ export function AuthGuard({children}: {children: ReactNode}) {
   const auth = useAppAuth(); const location = useLocation();
   if (auth.mode === 'unconfigured') return <AuthSetup />;
   if (!auth.loaded) return <AuthFrame><p role="status">Checking your secure session…</p></AuthFrame>;
-  if (!auth.signedIn) return <Navigate replace to={`/signin?returnTo=${encodeURIComponent(location.pathname + location.search + location.hash)}`} />;
+  if (!auth.signedIn) return <Navigate replace to={`${auth.mode === 'demo' ? '/demo' : '/signin'}?returnTo=${encodeURIComponent(location.pathname + location.search + location.hash)}`} />;
   return <>{children}</>;
 }
 export function AuthEntry({signup = false}: {signup?: boolean}) {

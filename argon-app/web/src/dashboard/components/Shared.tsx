@@ -1,3 +1,4 @@
+import { AnswerRunEvidence } from "../../shared/components/AnswerRunEvidence";
 // OWNER: tanush
 import { useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
@@ -207,13 +208,15 @@ export function Sources({
   return (
     <div className="source-list">
       <Status value={answer.check.status} />
+            <AnswerRunEvidence answerId={answer.answer_id} />
+      {answer.check.reason && <p>{answer.check.reason}</p>}
       {answer.citations.map((citation, index) => (
         <Link
           className="source-card"
           to={entityLink(citation.kind, citation.id)}
           key={`${citation.id}-${index}`}
         >
-          <strong>{citation.label}</strong>
+          <strong>{citation.label || citation.id}</strong>
           <blockquote>{citation.quote}</blockquote>
         </Link>
       ))}

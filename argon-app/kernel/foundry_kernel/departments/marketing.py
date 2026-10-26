@@ -50,6 +50,7 @@ class MarketingHandler(ArtifactHandler):
     ticket_types = ("growth.launch_plan",)
 
     async def handle(self, ticket, ctx):
+        ticket = {**ticket, "body": ticket.get("body", "") + "\nInclude a final section headed '## LinkedIn post' containing a polished 120-220 word app-specific launch post, plain text only, grounded exclusively in actual venture context and plan. Lead with the customer's problem and specific product value; end with one honest call to action. Never invent traction, launch status, URLs, or users. Draft only; do not publish."}
         result = await super().handle(ticket, ctx)
         if result.outcome != "done":
             return result

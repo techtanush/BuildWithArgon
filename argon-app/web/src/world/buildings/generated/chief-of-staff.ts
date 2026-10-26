@@ -1,3 +1,4 @@
+import { executiveSeats } from '../../interiors/executiveRoom';
 import type { BuildingModule, KitApi } from '../../kit/types';
 
 const chiefOfStaffBuilding: BuildingModule = {
@@ -179,25 +180,11 @@ const chiefOfStaffBuilding: BuildingModule = {
       k.prop({ kind: 'flag', pos: [2.8, 0, -6.1], scale: 0.9 });
     });
 
-    // Long council table in the center with 8 chairs
-    k.group('council_table_and_chairs', () => {
-      // Long council table centered at [0, 0, -0.8] (`collide: true`, size 3.0 x 1.1, rotated along Z)
-      k.prop({ kind: 'table_long', pos: [0, 0, -0.8], rotY: Math.PI / 2, collide: true });
-
-      // 8 council chairs: 3 along the west side, 3 along the east side, 1 at north head, 1 at south head
-      for (const cz of [-1.8, -0.8, 0.2]) {
-        k.prop({ kind: 'chair', pos: [-1.05, 0, cz], rotY: Math.PI / 2 });
-        k.prop({ kind: 'chair', pos: [1.05, 0, cz], rotY: -Math.PI / 2 });
-        // Briefing dossiers on the table in front of each seat
-        k.plane({ size: [0.26, 0.34], pos: [-0.32, 0.77, cz], rot: [-Math.PI / 2, 0, 0], mat: 'paper' });
-        k.plane({ size: [0.26, 0.34], pos: [0.32, 0.77, cz], rot: [-Math.PI / 2, 0, 0], mat: 'paper' });
-      }
-      k.prop({ kind: 'chair', pos: [0, 0, -2.65], rotY: 0 });
-      k.prop({ kind: 'chair', pos: [0, 0, 1.05], rotY: Math.PI });
-
-      k.prop({ kind: 'books', pos: [0, 0.76, -1.2], rotY: 0.15 });
-      k.prop({ kind: 'mug', pos: [-0.25, 0.76, -0.3] });
-      k.prop({ kind: 'mug', pos: [0.28, 0.76, 0.1] });
+    // Reuse the existing licensed prop kit for a thirteen-seat conference room.
+    k.group('executive_conference_table', () => {
+      for (const z of [-1.5, 1.5]) k.prop({kind: 'table_long', pos: [0, 0, z], rotY: Math.PI / 2, collide: true});
+      for (const seat of executiveSeats) k.prop({kind: 'chair', pos: seat.position, rotY: seat.facingY});
+      for (const z of [-2, -1, 0, 1, 2]) k.plane({size: [0.26, 0.34], pos: [0, 0.77, z], rot: [-Math.PI / 2, 0, 0], mat: 'paper'});
     });
 
     // Perimeter reference bookshelves, executive side desks, and plants

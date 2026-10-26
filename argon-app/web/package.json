@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --port 5173",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && node ../../scripts/build-web.mjs",
     "typecheck": "tsc --noEmit",
     "typecheck:worldgen": "tsc --noEmit -p tsconfig.worldgen.json",
     "test": "vitest run",

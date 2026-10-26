@@ -24,33 +24,31 @@ beforeEach(() => {
 });
 afterEach(async () => { await act(async () => root.unmount()); element.remove(); });
 async function render(overview = false) { await act(async () => root.render(<MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{overview ? <Overview /> : <LaunchReadiness />}</MemoryRouter>)); }
-it("explains draft, pending OAuth and local isolation without launching anything", async () => {
+it("shows a concise recorded-state summary without launching anything", async () => {
   await render();
   expect(element.textContent).toContain("Building has not started");
-  expect(element.textContent).toContain("approval is not OAuth completion");
-  expect(element.textContent).toContain("GitHub does not block intake Start");
-  expect(element.textContent).toContain("requires an isolated runner");
-  expect(element.textContent).toContain("0 tickets, 0 artifacts");
-  expect(element.textContent).toContain("no generated-site chat broker");
+  expect(element.textContent).toContain("0 queued");
+  expect(element.textContent).toContain("0 artifacts");
+  expect(element.textContent).toContain("not wallet funding or publishing");
   expect(state.post).not.toHaveBeenCalled();
 });
-it("recognizes the actual active integration status without claiming managed execution verified", async () => {
-  state.responses.set("/v1/ventures/ven_test/integrations", { items: [{ provider: "github", status: "active" }] }); state.venture.repo_full_name = "owner/tutor";
+it("does not infer a successful build from an active integration", async () => {
+  state.responses.set("/v1/ventures/ven_test/integrations", { items: [{ provider: "github", status: "active" }] });
+  state.venture.repo_full_name = "owner/tutor";
   await render();
-  expect(element.textContent).toContain("Connected according to the integration record");
-  expect(element.textContent).toContain("successful execution still need verification");
+  expect(element.textContent).toContain("Building has not started");
+  expect(element.querySelector('a[target="_blank"]')).toBeNull();
 });
-it("shows budget exhaustion and fake-mode limits", async () => {
-  state.venture.spent_usd = 25; state.system.mode = "fake";
+it("shows budget exhaustion", async () => {
+  state.venture.spent_usd = 25;
   await render();
-  expect(element.textContent).toContain("cap is reached");
-  expect(element.textContent).toContain("Fake mode: no real generated product");
+  expect(element.textContent).toContain("Budget cap reached");
 });
 it("uses the actual start action only after an explicit click, despite pending GitHub consent", async () => {
   state.post.mockResolvedValue({ status: "running", brief_ticket_id: "tkt_actual" });
   await render(true); expect(state.post).not.toHaveBeenCalled();
   await act(async () => [...element.querySelectorAll("button")].find(b => b.textContent === "Start building company")!.click());
-  expect(state.post).toHaveBeenCalledExactlyOnceWith("/v1/ventures/ven_test/start");
+  expect(state.post).toHaveBeenCalledExactlyOnceWith("/v1/ventures/ven_test/starter/start", { budget_usd: 0.25 });
 });
 it("surfaces a failed start without pretending a build exists", async () => {
   state.post.mockRejectedValue(new Error("Budget authorization required"));

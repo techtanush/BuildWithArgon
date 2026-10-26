@@ -1,3 +1,4 @@
+import { AnswerRunEvidence } from "../../shared/components/AnswerRunEvidence";
 // OWNER: mahin
 import { useEffect, useRef, useState } from "react";
 import type { ConversationState } from "../conversation/ConversationController";
@@ -9,7 +10,6 @@ export function ConversationPanel({
   onSend,
   onClose,
   onTravel,
-  onRace,
   onVoiceStart,
   onVoiceStop,
   onCall,
@@ -40,7 +40,7 @@ export function ConversationPanel({
     route = response && ("route_card" in response ? response.route_card : response.suggested_agent);
   const busy = ["thinking", "transcribing"].includes(state.phase);
   const submit = (value = text) => {
-    if (!value.trim()) return;
+    if (!value.trim() || busy || offline) return;
     onSend(value);
     setText("");
   };
@@ -115,11 +115,13 @@ export function ConversationPanel({
         )}
         {response && (
           <div className="sources">
+            <AnswerRunEvidence answerId={response.answer_id} />
             <div className={`check-status ${response.check.status}`}>
               {response.check.status === "verified"
                 ? "Sources verified"
                 : `Source check: ${response.check.status}`}
             </div>
+            {response.check.reason && <p>{response.check.reason}</p>}
             {response.citations.map((c, i) => {
               const href = sourceRoute(c);
               return (
@@ -154,7 +156,6 @@ export function ConversationPanel({
               >
                 Take me there ↗
               </button>
-              <button onClick={() => onRace(route.agent_id)}>Race there</button>
             </div>
           </div>
         )}
@@ -184,7 +185,8 @@ export function ConversationPanel({
               ? "Conversations unavailable"
               : `Ask ${npc.display_name} something…`
           }
-          disabled={offline}
+          disabled={offline || busy}
+          maxLength={4000}
         />
         <button
           type="submit"

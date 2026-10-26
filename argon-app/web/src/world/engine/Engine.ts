@@ -195,6 +195,10 @@ export class Engine {
   }
   private patch(p: Partial<WorldState>) {
     if (this.disposed) return;
+    if (p.mode && p.mode !== this.state.mode) {
+      this.input.clear();
+      this.player.velocity.set(0, 0, 0);
+    }
     this.state = { ...this.state, ...p };
     this.opts.onChange(this.state);
   }
@@ -334,6 +338,7 @@ export class Engine {
     if (!this.state.ready) return;
     this.elapsed += dt;
     const mode = this.state.mode;
+    if (this.input.blocked) this.player.velocity.set(0, 0, 0);
     const moving = ["KeyW", "KeyA", "KeyS", "KeyD"].some((k) =>
       this.input.down(k),
     );
@@ -669,21 +674,35 @@ export class Engine {
     this.patch({ mode: this.resumeMode });
   }
   private async transition(fn: () => void) {
+    if (this.state.mode === "transition") return false;
     const token = ++this.transitionToken;
     this.conversation.close();
     this.input.unlock();
     this.patch({ mode: "transition", fade: true, workplace:null, remoteConcierge:false });
-    await new Promise((r) => setTimeout(r, 320));
-    if (this.disposed || token !== this.transitionToken) return;
-    fn();
-    await new Promise((r) => setTimeout(r, 160));
-    if (this.disposed || token !== this.transitionToken) return;
-    this.patch({ mode: "foot", fade: false });
+    try {
+      await new Promise((r) => setTimeout(r, 120));
+      if (this.disposed || token !== this.transitionToken) return false;
+      fn();
+      await new Promise((r) => setTimeout(r, 80));
+      return !this.disposed && token === this.transitionToken;
+    } catch (error) {
+      console.error("Room transition failed", error);
+      this.toast("Could not change rooms. Please try again.");
+      return false;
+    } finally {
+      if (!this.disposed && token === this.transitionToken) {
+        this.input.unlock();
+        this.player.velocity.set(0, 0, 0);
+        this.player.present(0, true, false, this.interior ? 0 : urbanEnabled() ? cityHeight(this.player.position.x, this.player.position.z) : 0, this.colliders());
+        this.patch({ mode: "foot", fade: false });
+      }
+    }
   }
   async enterInterior(building: ManifestBuilding) {
-    await this.transition(() => {
+    return this.transition(() => {
+      const room = this.scenes.get(building);
       if (this.interior) this.world.remove(this.interior.group);
-      this.interior = this.scenes.get(building);
+      this.interior = room;
       this.city.group.visible = false;
       this.car.group.visible = false;
       this.gps.group.visible = false;
@@ -701,10 +720,11 @@ export class Engine {
     const b = this.interior?.building;
     if (!b) return;
     await this.transition(() => {
-      this.showCity();
       const door = this.city.doors.find(
         (d) => d.building.department_id === b.department_id,
-      )!;
+      );
+      if (!door) throw new Error("Room exit door is unavailable");
+      this.showCity();
       const p = door.position.clone();
       p.x -= Math.sin(b.theta) * 2.5;
       p.z += Math.cos(b.theta) * 2.5;
@@ -736,9 +756,8 @@ export class Engine {
     const b = this.manifest.buildings.find(
       (b) => b.building_id === npc.building_id,
     );
-    if (b) await this.enterInterior(b);
-    else await this.transition(() => this.showCity());
-    if (this.disposed) return;
+    const arrived = b ? await this.enterInterior(b) : await this.transition(() => this.showCity());
+    if (!arrived || this.disposed) return;
     const person = this.npcs.get(agentId);
     if (!person) {
       this.toast("This building is missing the agent’s slot.");
@@ -748,6 +767,7 @@ export class Engine {
     const p = person.position
       .clone()
       .add(new THREE.Vector3(Math.sin(angle) * 2, 1.65, Math.cos(angle) * 2));
+    p.y = 1.65 + (this.interior ? 0 : urbanEnabled() ? cityHeight(p.x, p.z) : 0);
     this.player.teleport(p, angle);
     this.engage(person);
     void this.conversation.greet();

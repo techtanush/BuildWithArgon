@@ -8,6 +8,7 @@ import { Route, Routes } from 'react-router-dom';
 
 const Landing = lazy(() => import('./entry/Landing'));
 import AuthProvider from './auth/AuthProvider';
+import GlobalProviderNotice from './shared/GlobalProviderNotice';
 import { AuthGuard, AuthEntry, AuthCallback, AccountPage, SignOutPage, DemoEntry } from './auth/AuthPages';
 
 const WorldHost = lazy(() => import('./world/WorldHost'));
@@ -16,7 +17,7 @@ const DashboardRoutes = lazy(() => import('./dashboard/routes'));
 
 export default function App() {
   return (
-    <AuthProvider><Suspense fallback={<div className="app-loading">Loading…</div>}>
+    <AuthProvider><GlobalProviderNotice /><Suspense fallback={<div className="app-loading">Loading…</div>}>
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/welcome" element={<Landing />} />

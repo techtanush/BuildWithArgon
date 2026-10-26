@@ -1,4 +1,6 @@
 // OWNER: mahin
+import { executiveSeats } from './executiveRoom';
+import { departmentLeads } from '../npc/executive';
 import * as THREE from "three";
 import type { Manifest, ManifestBuilding } from "../../shared/contracts";
 import type { AssetManifest } from "../assets/manifest.contract";
@@ -65,6 +67,17 @@ export class Interior {
       walkable: (x:number,z:number,r:number) => x-r > -8.8 && x+r < 8.8 && z-r > -6.8 && z+r < 6.8,
       executiveMeeting: building.department_id === "chief-of-staff",
     });
+    if (building.department_id === "chief-of-staff") {
+      departmentLeads(manifest).forEach((lead, index) => {
+        const actor = this.npcs.get(lead.agent_id), seat = executiveSeats[index];
+        if (!actor || !seat) return;
+        actor.position.fromArray(seat.position);
+        actor.group.rotation.y = seat.facingY;
+        // Existing procedural rig has a known static sitting pose. Imported avatars
+        // keep their supplied rig, with no invented animation or bone-name guesses.
+        actor.character.setSeated(true);
+      });
+    }
     this.colliders = movementColliders(this.build.recording);
     this.colliders.push(
       { kind: "obb", x: -9, z: 0, hw: 0.1, hd: 7, rotY: 0 },

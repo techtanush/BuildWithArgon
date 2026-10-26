@@ -1,0 +1,14 @@
+import fs from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+const root=fileURLToPath(new URL('../',import.meta.url)),web=path.join(root,'argon-app/web'),out=path.join(web,'dist');
+const req=createRequire(path.join(web,'package.json')),vr=createRequire(req.resolve('vite/package.json')),compiler=vr('esbuild');
+const key=process.env.VITE_CLERK_PUBLISHABLE_KEY?.trim()||'';
+if(key&&!key.startsWith('pk_'))throw Error('VITE_CLERK_PUBLISHABLE_KEY must contain a publishable key, never a server secret.');
+const glob={name:'capture-static-glob',setup(build){build.onLoad({filter:/CapturePage\.tsx$/},async args=>{let s=await fs.readFile(args.path,'utf8');let files=[];try{files=(await fs.readdir(path.join(web,'src/world/buildings/staging'))).filter(f=>f.endsWith('.ts'));}catch{}const map='{'+files.map(f=>{const p='../buildings/staging/'+f;return JSON.stringify(p)+':()=>import('+JSON.stringify(p)+')';}).join(',')+'}';s=s.replace(/import\.meta\.glob<\{\s*default:\s*BuildingModule\s*\}>\(\s*["']\.\.\/buildings\/staging\/\*\.ts["'],?\s*\)/,map);return{contents:s,loader:'tsx'};});}};
+await fs.mkdir(out,{recursive:true});
+await compiler.build({absWorkingDir:web,entryPoints:['src/main.tsx'],outdir:out,entryNames:'main',assetNames:'bundled/[name]-[hash]',publicPath:'/',bundle:true,format:'esm',platform:'browser',target:'es2022',splitting:true,minify:true,sourcemap:false,jsx:'automatic',loader:{'.svg':'file','.png':'file','.jpg':'file','.webp':'file','.woff2':'file'},define:{'import.meta.env':JSON.stringify({DEV:false,PROD:true,MODE:'production',BASE_URL:'/',VITE_ENABLE_LOCAL_DEMO:'false',VITE_CLERK_PUBLISHABLE_KEY:key})},plugins:[glob],logLevel:'warning'});
+await fs.cp(path.join(web,'public'),out,{recursive:true,filter:async p=>!(await fs.lstat(p)).isSymbolicLink()});
+let index=await fs.readFile(path.join(web,'index.html'),'utf8');index=index.replace('<script type="module" src="/src/main.tsx"></script>','<link rel="stylesheet" href="/main.css"><script type="module" src="/main.js"></script>');await fs.writeFile(path.join(out,'index.html'),index);
+console.log('Production web bundle built. Local demo is disabled; no server environment was loaded into browser code.');

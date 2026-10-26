@@ -147,6 +147,7 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
             const work = toolQueue.then(async () => {
               if (closed) return 'The call has ended.';
               if (typeof parameters.question !== 'string' || !parameters.question.trim()) return 'Please ask a specific question. No company facts were retrieved.';
+              if (parameters.question.trim().length > 4000) return 'Please shorten your question to fewer than 4000 characters.';
               notify('thinking');
               try {
                 const req = { text: parameters.question.trim(), history: history.slice(-6) }, base = `/v1/ventures/${encodeURIComponent(ventureId)}`;
@@ -159,13 +160,19 @@ export async function startVoiceCall(opts: VoiceCallOptions): Promise<VoiceCallH
                 try { opts.onAnswer?.(answer); } catch { /* UI only */ }
                 let spoken: TalkResponse | ConciergeResponse | null = isVerified(answer) ? answer : null;
                 if (answer.check.status === 'pending') {
-                  // A pending answer is never spoken. Give its existing verification record up to 3s to settle.
-                  const verificationSignal = AbortSignal.any([startup.signal, AbortSignal.timeout(3_000)]);
+                  // Poll the existing check; never speak pending or rejected company claims.
+                  const verificationSignal = AbortSignal.any([startup.signal, AbortSignal.timeout(8_000)]);
                   try {
-                    const stored = await get<StoredAnswer>('/v1/answers/' + encodeURIComponent(answer.answer_id), verificationSignal);
-                    if (!closed && stored?.id === answer.answer_id && typeof stored.text === 'string' && Array.isArray(stored.citations) && isVerified(stored)) {
-                      spoken = { ...answer, text: stored.text, citations: stored.citations as typeof answer.citations, check: stored.check as typeof answer.check };
-                      try { opts.onAnswer?.(spoken); } catch { /* UI only */ }
+                    while (!closed && !verificationSignal.aborted) {
+                      const stored = await get<StoredAnswer>('/v1/answers/' + encodeURIComponent(answer.answer_id), verificationSignal);
+                      if (stored?.id !== answer.answer_id || typeof stored.text !== 'string' || !Array.isArray(stored.citations)) break;
+                      if (isVerified(stored)) {
+                        spoken = { ...answer, text: stored.text, citations: stored.citations as typeof answer.citations, check: stored.check as typeof answer.check };
+                        try { opts.onAnswer?.(spoken); } catch { /* UI only */ }
+                        break;
+                      }
+                      if (stored.check.status !== 'pending') break;
+                      await abortable(new Promise<void>(resolve => setTimeout(resolve, 400)), verificationSignal);
                     }
                   } catch { /* Pending or unavailable checks must fail closed. */ }
                 }

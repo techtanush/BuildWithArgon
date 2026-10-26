@@ -181,6 +181,17 @@ async def _save_toolkit(db: Any, vid: str, provider: str, status: str, account_r
                          (new_id("int"), vid, provider, status, account_ref, now, now))
 
 
+@router.post("/v1/ventures/{vid}/integrations/linkedin/connect", response_model=ConnectEnvelope)
+async def linkedin_connect(vid: str, body: ConnectRequest, request: Request) -> dict[str, Any]:
+    """Exact gateway-audited specialization; same approval and owner binding as toolkit flow."""
+    return await toolkit_connect(vid, "linkedin", body, request)
+
+
+@router.post("/v1/ventures/{vid}/integrations/linkedin/refresh", response_model=IntegrationEnvelope)
+async def linkedin_refresh(vid: str, request: Request) -> dict[str, Any]:
+    return await toolkit_refresh(vid, "linkedin", request)
+
+
 @router.post("/v1/ventures/{vid}/integrations/{provider}/connect", response_model=ConnectEnvelope)
 async def toolkit_connect(vid: str, provider: str, body: ConnectRequest, request: Request) -> dict[str, Any]:
     _provider(provider)
@@ -189,11 +200,11 @@ async def toolkit_connect(vid: str, provider: str, body: ConnectRequest, request
     client = _client(request.app.state.settings)
     rows = await db.fetch_all("SELECT * FROM approvals WHERE venture_id=? AND gate_type='integration' ORDER BY created_at DESC, id DESC", (vid,))
     latest = next((row for row in rows if json.loads(row["payload_json"] or "{}").get("provider") == provider and json.loads(row["payload_json"] or "{}").get("callback_url") == body.callback_url), None)
-    if latest is None or latest["status"] not in ("pending", "approved"):
+    if latest is None or latest["status"] not in ("pending", "approved") or (provider == "linkedin" and json.loads(latest["payload_json"] or "{}").get("owner_user_id") != venture.get("owner_user_id")):
         async with db.tx() as tx:
             aid = await gates.request_approval(tx, venture_id=vid, gate_type="integration", title=f"Connect {provider}",
                 summary="Authorize an optional account connection through Composio. Provider consent is still required. This does not authorize spending or tool execution.",
-                payload={"provider": provider, "callback_url": body.callback_url, "scopes": "Enabled toolkit-specific auth configuration; exact provider permissions require separate consent", "composio_user_id": venture["composio_user_id"]})
+                payload={"provider": provider, "callback_url": body.callback_url, "scopes": "Enabled toolkit-specific auth configuration; exact provider permissions require separate consent", "composio_user_id": venture["composio_user_id"], "owner_user_id": venture.get("owner_user_id")})
         return {"data": {"redirect_url": None, "approval_id": aid, "status": "waiting_approval"}}
     if latest["status"] == "pending":
         return {"data": {"redirect_url": None, "approval_id": latest["id"], "status": "waiting_approval"}}
@@ -206,6 +217,9 @@ async def toolkit_connect(vid: str, provider: str, body: ConnectRequest, request
     except ComposioError as exc:
         raise DependencyError("composio", exc.user_message) from exc
     await _save_toolkit(db, vid, provider, "pending", link.get("connected_account_id"))
+    if provider == "linkedin":
+        async with db.tx() as tx:
+            await tx.execute("UPDATE integrations SET data_json=? WHERE venture_id=? AND provider='linkedin'", (json.dumps({"owner_user_id": venture.get("owner_user_id"), "linked_for_venture": vid}), vid))
     return {"data": {"redirect_url": link["redirect_url"], "approval_id": latest["id"], "status": "pending"}}
 
 
@@ -214,9 +228,18 @@ async def toolkit_refresh(vid: str, provider: str, request: Request) -> dict[str
     _provider(provider)
     db = request.app.state.db
     venture = await _venture(db, vid)
+    ownership = None
+    if provider == "linkedin":
+        ownership = await db.fetch_one("SELECT data_json FROM integrations WHERE venture_id=? AND provider='linkedin'", (vid,))
+        meta = json.loads(ownership["data_json"] or "{}") if ownership else {}
+        if meta.get("linked_for_venture") != vid or meta.get("owner_user_id") != venture.get("owner_user_id"):
+            raise HTTPException(409, "Connect LinkedIn for this company and owner before refreshing. Existing accounts are not reused.")
     try:
         status = await _client(request.app.state.settings).toolkit_connection_status(provider, venture["composio_user_id"])
     except ComposioError as exc:
         raise DependencyError("composio", exc.user_message) from exc
     await _save_toolkit(db, vid, provider, status["status"], status["account_ref"])
+    if ownership:
+        async with db.tx() as tx:
+            await tx.execute("UPDATE integrations SET data_json=? WHERE venture_id=? AND provider='linkedin'", (ownership["data_json"], vid))
     return {"data": IntegrationItem(provider=provider, **status)}

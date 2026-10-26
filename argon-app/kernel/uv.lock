@@ -572,6 +572,7 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "aiosqlite" },
+    { name = "cryptography" },
     { name = "fastapi" },
     { name = "google-genai" },
     { name = "httpx" },
@@ -600,6 +601,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "aiosqlite", specifier = ">=0.20" },
+    { name = "cryptography", specifier = ">=43" },
     { name = "cua", marker = "extra == 'computers'", specifier = "==0.5.0" },
     { name = "cua-sandbox", marker = "extra == 'computers'", specifier = "==0.9.1" },
     { name = "fastapi", specifier = ">=0.115" },

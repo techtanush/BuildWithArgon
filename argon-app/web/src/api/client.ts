@@ -23,7 +23,9 @@ async function request<T>(
     init.headers = { "Content-Type": "application/json" };
     init.body = JSON.stringify(body);
   }
-  const res = await fetch(path, init);
+  let res: Response;
+  try { res = await fetch(path, init); }
+  catch { throw new ApiError(0, "network_unavailable", "Connection lost. Your input is unchanged. Check that YCBF is running, then retry."); }
   const json = await res.json().catch(() => ({}));
   if (!res.ok) {
     const e = json?.error ?? {};

@@ -12,6 +12,7 @@ import type {
   Venture,
 } from "../../shared/contracts";
 import { useCompany } from "../context";
+import { StarterStatus } from "../components/StarterStatus";
 import { LaunchReadiness } from "../components/LaunchReadiness";
 import { BuildNotifications } from "../components/BuildNotifications";
 import { colors, currency, entityLink, titleCase } from "../types";
@@ -81,7 +82,7 @@ export default function Overview() {
     ).length ?? 0;
   async function changeStatus() {
     await action.run(async () => {
-      await post(`/v1/ventures/${ventureId}/${operation}`);
+      await post(`/v1/ventures/${ventureId}/${operation === "start" ? "starter/start" : operation}`, operation === "start" ? { budget_usd: Math.min(0.25, venture!.budget_usd) } : {});
       invalidateQueries();
     });
   }
@@ -159,6 +160,7 @@ export default function Overview() {
           <span className="muted small-text">Recorded merged pull requests</span>
         </Card>
       </div>
+      <StarterStatus key={venture.id} ventureId={venture.id} />
       <LaunchReadiness />
       <BuildNotifications />
       <div className="overview-columns">

@@ -309,3 +309,18 @@ describe("speech cancellation", () => {
     c.dispose();
   });
 });
+
+it("rejects oversized typed questions before HTTP and excludes failed history", async () => {
+  const service = api();
+  const c = new ConversationController({ api: service, ventureId: "v", audioEnabled: false });
+  c.open(npc);
+  await c.send("a".repeat(4001));
+  expect(service.talk).not.toHaveBeenCalled();
+  expect(c.state.error).toContain("4,000");
+  vi.mocked(service.talk).mockRejectedValueOnce(new Error("Provider unavailable"));
+  await c.send("failed question");
+  expect(c.state.error).toBe("Provider unavailable");
+  await c.send("retry question");
+  expect(service.talk).toHaveBeenLastCalledWith("v", npc.agent_id, {text: "retry question", history: []});
+  c.dispose();
+});

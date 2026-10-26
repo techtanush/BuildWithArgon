@@ -18,6 +18,7 @@ class Job:
     aspect_ratio: str | None = None  # image jobs: generation_config.image_config.aspect_ratio (e.g. "4:1")
 
 
+OPENAI_TUTOR = "gpt-4o-mini"
 ARGON = "gemini-4-argon"
 FLASH = "gemini-3.8-flash"
 LITE = "gemini-3.5-flash-lite"
@@ -29,6 +30,9 @@ JOBS: dict[str, Job] = {
     "capability_design": Job(ARGON, "high", 32_768, timeout_s=1200),
     "cos_report": Job(ARGON, "medium", 16_384, timeout_s=600),
     "spec_write": Job(ARGON, "high", 32_768, timeout_s=1200),
+    # Opt-in typed landing starter only; existing planning jobs remain untouched.
+    "starter_tutor": Job(ARGON, "low", 1024, timeout_s=45),
+    "starter_content": Job(ARGON, "medium", 4096, timeout_s=120),
     # engineering
     "engineering_design": Job(ARGON, "high", 65_536, timeout_s=1200),
     "engineering_build": Job(ARGON, "high", 262_144, background=True),

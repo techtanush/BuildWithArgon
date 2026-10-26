@@ -36,6 +36,9 @@ def _since(value: str | None, now: datetime) -> float:
 
 
 def ticket_job(ticket: dict, agent: dict) -> str:
+    if ticket["type"].startswith("starter."):
+        from .departments.starter import selected_job
+        return selected_job()
     if agent.get("generated") and ticket["type"] != "chat.reply":
         return "dept_artifact"
     if ticket["type"] == "chat.reply" and agent["id"] == "concierge":
@@ -163,7 +166,7 @@ class Scheduler:
             name = ticket_job(ticket, agent)
             await tx.execute("UPDATE tickets SET status='in_progress',attempts=attempts+1,started_at=?,completed_at=NULL,updated_at=? WHERE id=?", (now, now, ticket_id))
             await tx.execute("INSERT INTO runs(id,venture_id,ticket_id,agent_id,kind,job,model,status,created_at,started_at) VALUES(?,?,?,?,'ticket',?,?,'running',?,?)",
-                             (run_id, venture["id"], ticket_id, agent["id"], name, get_job(name).model, now, now))
+                             (run_id, venture["id"], ticket_id, agent["id"], name, "none (deterministic)" if ticket["type"] in {"starter.build", "starter.qa", "starter.review"} or (ticket["type"] == "starter.plan" and json_loads_or(ticket["payload_json"], {}).get("scenario") == "ai_tutor_demo") else get_job(name).model, now, now))
             await self._agent_state(tx, ticket, "working", ticket_id)
             ticket = await get_row(tx, "tickets", ticket_id)
             await self._ticket_event(tx, ticket)

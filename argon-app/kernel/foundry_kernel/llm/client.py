@@ -210,12 +210,14 @@ class LLMClient:
                 await asyncio.sleep(delay)
         raise AssertionError("unreachable")
 
-    async def _create(self, kwargs: dict[str, Any], timeout_s: float, run_id: str | None, label: str) -> Any:
+    async def _create(self, kwargs: dict[str, Any], timeout_s: float, run_id: str | None, label: str, single_attempt: bool = False) -> Any:
         aio = self._genai().aio.interactions
 
         async def call() -> Any:
             return await asyncio.wait_for(aio.create(timeout=timeout_s, **kwargs), timeout=timeout_s + 30)
 
+        if single_attempt:
+            return await call()
         return await self._with_retries(label, call, run_id)
 
     async def _poll(self, interaction: Any, on_progress: ProgressFn | None, run_id: str | None, label: str) -> Any:
@@ -345,7 +347,7 @@ class LLMClient:
                        previous_interaction_id: str | None = None, run_id: str | None = None,
                        venture_id: str | None = None, agent_id: str | None = None,
                        department_id: str | None = None, on_progress: ProgressFn | None = None,
-                       thinking_level: str | None = None, response_schema: dict[str, Any] | None = None) -> LLMResult:
+                       thinking_level: str | None = None, response_schema: dict[str, Any] | None = None, single_attempt: bool = False) -> LLMResult:
         """Routes to a normal call or a background long decode (Job.background). `thinking_level` overrides the
         job's level for this call only (03-company-kernel/10 §3: worldgen jobs run "medium in a fast live round")."""
         if self.fake is not None:
@@ -373,7 +375,7 @@ class LLMClient:
                 interaction = await self._poll(interaction, on_progress, run_id, job)
             else:
                 timeout = 1200 if cfg.get("thinking_level") == "high" else j.timeout_s
-                interaction = await self._create(kwargs, timeout, run_id, job)
+                interaction = await self._create(kwargs, timeout, run_id, job, single_attempt=True) if single_attempt else await self._create(kwargs, timeout, run_id, job)
         except Exception as exc:
             await self._failed(job, exc)
             if job == "avatar_personalize":

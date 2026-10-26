@@ -10,10 +10,13 @@ from . import (
     departments,
     integrations,
     metrics,
+    marketing,
     org,
     preview,
     runs,
     stream,
+    starter,
+    starter_auth,
     system,
     tickets,
     ventures,
@@ -22,4 +25,4 @@ from . import (
     worldgen,
 )
 
-ROUTERS = [system, ventures, departments, agents, tickets, runs, artifacts, approvals, channels, activity, stream, conversation, world, metrics, org, voice, integrations, computers, preview, worldgen]
+ROUTERS = [starter_auth, starter, system, ventures, departments, agents, tickets, runs, artifacts, approvals, channels, activity, stream, conversation, world, metrics, org, voice, integrations, computers, preview, worldgen, marketing]

@@ -23,6 +23,9 @@ class AnswerInfo(BaseModel):
     text: str
     citations: list[Citation]
     check: AnswerCheck
+    run_id: str | None = None
+    model: str | None = None
+    run_status: str | None = None
 
 
 @router.post("/v1/ventures/{vid}/agents/{agent_id}/talk",response_model=Envelope[TalkResponse])
@@ -46,4 +49,5 @@ async def get_answer(answer_id: str,request: Request):
     check.status=row["check_status"]
     if check.status == "pending":
         check.reason = "Exact sources checked; claim support is being checked."
-    return {"data":{"id":row["id"],"text":row["answer"],"citations":json_loads(row["citations_json"],[]),"check":check}}
+    run=await db.fetch_one("SELECT id,model,status FROM runs WHERE id=? AND venture_id=?",(row["run_id"],row["venture_id"]))
+    return {"data":{"id":row["id"],"text":row["answer"],"citations":json_loads(row["citations_json"],[]),"check":check,"run_id":run["id"] if run else None,"model":run["model"] if run else None,"run_status":run["status"] if run else None}}

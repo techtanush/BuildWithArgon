@@ -39,3 +39,11 @@ A complete autonomous build/deploy, browser microphone acceptance, and automatic
 - Architecture: [`architecture-files/`](architecture-files/README.md)
 - Integration/acceptance record: [`argon-app/docs/merge/final-integration.md`](argon-app/docs/merge/final-integration.md)
 - Asset attribution: [`argon-app/web/public/assets/CREDITS.md`](argon-app/web/public/assets/CREDITS.md)
+
+## Focused AI tutor demo
+
+All departments remain available. Engineering now has an explicitly authorized starter path with four recorded build/check stages, a scoped preview, and an adaptive tutor. The known tutor scenario uses prebuilt scaffolding, not a claim of arbitrary autonomous coding. Its preview has real local/owner-protected signup, login and logout; this is not a separately deployed public student identity service. Provider keys belong only in the preview's secure password field, never ordinary agent chat. The optional OpenAI key is encrypted server-side. Marketing studio supports recorded plan generation/PDF downloads and exact-content, account-reviewed LinkedIn posting after connection and approval. No live publication has been performed.
+
+`pnpm dev:portable` is a loopback-only explicit local demo launcher. Production builds use the portable compiler with local demo disabled and fail-closed account configuration. The demo's new API routes require the matching updated Python backend. Executive HQ includes a separately labeled scripted demo briefing; it is not evidence of live work.
+
+Latest focused release validation: 924 backend tests, frontend TypeScript and production web bundle passed. Vitest startup remains blocked in this macOS environment. Actual microphone audio, a configured OpenAI request, LinkedIn OAuth/publication, and a live full demo still need acceptance after restarting the old local API. Missing provider keys are not simulated connections.

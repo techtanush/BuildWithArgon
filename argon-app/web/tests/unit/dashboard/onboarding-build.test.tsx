@@ -4,6 +4,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { IntegrationConnect } from "../../../src/dashboard/components/IntegrationConnect";
 import Onboarding from "../../../src/dashboard/pages/Onboarding";
 import Chat from "../../../src/dashboard/pages/Chat";
 import { buildEvidence, BuildNotifications } from "../../../src/dashboard/components/BuildNotifications";
@@ -22,23 +23,18 @@ afterEach(async () => { await act(async () => root.unmount()); element.remove();
 async function render(node: React.ReactNode, url = "/") { await act(async () => root.render(<MemoryRouter initialEntries={[url]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>{node}</MemoryRouter>)); }
 async function fill(selector: string, value: string) { await act(async () => { const node = element.querySelector<HTMLInputElement | HTMLTextAreaElement>(selector)!; const proto = node.tagName === "TEXTAREA" ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype; Object.getOwnPropertyDescriptor(proto, "value")!.set!.call(node, value); node.dispatchEvent(new Event("input", { bubbles: true })); }); }
 async function submit() { await act(async () => { element.querySelector("form")!.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })); }); }
-it("persists discovery intent using the existing idea contract without connecting, funding or starting", async () => {
-  state.post.mockResolvedValue({ id: "ven_created", name: "Discovery company" });
+it("keeps typing local and starts only after the explicit create-and-start submit", async () => {
+  state.post.mockResolvedValueOnce({ id: "ven_created", name: "Untitled project" }).mockResolvedValueOnce({ status: "queued", preview_url: null });
   await render(<Onboarding />);
-  expect(state.post).not.toHaveBeenCalled();
-  await fill('input[autocomplete="given-name"]', "Founder"); await submit();
-  await act(async () => element.querySelectorAll<HTMLInputElement>('input[type="radio"]')[1].click());
-  await fill('input[maxlength="200"]', "Discovery company");
+  await fill('input[autocomplete="given-name"]', "Founder");
+  await act(async () => element.querySelector<HTMLInputElement>('input[type="checkbox"]')!.click());
   await fill("textarea", "Help independent teachers find a useful education product within a small budget, using research evidence.");
-  expect(element.textContent).toContain("No discovery has run yet");
-  await submit(); await submit();
-  expect(state.post).toHaveBeenCalledTimes(1);
-  expect(state.post).toHaveBeenCalledWith("/v1/ventures", expect.objectContaining({ idea: expect.stringContaining("Founder intent: Discover an idea for me."), budget_usd: 25 }));
-  expect(element.textContent).toContain("not deposited");
-  expect(element.querySelector('a[href="/treasury"]')?.textContent).toContain("Review funding");
-  const connect = [...element.querySelectorAll("button")].find(b => b.textContent === "Connect GitHub")!;
-  expect(connect.disabled).toBe(true);
-  expect(element.textContent).toContain("not configured on the server");
+  expect(state.post).not.toHaveBeenCalled();
+  expect(element.querySelectorAll('input[type="radio"]')).toHaveLength(0);
+  expect(element.querySelectorAll('textarea')).toHaveLength(1);
+  await submit();
+  expect(state.post).toHaveBeenNthCalledWith(1, "/v1/ventures", expect.objectContaining({ name: "Untitled project", idea: expect.stringContaining("Founder intent: Discover an idea for me."), budget_usd: 25 }));
+  expect(state.post).toHaveBeenNthCalledWith(2, "/v1/ventures/ven_created/starter/start", { budget_usd: 0.25 });
 });
 it("opens a world channel query deep link by ID and shows only recorded participants", async () => {
   state.responses.set("/v1/ventures/ven_test/channels", { items: [{ id: "ch_eng", slug: "dept-engineering", name: "Engineering" }] });
@@ -67,12 +63,7 @@ it("labels disconnected evidence and stays honest when no build exists", async (
 });
 async function prepareLaunch() {
   state.configured = true;
-  state.post.mockResolvedValueOnce({ id: "ven_created", name: "My idea" });
-  await render(<Onboarding />);
-  await fill('input[autocomplete="given-name"]', "Founder"); await submit();
-  await fill('input[maxlength="200"]', "My idea");
-  await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
-  await submit(); await submit();
+  await render(<IntegrationConnect ventureId="ven_created" provider="github" name="GitHub" />);
 }
 it("rejects insecure connection redirects and never starts during connection", async () => {
   await prepareLaunch();
@@ -80,7 +71,7 @@ it("rejects insecure connection redirects and never starts during connection", a
   state.get.mockResolvedValue({ items: [] });
   await act(async () => [...element.querySelectorAll("button")].find(b => b.textContent === "Connect GitHub")!.click());
   expect(element.textContent).toContain("Unsafe provider sign-in link rejected");
-  expect(state.post).toHaveBeenCalledTimes(2);
+  expect(state.post).toHaveBeenCalledTimes(1);
   expect(state.post.mock.calls.some(([url]) => String(url).endsWith("/start"))).toBe(false);
 });
 it("shows the real integration approval wait instead of pretending connected", async () => {
@@ -110,13 +101,12 @@ function CurrentRoute() { return <output data-current-route>{useLocation().pathn
 it("finishes onboarding in the normal dashboard, not the world", async () => {
   state.post.mockResolvedValue({ id: "ven_created", name: "My idea" });
   await render(<><Onboarding /><CurrentRoute /></>, "/onboarding");
-  await fill('input[autocomplete="given-name"]', "Founder"); await submit();
+  await fill('input[autocomplete="given-name"]', "Founder");
   await fill('input[maxlength="200"]', "My idea");
   await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
-  await submit(); await submit();
   expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
   await submit();
-  expect(state.post).toHaveBeenCalledWith('/v1/ventures/ven_created/start');
+  expect(state.post).toHaveBeenCalledWith('/v1/ventures/ven_created/starter/start', { budget_usd: 0.25 });
   expect(element.querySelector('[data-current-route]')?.textContent).toBe('/dashboard');
   expect(sessionStorage.getItem('foundry.just-launched')).toBe('ven_created');
 });
@@ -124,12 +114,14 @@ it("finishes onboarding in the normal dashboard, not the world", async () => {
 it("keeps the founder on onboarding if the actual backend start fails", async () => {
   state.post.mockResolvedValueOnce({ id: "ven_created", name: "My idea" });
   await render(<><Onboarding /><CurrentRoute /></>, "/onboarding");
-  await fill('input[autocomplete="given-name"]', "Founder"); await submit();
+  await fill('input[autocomplete="given-name"]', "Founder");
   await fill('input[maxlength="200"]', "My idea");
   await fill("textarea", "A useful app for teachers that helps organize lessons and collaborate safely with other educators.");
-  await submit(); await submit();
   state.post.mockRejectedValueOnce(new Error('Server authorization required'));
   await submit();
   expect(element.querySelector('[data-current-route]')?.textContent).toBe('/onboarding');
   expect(element.textContent).toContain('Server authorization required');
+  state.post.mockResolvedValueOnce({ status: 'queued', preview_url: null });
+  await submit();
+  expect(state.post.mock.calls.filter(([url]) => url === '/v1/ventures')).toHaveLength(1);
 });

@@ -222,6 +222,9 @@ function Thread({ channelId, root }: { channelId: string; root: string }) {
   );
 }
 export function ChannelView({ channelId }: { channelId: string }) {
+  return <ScopedChannelView key={channelId} channelId={channelId} />;
+}
+function ScopedChannelView({ channelId }: { channelId: string }) {
   const key = `/v1/channels/${channelId}/messages`;
   const query = useQuery<ListPage<Message>>(key, () => get(key));
   const [older, setOlder] = useState<Message[]>([]),

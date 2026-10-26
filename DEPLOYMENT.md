@@ -57,3 +57,5 @@ The root Vercel configuration sets `NODEJS_HELPERS=0` to disable automatic body 
 ## Current hosted-mode limits
 
 Read `argon-app/kernel/GATEWAY_AUTH.md`: gateway mode fails closed on routes not yet audited for account ownership. This currently limits integration/provider/wallet operations, unscoped audio, world generation and aggregate metrics. Managed account entry and deployment plumbing do **not** imply that every local operator-only feature is enabled for every signed-in account. Private runtime data and keys must be configured/transferred separately; GitHub does not carry the current local database.
+
+The web build now uses `scripts/build-web.mjs` after TypeScript checking, avoiding native bundler-addon requirements. It embeds only the Clerk publishable key, never kernel/provider secrets, and explicitly disables local demo access. `scripts/local-demo.mjs --local-demo` is development-only, bound to loopback with host/origin checks. Do not expose that development proxy publicly.

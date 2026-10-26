@@ -11,9 +11,17 @@
     "dev": "pnpm --filter foundry-argon-web dev",
     "typecheck": "pnpm --filter foundry-argon-web typecheck",
     "test:gateway": "node --test tests/deployment/*.test.mjs",
-    "test": "pnpm test:gateway && pnpm --filter foundry-argon-web test"
+    "test": "pnpm test:gateway && pnpm --filter foundry-argon-web test",
+    "dev:portable": "node scripts/local-demo.mjs --local-demo",
+    "start:local-demo": "node scripts/start-local-demo.mjs"
   },
   "dependencies": {
     "@clerk/backend": "3.26.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": "npm:@rollup/wasm-node@4.65.0",
+      "esbuild": "npm:esbuild-wasm@0.25.12"
+    }
   }
 }

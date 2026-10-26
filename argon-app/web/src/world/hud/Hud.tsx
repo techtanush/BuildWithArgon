@@ -1,9 +1,12 @@
 // OWNER: mahin
+import {useEffect, useState} from "react";
+import {ExecutiveBriefing} from "./ExecutiveBriefing";
 import type { Engine, WorldState } from "../engine/Engine";
 import type { QualityChoice } from "../engine/Quality";
 import {MiniMap} from "./MiniMap";
 import { MapOverlay } from "./MapOverlay";
 import { ConversationPanel } from "./ConversationPanel";
+import {DepartmentGroupChat} from "./DepartmentGroupChat";
 import {WorkplacePanel} from "./WorkplacePanel";
 export function Hud({
   state,
@@ -12,6 +15,11 @@ export function Hud({
   state: WorldState;
   engine: Engine | null;
 }) {
+  const [demo,setDemo]=useState(false);
+  const [roomPromptDismissed,setRoomPromptDismissed]=useState(false);
+  useEffect(()=>setRoomPromptDismissed(false),[state.scene]);
+  const groupRoom=state.scene === "interior:engineering" || state.scene === "interior:growth";
+  const executiveRoom=state.scene==="interior:chief-of-staff";
   const back = () => { location.href = "/dashboard"; };
   return (
     <div className="world-hud" onKeyDown={event=>{
@@ -28,12 +36,14 @@ export function Hud({
         </a>
         <div className="world-location">
           <span className="location-dot" />
-          {state.place}
+          {executiveRoom ? "Executive HQ · Conference room" : state.place}
           <span className="location-divider">/</span>
           <span>{state.scene === "city" ? "OUTDOORS" : "INTERIOR"}</span>
         </div>
         <nav>
-          {state.ready&&["foot","conversation"].includes(state.mode)&&state.scene!=="city"&&<button onClick={()=>engine?.openWorkplace()}>See communications</button>}
+          {state.ready&&executiveRoom&&state.mode==="foot"&&<><button onClick={()=>{setDemo(true);engine?.openWorkplace();}}>Demo briefing</button><button onClick={()=>void engine?.exitInterior()}>Exit Executive HQ</button></>}
+          {state.ready && !executiveRoom && state.scene !== "city" && ["foot", "conversation", "workplace"].includes(state.mode) && <button onClick={()=>void engine?.exitInterior()}>Exit room</button>}
+          {state.ready&&["foot","conversation"].includes(state.mode)&&state.scene!=="city"&&<button onClick={()=>engine?.openWorkplace()}>{groupRoom ? "View agent group chat" : "See communications"}</button>}
           {state.ready&&state.mode!=="transition"&&<button onClick={()=>void engine?.meetDepartmentLeads()}>Meet department leads</button>}
           {state.ready&&state.scene==="city"&&state.mode==="foot"&&<button onClick={()=>engine?.enterCar(true)}>Drive the city</button>}
           <button onClick={() => engine?.showMap()}>
@@ -58,6 +68,7 @@ export function Hud({
           Ask Nova <kbd>N</kbd>
         </button>
       )}
+      {state.ready && groupRoom && state.mode === "foot" && !roomPromptDismissed && <aside className="department-chat-invite" aria-label="Department group chat invitation"><strong>{state.scene === "interior:engineering" ? "Engineering" : "Growth & Marketing"} agent group chat</strong><p>Read real team messages, run status and completed work.</p><button onClick={()=>engine?.openWorkplace()}>View agent group chat</button><button aria-label="Dismiss group chat invitation" onClick={()=>setRoomPromptDismissed(true)}>Dismiss</button></aside>}
       {!state.ready && !state.error && (
         <div className="world-loading">
           <img className="ycbf-brand-icon" src="/ycbf-mark.svg" alt=""/>
@@ -197,7 +208,8 @@ export function Hud({
               />
             </>
           )}
-          {state.mode === "workplace" && state.workplace && <WorkplacePanel ventureId={state.ventureId} departmentId={state.workplace.departmentId} name={state.workplace.name} mock={state.mock} activity={state.activity} activityError={state.activityError} onClose={()=>engine?.closeWorkplace()}/>}
+          {state.mode === "workplace" && executiveRoom && demo && <ExecutiveBriefing onClose={()=>{setDemo(false);engine?.closeWorkplace();}} onRecorded={()=>setDemo(false)}/>}
+          {state.mode === "workplace" && !demo && state.workplace && (groupRoom ? <DepartmentGroupChat ventureId={state.ventureId} departmentId={state.workplace.departmentId} name={state.scene === "interior:engineering" ? "Engineering" : "Growth & Marketing"} mock={state.mock} activity={state.activity} activityError={state.activityError} onClose={()=>{setRoomPromptDismissed(true);engine?.closeWorkplace();}}/> : <WorkplacePanel ventureId={state.ventureId} departmentId={state.workplace.departmentId} name={state.workplace.name} mock={state.mock} activity={state.activity} activityError={state.activityError} onClose={()=>engine?.closeWorkplace()}/>)}
           {state.mode === "map" && state.manifest && (
             <div className="modal-backdrop">
               <MapOverlay

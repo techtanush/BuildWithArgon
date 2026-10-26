@@ -345,7 +345,8 @@ export class ConversationController {
   ): Promise<void> {
     text = text.trim();
     const npc = this.state.npc;
-    if (!text || !npc || this.disposed) return;
+    if (!text || !npc || this.disposed || this.state.phase === "thinking") return;
+    if (text.length > 4000) { this.patch({ error: "Questions must contain between 1 and 4,000 characters." }); return; }
     if (
       this.options.offline ||
       (!this.options.ventureId && this.options.api.mode !== "mock")
@@ -366,7 +367,7 @@ export class ConversationController {
     clearTimeout(this.maxListen);
     const history = [...(this.histories.get(npc.agent_id) ?? [])].slice(-6);
     const turns: ChatTurn[] = [...history, { role: "user", text }];
-    this.histories.set(npc.agent_id, turns.slice(-6));
+    // Failed requests stay visible but never enter factual conversation history.
     this.patch({
       phase: "thinking",
       turns: turns.slice(-6),
@@ -443,7 +444,7 @@ export class ConversationController {
       this.patch({
         phase: "engaged",
         error: error instanceof Error ? error.message : String(error),
-        caption: "Sorry, I lost my train of thought. Can you ask again?",
+        caption: "The request failed. Your question was not answered. Please retry.",
       });
     }
   }

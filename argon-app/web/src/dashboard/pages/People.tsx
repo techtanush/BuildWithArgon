@@ -1,5 +1,5 @@
 // OWNER: tanush
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { get, post } from "../../api/client";
 import { invalidateQueries, useQuery } from "../../api/hooks";
@@ -240,6 +240,9 @@ export function AgentPage() {
     [history, setHistory] = useState<ChatTurn[]>([]),
     [answers, setAnswers] = useState<TalkResponse[]>([]),
     action = useAction();
+  const scope = `${ventureId}:${id}`;
+  const activeScope = useRef(scope);
+  activeScope.current = scope;
   const query = useQuery<AgentDetail>(
     ventureId ? `/v1/ventures/${ventureId}/agents/${id}` : null,
     () => get(`/v1/ventures/${ventureId}/agents/${id}`),
@@ -250,6 +253,7 @@ export function AgentPage() {
   );
   useEffect(() => {
     setHistory([]);
+    setText("");
     setAnswers([]);
     setCalling(false);
   }, [id, ventureId]);
@@ -279,13 +283,16 @@ export function AgentPage() {
     return <ErrorNotice error={query.error} retry={query.refetch} />;
   const agent = query.data;
   async function ask() {
-    if (!text.trim()) return;
-    const message = text;
+    if (!text.trim() || action.working || !ventureId || !id) return;
+    const requestScope = scope;
+    const message = text.trim();
     await action.run(async () => {
       const answer = await post<TalkResponse>(
         `/v1/ventures/${ventureId}/agents/${id}/talk`,
         { text: message, history: history.slice(-6) },
       );
+      if (activeScope.current !== requestScope) return;
+      invalidateQueries(`/v1/ventures/${ventureId}/agents/${id}`);
       setHistory((old) => [
         ...old,
         { role: "user", text: message },
@@ -353,6 +360,7 @@ export function AgentPage() {
             <label>
               Message {agent.display_name}
               <textarea
+                disabled={action.working}
                 value={text}
                 onChange={(event) => setText(event.target.value)}
                 placeholder="What are you working on?"

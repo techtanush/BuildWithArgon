@@ -1,3 +1,4 @@
+import { MarketingWorkspace } from '../components/MarketingWorkspace';
 // OWNER: tanush
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
@@ -471,6 +472,7 @@ export function Artifacts() {
         title="Artifacts"
         description="The company’s work, preserved with its sources and the people who made it."
       />
+      {ventureId && <MarketingWorkspace key={ventureId} ventureId={ventureId} />}
       <div className="filters">
         <label>
           Kind
